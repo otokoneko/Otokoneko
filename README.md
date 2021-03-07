@@ -1,10 +1,10 @@
 ## 预览
 
-![](screenshot\1.png)
+![](screenshot/1.png)
 
-![](screenshot\2.png)
+![](screenshot/2.png)
 
-![](screenshot\3.png)
+![](screenshot/3.png)
 
 ## 快速开始
 
@@ -12,7 +12,7 @@
 
 2. 启动服务端后会在当前目录下生成 `config.yml` 配置文件，可以通过配置文件进行服务端的配置
 
-![](screenshot\4.png)
+![](screenshot/4.png)
 
 
 3. 选择所需地址的配置字符串在客户端中进行配置，并使用 Root 用户邀请码进行注册（该邀请码仅在数据库初始化时出现，可以通过删除 `data` 目录重置数据库）并登录

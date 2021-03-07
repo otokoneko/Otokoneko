@@ -258,8 +258,8 @@ namespace Otokoneko.Server.MangaManage
                         MangaId = manga.ObjectId,
                         TagId = tag.Key
                     }).ToList();
-
-                    await mangaTagMappingService.Insert(mangaTagMappings);
+                    if(mangaTagMappings.Count > 0)
+                        await mangaTagMappingService.Insert(mangaTagMappings);
                 }
 
                 await mangaService.Upsert(manga);

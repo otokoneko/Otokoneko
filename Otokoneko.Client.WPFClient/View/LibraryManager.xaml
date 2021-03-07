@@ -1,0 +1,112 @@
+﻿<mah:MetroContentControl
+    x:Class="Otokoneko.Client.WPFClient.View.LibraryManager"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:Otokoneko.Client.WPFClient.View"
+    xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="800"
+    d:DesignWidth="1200"
+    mc:Ignorable="d">
+    <mah:MetroContentControl.Resources>
+        <ResourceDictionary>
+            <DataTemplate x:Key="LibraryItem">
+                <DataTemplate.Resources>
+                    <Style TargetType="Rectangle">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding LibraryType}" Value="Local">
+                                <Setter Property="Rectangle.OpacityMask">
+                                    <Setter.Value>
+                                        <ImageBrush ImageSource="/icon/folder.png" />
+                                    </Setter.Value>
+                                </Setter>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding LibraryType}" Value="Ftp">
+                                <Setter Property="Rectangle.OpacityMask">
+                                    <Setter.Value>
+                                        <ImageBrush ImageSource="/icon/cloud.png" />
+                                    </Setter.Value>
+                                </Setter>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding LibraryType}" Value="None">
+                                <Setter Property="Rectangle.OpacityMask">
+                                    <Setter.Value>
+                                        <ImageBrush ImageSource="/icon/plus.png" />
+                                    </Setter.Value>
+                                </Setter>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </DataTemplate.Resources>
+                <Border
+                    Width="150"
+                    Height="200"
+                    Margin="20"
+                    Background="#333333"
+                    BorderBrush="#a5a5a5"
+                    BorderThickness="3"
+                    CornerRadius="5"
+                    Cursor="Hand">
+                    <Border.InputBindings>
+                        <MouseBinding Command="{Binding ClickCommand}" MouseAction="LeftClick" />
+                    </Border.InputBindings>
+                    <StackPanel>
+                        <Rectangle
+                            Width="64"
+                            Height="64"
+                            Margin="20"
+                            VerticalAlignment="Top">
+                            <Rectangle.Fill>
+                                <SolidColorBrush Color="#a5a5a5" />
+                            </Rectangle.Fill>
+                        </Rectangle>
+                        <TextBlock
+                            Margin="20,10"
+                            FontSize="20"
+                            FontWeight="Black"
+                            Text="{Binding LibraryType, Converter={StaticResource StaticResourceConverter}}" />
+                        <TextBlock
+                            Margin="20,10,0,0"
+                            FontSize="13"
+                            Text="{Binding Path=Name}" />
+                    </StackPanel>
+                </Border>
+            </DataTemplate>
+        </ResourceDictionary>
+    </mah:MetroContentControl.Resources>
+    <Grid>
+        <StackPanel Orientation="Horizontal">
+            <ListBox
+                Margin="20"
+                ItemContainerStyle="{StaticResource NoFocusListBox}"
+                ItemTemplate="{StaticResource LibraryItem}"
+                ItemsSource="{Binding Libraries}">
+                <ListBox.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                </ListBox.ItemsPanel>
+            </ListBox>
+        </StackPanel>
+        <Button
+            Width="60"
+            Height="60"
+            Margin="50"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Bottom"
+            Background="{DynamicResource MahApps.Brushes.Accent}"
+            BorderBrush="{DynamicResource MahApps.Brushes.Accent}"
+            Command="{Binding RefreshCommand}"
+            Style="{StaticResource MahApps.Styles.Button.Circle}">
+            <Rectangle Width="30" Height="30">
+                <Rectangle.Fill>
+                    <SolidColorBrush Color="White" />
+                </Rectangle.Fill>
+                <Rectangle.OpacityMask>
+                    <ImageBrush ImageSource="/icon/refresh.png" />
+                </Rectangle.OpacityMask>
+            </Rectangle>
+        </Button>
+    </Grid>
+</mah:MetroContentControl>

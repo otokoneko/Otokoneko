@@ -1,0 +1,35 @@
+﻿<UserControl
+    x:Class="Otokoneko.Client.WPFClient.View.ScoreControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:view="clr-namespace:Otokoneko.Client.WPFClient.View"
+    d:DesignHeight="30"
+    d:DesignWidth="200"
+    mc:Ignorable="d">
+    <Grid>
+        <ItemsControl Name="ItemsControl" ItemsSource="{Binding Stars, RelativeSource={RelativeSource AncestorType=view:ScoreControl}}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel Orientation="Horizontal" />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Rectangle
+                        Width="{Binding StarSize, RelativeSource={RelativeSource AncestorType=view:ScoreControl}}"
+                        Height="{Binding StarSize, RelativeSource={RelativeSource AncestorType=view:ScoreControl}}"
+                        Margin="5,0">
+                        <Rectangle.OpacityMask>
+                            <ImageBrush ImageSource="{Binding}" />
+                        </Rectangle.OpacityMask>
+                        <Rectangle.Fill>
+                            <SolidColorBrush Color="Orange" />
+                        </Rectangle.Fill>
+                    </Rectangle>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </Grid>
+</UserControl>

@@ -1,0 +1,228 @@
+﻿<mah:MetroContentControl
+    x:Class="Otokoneko.Client.WPFClient.View.MangaExplorer"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:Otokoneko.Client.WPFClient.View"
+    xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:viewModel="clr-namespace:Otokoneko.Client.WPFClient.ViewModel"
+    d:DesignHeight="800"
+    d:DesignWidth="1200"
+    mc:Ignorable="d">
+    <mah:MetroContentControl.Resources>
+        <ResourceDictionary>
+            <DataTemplate x:Key="CircleButton">
+                <Button
+                    Width="30"
+                    Height="30"
+                    BorderThickness="0"
+                    Command="{Binding Command}"
+                    Cursor="Hand"
+                    IsEnabled="{Binding IsEnable}"
+                    Opacity="{Binding IsEnable, Converter={StaticResource BooleanToOpacityConverter}}"
+                    Style="{StaticResource MahApps.Styles.Button.Circle}">
+                    <Rectangle Width="20" Height="20">
+                        <Rectangle.OpacityMask>
+                            <ImageBrush ImageSource="{Binding Image}" />
+                        </Rectangle.OpacityMask>
+                        <Rectangle.Fill>
+                            <SolidColorBrush Color="{DynamicResource MahApps.Colors.ThemeForeground}" />
+                        </Rectangle.Fill>
+                    </Rectangle>
+                </Button>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type viewModel:MangaSearchResultViewModel}">
+                <local:MangaSearchResult />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type viewModel:MangaDetailViewModel}">
+                <local:MangaDetail />
+            </DataTemplate>
+        </ResourceDictionary>
+    </mah:MetroContentControl.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="65" />
+            <RowDefinition />
+        </Grid.RowDefinitions>
+        <Border Grid.Row="0" Margin="5,5">
+            <Grid>
+                <StackPanel HorizontalAlignment="Left" Orientation="Horizontal">
+                    <ContentPresenter
+                        Margin="30,10,10,10"
+                        Content="{Binding BackwardCircleButton}"
+                        ContentTemplate="{StaticResource CircleButton}" />
+                    <ContentPresenter
+                        Margin="10"
+                        Content="{Binding ForwardCircleButton}"
+                        ContentTemplate="{StaticResource CircleButton}" />
+                    <ContentPresenter
+                        Margin="10"
+                        Content="{Binding RefreshCircleButton}"
+                        ContentTemplate="{StaticResource CircleButton}" />
+                    <ContentPresenter
+                        Margin="10"
+                        Content="{Binding HomeCircleButton}"
+                        ContentTemplate="{StaticResource CircleButton}" />
+                    <ContentPresenter
+                        Margin="10"
+                        Content="{Binding Path=FavoriteCircleButton}"
+                        ContentTemplate="{StaticResource CircleButton}" />
+                    <ContentPresenter
+                        Margin="10"
+                        Content="{Binding Path=HistoryCircleButton}"
+                        ContentTemplate="{StaticResource CircleButton}" />
+                </StackPanel>
+                <Border
+                    Name="SearchBox"
+                    Margin="0,9"
+                    HorizontalAlignment="Center"
+                    Background="#3f3f3f"
+                    CornerRadius="18">
+                    <Grid>
+                        <TextBox
+                            Name="SearchTextBox"
+                            Width="500"
+                            Margin="10,3,35,3"
+                            HorizontalAlignment="Left"
+                            Background="#3f3f3f"
+                            BorderThickness="0"
+                            FontSize="16"
+                            Text="{Binding SearchKeywords, UpdateSourceTrigger=PropertyChanged}">
+                            <TextBox.InputBindings>
+                                <KeyBinding Key="Enter" Command="{Binding SearchCommand}" />
+                            </TextBox.InputBindings>
+                        </TextBox>
+                        <ContentPresenter
+                            Margin="10,3"
+                            HorizontalAlignment="Right"
+                            Content="{Binding SearchCircleButton}"
+                            ContentTemplate="{StaticResource CircleButton}" />
+                    </Grid>
+                </Border>
+            </Grid>
+        </Border>
+        <mah:TransitioningContentControl
+            Grid.Row="1"
+            Content="{Binding NavigationService.SelectedViewModel}"
+            RestartTransitionOnContentChange="True"
+            Transition="Normal">
+            <mah:TransitioningContentControl.ContentTemplateSelector>
+                <local:AlwaysRefreshDataTemplateSelector />
+            </mah:TransitioningContentControl.ContentTemplateSelector>
+        </mah:TransitioningContentControl>
+        <Popup
+            HorizontalOffset="20"
+            IsOpen="{Binding ElementName=SearchTextBox, Path=IsKeyboardFocused, Mode=OneWay}"
+            Placement="Bottom"
+            PlacementTarget="{Binding ElementName=SearchBox}"
+            StaysOpen="{Binding ElementName=SearchTextBox, Path=IsKeyboardFocused}">
+            <Grid
+                Width="505"
+                Height="300"
+                HorizontalAlignment="Center"
+                Background="#333333"
+                MouseUp="UIElement_OnMouseUp"
+                Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="374*" />
+                    <ColumnDefinition Width="1*" />
+                    <ColumnDefinition Width="170*" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" Margin="5,10">
+                    <TextBlock
+                        Margin="10"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
+                        FontWeight="Bold"
+                        Foreground="{DynamicResource MahApps.Brushes.ThemeForeground}"
+                        Text="标签建议" />
+                    <ListBox
+                        Height="240"
+                        Background="#333333"
+                        ItemContainerStyle="{StaticResource NoFocusListBox}"
+                        ItemsSource="{Binding SearchHelper}"
+                        ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                        ScrollViewer.VerticalScrollBarVisibility="Auto">
+                        <ListBox.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel Orientation="Horizontal" />
+                            </ItemsPanelTemplate>
+                        </ListBox.ItemsPanel>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Border
+                                    Margin="5,5,5,5"
+                                    Background="{Binding Path=Color, Converter={StaticResource ColorToBackgroundConverter}}"
+                                    BorderThickness="1"
+                                    CornerRadius="15"
+                                    Cursor="Hand"
+                                    PreviewMouseUp="UIElement_OnPreviewMouseUp">
+                                    <TextBlock
+                                        Margin="15,5,15,5"
+                                        Background="{Binding Path=Color, Converter={StaticResource ColorToBackgroundConverter}}"
+                                        FontSize="12"
+                                        FontWeight="Bold"
+                                        Foreground="{Binding Path=Color, Converter={StaticResource ColorToForegroundConverter}}"
+                                        Text="{Binding Path=Name}" />
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </StackPanel>
+                <Rectangle
+                    Grid.Column="1"
+                    Width="1"
+                    Height="280"
+                    VerticalAlignment="Center"
+                    Fill="{DynamicResource MahApps.Brushes.ThemeForeground}" />
+                <StackPanel Grid.Column="2" Margin="5,10">
+                    <TextBlock
+                        Margin="10"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
+                        FontWeight="Bold"
+                        Foreground="{DynamicResource MahApps.Brushes.ThemeForeground}"
+                        Text="搜索历史" />
+                    <ListBox
+                        Height="240"
+                        Background="#333333"
+                        ItemContainerStyle="{StaticResource NoFocusListBox}"
+                        ItemsSource="{Binding SearchHistory}"
+                        ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                        ScrollViewer.VerticalScrollBarVisibility="Auto">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="5">
+                                    <TextBlock
+                                        Width="80"
+                                        HorizontalAlignment="Left"
+                                        VerticalAlignment="Center"
+                                        Cursor="Hand"
+                                        PreviewMouseUp="UIElement_OnPreviewMouseUp"
+                                        Text="{Binding}"
+                                        TextTrimming="CharacterEllipsis"
+                                        ToolTip="{Binding}" />
+                                    <Rectangle
+                                        Width="16"
+                                        Height="16"
+                                        HorizontalAlignment="Right"
+                                        VerticalAlignment="Center"
+                                        Cursor="Hand"
+                                        PreviewMouseUp="UIElement_OnPreviewMouseUp">
+                                        <Rectangle.Fill>
+                                            <SolidColorBrush Color="White" />
+                                        </Rectangle.Fill>
+                                        <Rectangle.OpacityMask>
+                                            <ImageBrush ImageSource="/icon/close.png" />
+                                        </Rectangle.OpacityMask>
+                                    </Rectangle>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </StackPanel>
+            </Grid>
+        </Popup>
+    </Grid>
+</mah:MetroContentControl>

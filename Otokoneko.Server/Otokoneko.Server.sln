@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30717.126
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Otokoneko.Server", "Otokoneko.Server.csproj", "{2E838F82-F2F0-4EA9-82EB-4E70B9ECC3CC}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Otokoneko.Base", "..\Otokoneko.Base\Otokoneko.Base.shproj", "{82B38B9C-F381-4335-8F3E-F8EB6F3F10EE}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Otokoneko.Plugins.Interface", "..\Otokoneko.Plugins\Otokoneko.Plugins.Interface\Otokoneko.Plugins.Interface.csproj", "{2F61EBAD-7FC5-4C8E-8C3F-99E92A98DDA8}"
+EndProject
+Global
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		..\Otokoneko.Base\Otokoneko.Base.projitems*{2e838f82-f2f0-4ea9-82eb-4e70b9ecc3cc}*SharedItemsImports = 5
+		..\Otokoneko.Base\Otokoneko.Base.projitems*{82b38b9c-f381-4335-8f3e-f8eb6f3f10ee}*SharedItemsImports = 13
+	EndGlobalSection
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2E838F82-F2F0-4EA9-82EB-4E70B9ECC3CC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2E838F82-F2F0-4EA9-82EB-4E70B9ECC3CC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2E838F82-F2F0-4EA9-82EB-4E70B9ECC3CC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2E838F82-F2F0-4EA9-82EB-4E70B9ECC3CC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2F61EBAD-7FC5-4C8E-8C3F-99E92A98DDA8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2F61EBAD-7FC5-4C8E-8C3F-99E92A98DDA8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2F61EBAD-7FC5-4C8E-8C3F-99E92A98DDA8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2F61EBAD-7FC5-4C8E-8C3F-99E92A98DDA8}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B147A512-5AF2-4FFB-90C3-6341BF46F4E2}
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,452 @@
+﻿<mah:MetroWindow
+    x:Class="Otokoneko.Client.WPFClient.View.MangaReader"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:system="clr-namespace:System;assembly=System.Runtime"
+    xmlns:view="clr-namespace:Otokoneko.Client.WPFClient.View"
+    xmlns:viewModel="clr-namespace:Otokoneko.Client.WPFClient.ViewModel"
+    Name="Root"
+    Title="{Binding Path=Title}"
+    MouseMove="OnMouseMove"
+    PreviewMouseWheel="ZoomImages"
+    ShowCloseButton="{Binding Path=ShowCloseButton}"
+    ShowMaxRestoreButton="{Binding Path=ShowMaxRestoreButton}"
+    ShowMinButton="{Binding Path=ShowMinButton}"
+    ShowTitleBar="{Binding Path=ShowTitleBar}"
+    WindowStartupLocation="CenterScreen"
+    WindowState="{Binding Path=WindowState}"
+    mc:Ignorable="d">
+    <mah:MetroWindow.Resources>
+        <ResourceDictionary>
+            <DataTemplate x:Key="CircleButton">
+                <Button
+                    Width="30"
+                    Height="30"
+                    BorderThickness="0"
+                    Command="{Binding Command}"
+                    Cursor="Hand"
+                    IsEnabled="{Binding IsEnable}"
+                    Opacity="{Binding IsEnable, Converter={StaticResource BooleanToOpacityConverter}}"
+                    Style="{StaticResource MahApps.Styles.Button.Circle}">
+                    <Rectangle Width="20" Height="20">
+                        <Rectangle.OpacityMask>
+                            <ImageBrush ImageSource="{Binding Image}" />
+                        </Rectangle.OpacityMask>
+                        <Rectangle.Fill>
+                            <SolidColorBrush Color="{DynamicResource MahApps.Colors.ThemeForeground}" />
+                        </Rectangle.Fill>
+                    </Rectangle>
+                </Button>
+            </DataTemplate>
+            <Style TargetType="{x:Type Button}">
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="Cursor" Value="Hand" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Grid Background="{TemplateBinding Background}">
+                                <ContentPresenter />
+                            </Grid>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+            <Style BasedOn="{StaticResource MahApps.Styles.ToggleButton.Flat}" TargetType="{x:Type ToggleButton}">
+                <Setter Property="BorderThickness" Value="1" />
+                <Style.Triggers>
+                    <Trigger Property="ToggleButton.IsChecked" Value="True">
+                        <Setter Property="ToggleButton.Background" Value="{DynamicResource MahApps.Brushes.Accent}" />
+                        <Setter Property="ToggleButton.BorderBrush" Value="{DynamicResource MahApps.Brushes.Accent}" />
+                    </Trigger>
+                    <Trigger Property="ToggleButton.IsChecked" Value="False">
+                        <Setter Property="ToggleButton.Background" Value="Transparent" />
+                        <Setter Property="ToggleButton.BorderBrush" Value="{DynamicResource MahApps.Brushes.ThemeForeground}" />
+                        <Setter Property="ToggleButton.Foreground" Value="{DynamicResource MahApps.Brushes.ThemeForeground}" />
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+            <Style BasedOn="{StaticResource MahApps.Styles.ToggleButton.Flat}" TargetType="{x:Type RadioButton}">
+                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="HorizontalContentAlignment" Value="Center" />
+                <Style.Triggers>
+                    <Trigger Property="ToggleButton.IsChecked" Value="True">
+                        <Setter Property="ToggleButton.Background" Value="{DynamicResource MahApps.Brushes.Accent}" />
+                        <Setter Property="ToggleButton.BorderBrush" Value="{DynamicResource MahApps.Brushes.Accent}" />
+                    </Trigger>
+                    <Trigger Property="ToggleButton.IsChecked" Value="False">
+                        <Setter Property="ToggleButton.Background" Value="Transparent" />
+                        <Setter Property="ToggleButton.BorderBrush" Value="{DynamicResource MahApps.Brushes.ThemeForeground}" />
+                        <Setter Property="ToggleButton.Foreground" Value="{DynamicResource MahApps.Brushes.ThemeForeground}" />
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+            <ItemsControl
+                x:Key="DoublePageModeControl"
+                Width="{Binding Path=Width}"
+                Height="{Binding Path=Height}"
+                Background="LightGray"
+                ItemsSource="{Binding Path=ItemSource}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <ItemContainerTemplate>
+                        <Image
+                            Width="{Binding Path=Width}"
+                            Height="{Binding Path=Height}"
+                            Source="{Binding Path=Source}" />
+                    </ItemContainerTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <DataTemplate DataType="{x:Type viewModel:SingleImageViewModel}">
+                <Grid
+                    Name="ImageContainer"
+                    Background="{DynamicResource MahApps.Brushes.ThemeBackground}"
+                    MouseWheel="UIElement_OnMouseWheel">
+                    <Image
+                        Width="{Binding Path=ActualWidth}"
+                        Height="{Binding Path=ActualHeight}"
+                        DataContext="{Binding CurrentImage}"
+                        IsVisibleChanged="ImageOnIsVisibleChanged"
+                        LayoutTransform="{Binding Path=DataContext.Transform, ElementName=Root}"
+                        Source="{Binding Path=Source, IsAsync=True}" />
+                </Grid>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type viewModel:ImageListBoxViewModel}">
+                <view:ImageListBox
+                    Width="{Binding Width, Mode=OneWayToSource}"
+                    Height="{Binding Height, Mode=OneWayToSource}"
+                    ItemContainerStyle="{StaticResource NoFocusListBox}"
+                    ItemsSource="{Binding Path=Images}"
+                    ScrollViewer.IsDeferredScrollingEnabled="True"
+                    ScrollViewer.PanningRatio="10"
+                    ScrollViewer.VerticalScrollBarVisibility="Hidden"
+                    SelectedItem="{Binding SelectedItem}"
+                    Style="{StaticResource MahApps.Styles.ListBox}"
+                    VirtualizingPanel.CacheLength="0"
+                    VirtualizingPanel.IsContainerVirtualizable="True"
+                    VirtualizingPanel.IsVirtualizing="True"
+                    VirtualizingPanel.ScrollUnit="Pixel"
+                    VirtualizingPanel.VirtualizationMode="Recycling">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid
+                                Margin="-1"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Background="#7f7f7f">
+                                <Image
+                                    Width="{Binding Path=ActualWidth}"
+                                    Height="{Binding Path=ActualHeight}"
+                                    DataContext="{Binding}"
+                                    IsVisibleChanged="ImageOnIsVisibleChanged"
+                                    LayoutTransform="{Binding Path=DataContext.Transform, ElementName=Root}"
+                                    Source="{Binding Path=Source, IsAsync=True}" />
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </view:ImageListBox>
+            </DataTemplate>
+        </ResourceDictionary>
+    </mah:MetroWindow.Resources>
+    <Grid>
+        <ContentPresenter Content="{Binding ImageExplorerViewModel}" />
+        <Border
+            x:Name="ExplorerToolBar"
+            Margin="200,0,200,30"
+            VerticalAlignment="Bottom"
+            Background="#df000000"
+            CornerRadius="40">
+            <Grid Margin="30,10" Background="{x:Null}">
+                <Grid
+                    Margin="40,10,40,120"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Top"
+                    IsEnabled="{Binding MenuEnable}"
+                    Visibility="{Binding MenuEnable, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition />
+                        <RowDefinition />
+                        <RowDefinition />
+                        <RowDefinition />
+                    </Grid.RowDefinitions>
+                    <TextBlock
+                        Grid.Row="0"
+                        Grid.Column="0"
+                        VerticalAlignment="Center"
+                        FontSize="18"
+                        FontWeight="Bold"
+                        Text="自动切分：" />
+                    <Grid
+                        Grid.Row="0"
+                        Grid.Column="1"
+                        Margin="0,5"
+                        VerticalAlignment="Center">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+                        <RadioButton
+                            Grid.Column="0"
+                            Margin="25,0,0,0"
+                            Content="从右往左"
+                            IsChecked="{Binding AutoCropMode, Converter={StaticResource EnumBooleanConverter}, ConverterParameter=RightToLeft}" />
+                        <RadioButton
+                            Grid.Column="1"
+                            Margin="25,0,0,0"
+                            Content="从左往右"
+                            IsChecked="{Binding AutoCropMode, Converter={StaticResource EnumBooleanConverter}, ConverterParameter=LeftToRight}" />
+                        <RadioButton
+                            Grid.Column="2"
+                            Margin="25,0,0,0"
+                            Content="关闭"
+                            IsChecked="{Binding AutoCropMode, Converter={StaticResource EnumBooleanConverter}, ConverterParameter=None}" />
+                    </Grid>
+                    <TextBlock
+                        Grid.Row="1"
+                        Grid.Column="0"
+                        VerticalAlignment="Center"
+                        FontSize="18"
+                        FontWeight="Bold"
+                        Text="窗口状态：" />
+                    <Grid
+                        Grid.Row="1"
+                        Grid.Column="1"
+                        Margin="0,5"
+                        VerticalAlignment="Center">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+                        <RadioButton
+                            Grid.Column="0"
+                            Margin="25,0,0,0"
+                            Content="全屏"
+                            IsChecked="{Binding WindowMode, Converter={StaticResource EnumBooleanConverter}, ConverterParameter=FullScreen}" />
+                        <RadioButton
+                            Grid.Column="1"
+                            Margin="25,0,0,0"
+                            Content="无边框窗口"
+                            IsChecked="{Binding WindowMode, Converter={StaticResource EnumBooleanConverter}, ConverterParameter=BorderlessWindow}" />
+                        <RadioButton
+                            Grid.Column="2"
+                            Margin="25,0,0,0"
+                            Content="无边框窗口（带控制按钮）"
+                            IsChecked="{Binding WindowMode, Converter={StaticResource EnumBooleanConverter}, ConverterParameter=BorderlessWindowWithControlButton}" />
+                        <RadioButton
+                            Grid.Column="3"
+                            Margin="25,0,0,0"
+                            Content="普通窗口"
+                            IsChecked="{Binding WindowMode, Converter={StaticResource EnumBooleanConverter}, ConverterParameter=NormalWindow}" />
+                    </Grid>
+                    <TextBlock
+                        Grid.Row="2"
+                        Grid.Column="0"
+                        VerticalAlignment="Center"
+                        FontSize="18"
+                        FontWeight="Bold"
+                        Text="缩放工具：" />
+                    <Grid
+                        Grid.Row="2"
+                        Grid.Column="1"
+                        Margin="0,5"
+                        VerticalAlignment="Center">
+                        <Grid.Resources>
+                            <Style BasedOn="{StaticResource MahApps.Styles.Button.Flat}" TargetType="{x:Type Button}">
+                                <Setter Property="BorderThickness" Value="1" />
+                                <Style.Triggers>
+                                    <Trigger Property="Button.IsPressed" Value="True">
+                                        <Setter Property="Button.Background" Value="{DynamicResource MahApps.Brushes.Accent}" />
+                                        <Setter Property="Button.BorderBrush" Value="{DynamicResource MahApps.Brushes.Accent}" />
+                                    </Trigger>
+                                    <Trigger Property="Button.IsPressed" Value="False">
+                                        <Setter Property="Button.Background" Value="Transparent" />
+                                        <Setter Property="Button.BorderBrush" Value="{DynamicResource MahApps.Brushes.ThemeForeground}" />
+                                        <Setter Property="Button.Foreground" Value="{DynamicResource MahApps.Brushes.ThemeForeground}" />
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Grid.Resources>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+                        <Button
+                            Grid.Column="0"
+                            Margin="25,0,0,0"
+                            Command="{Binding ZoomCommand}"
+                            Content="-10%">
+                            <Button.CommandParameter>
+                                <system:Double>-0.1</system:Double>
+                            </Button.CommandParameter>
+                        </Button>
+                        <Button
+                            Grid.Column="1"
+                            Margin="25,0,0,0"
+                            Command="{Binding ZoomCommand}"
+                            Content="-1%">
+                            <Button.CommandParameter>
+                                <system:Double>-0.01</system:Double>
+                            </Button.CommandParameter>
+                        </Button>
+                        <Button
+                            Grid.Column="2"
+                            Margin="25,0,0,0"
+                            Command="{Binding ZoomCommand}"
+                            Content="+1%">
+                            <Button.CommandParameter>
+                                <system:Double>0.01</system:Double>
+                            </Button.CommandParameter>
+                        </Button>
+                        <Button
+                            Grid.Column="3"
+                            Margin="25,0,0,0"
+                            Command="{Binding ZoomCommand}"
+                            Content="+10%">
+                            <Button.CommandParameter>
+                                <system:Double>0.1</system:Double>
+                            </Button.CommandParameter>
+                        </Button>
+                        <Button
+                            Grid.Column="4"
+                            Margin="25,0,0,0"
+                            Command="{Binding FixWidthCommand}"
+                            Content="适应宽度" />
+                        <Button
+                            Grid.Column="5"
+                            Margin="25,0,0,0"
+                            Command="{Binding FixHeightCommand}"
+                            Content="适应高度" />
+                    </Grid>
+                    <TextBlock
+                        Grid.Row="3"
+                        Grid.Column="0"
+                        VerticalAlignment="Center"
+                        FontSize="18"
+                        FontWeight="Bold"
+                        Text="阅读模式：" />
+                    <Grid
+                        Grid.Row="3"
+                        Grid.Column="1"
+                        Margin="0,5"
+                        VerticalAlignment="Center">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+                        <RadioButton
+                            Grid.Column="0"
+                            Margin="25,0,0,0"
+                            Content="瀑布流模式"
+                            IsChecked="{Binding ImageDisplayMode, Converter={StaticResource EnumBooleanConverter}, ConverterParameter=ImageListMode}" />
+                        <RadioButton
+                            Grid.Column="1"
+                            Margin="25,0,0,0"
+                            Content="单页模式"
+                            IsChecked="{Binding ImageDisplayMode, Converter={StaticResource EnumBooleanConverter}, ConverterParameter=SinglePageMode}" />
+                    </Grid>
+                </Grid>
+                <Slider
+                    x:Name="Slider"
+                    Margin="190,50"
+                    VerticalAlignment="Bottom"
+                    IsSnapToTickEnabled="True"
+                    Maximum="{Binding Path=ImageExplorerViewModel.Images.Count}"
+                    Minimum="1"
+                    Style="{DynamicResource MahApps.Styles.Slider.Flat}"
+                    Thumb.DragCompleted="PageSliderOnDragCompleted"
+                    TickFrequency="1"
+                    Value="{Binding Path=CurrentSliderValue}" />
+                <ContentPresenter
+                    Margin="80,0,0,40"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Bottom"
+                    Content="{Binding PrevChapterButton}"
+                    ContentTemplate="{StaticResource CircleButton}"
+                    ToolTip="上一章" />
+                <ContentPresenter
+                    Margin="130,0,0,40"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Bottom"
+                    Content="{Binding PrevImageButton}"
+                    ContentTemplate="{StaticResource CircleButton}"
+                    ToolTip="上一页" />
+                <ContentPresenter
+                    Margin="0,0,130,40"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Bottom"
+                    Content="{Binding NextImageButton}"
+                    ContentTemplate="{StaticResource CircleButton}"
+                    ToolTip="下一页" />
+                <ContentPresenter
+                    Margin="0,0,80,40"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Bottom"
+                    Content="{Binding NextChapterButton}"
+                    ContentTemplate="{StaticResource CircleButton}"
+                    ToolTip="下一章" />
+                <ContentPresenter
+                    Margin="30,0,0,40"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Bottom"
+                    Content="{Binding MenuButton}"
+                    ContentTemplate="{StaticResource CircleButton}"
+                    ToolTip="菜单" />
+                <ContentPresenter
+                    Margin="0,0,30,40"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Bottom"
+                    Content="{Binding FullScreenButton}"
+                    ContentTemplate="{StaticResource CircleButton}"
+                    ToolTip="全屏" />
+                <TextBlock
+                    Margin="0,0,0,70"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Bottom"
+                    FontSize="16"
+                    Text="{Binding Path=DataContext.SliderText, ElementName=Slider}" />
+            </Grid>
+        </Border>
+        <Border
+            Name="ScaleValueNotice"
+            Padding="10,5"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Background="#df000000"
+            IsHitTestVisible="False"
+            Opacity="0">
+            <TextBlock FontSize="40" Text="{Binding Path=ScaleValue, StringFormat={}{0:P0}, NotifyOnTargetUpdated=True}">
+                <TextBlock.Triggers>
+                    <EventTrigger RoutedEvent="Binding.TargetUpdated">
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <DoubleAnimation
+                                    Storyboard.TargetName="ScaleValueNotice"
+                                    Storyboard.TargetProperty="Opacity"
+                                    From="1.0"
+                                    To="0.0"
+                                    Duration="0:0:1" />
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </EventTrigger>
+                </TextBlock.Triggers>
+            </TextBlock>
+        </Border>
+    </Grid>
+</mah:MetroWindow>

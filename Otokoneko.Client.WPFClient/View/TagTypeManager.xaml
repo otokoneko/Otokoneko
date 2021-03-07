@@ -1,0 +1,104 @@
+﻿<mah:MetroWindow
+    x:Class="Otokoneko.Client.WPFClient.View.TagTypeManager"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:Otokoneko.Client.WPFClient.View"
+    xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:viewModel="clr-namespace:Otokoneko.Client.WPFClient.ViewModel"
+    Title="{DynamicResource TagTypeManager}"
+    Width="300"
+    Height="450"
+    ShowMaxRestoreButton="False"
+    WindowStartupLocation="CenterScreen"
+    mc:Ignorable="d">
+    <mah:MetroWindow.Resources>
+        <ResourceDictionary>
+            <DataTemplate x:Key="CircleButton">
+                <Button
+                    Width="30"
+                    Height="30"
+                    BorderThickness="0"
+                    Command="{Binding Command}"
+                    Cursor="Hand"
+                    IsEnabled="{Binding IsEnable}"
+                    Style="{StaticResource MahApps.Styles.Button.Circle}"
+                    Visibility="{Binding IsEnable, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <Rectangle Width="20" Height="20">
+                        <Rectangle.OpacityMask>
+                            <ImageBrush ImageSource="{Binding Image}" />
+                        </Rectangle.OpacityMask>
+                        <Rectangle.Fill>
+                            <SolidColorBrush Color="{DynamicResource MahApps.Colors.ThemeForeground}" />
+                        </Rectangle.Fill>
+                    </Rectangle>
+                </Button>
+            </DataTemplate>
+        </ResourceDictionary>
+    </mah:MetroWindow.Resources>
+    <mah:MetroWindow.DataContext>
+        <viewModel:TagTypeManagerViewModel />
+    </mah:MetroWindow.DataContext>
+    <ListBox
+        Margin="10"
+        ItemContainerStyle="{StaticResource NoFocusListBox}"
+        ItemsSource="{Binding TagTypes}">
+        <ListBox.ItemTemplate>
+            <DataTemplate>
+                <Border
+                    Margin="0,5"
+                    BorderBrush="#a5a5a5"
+                    BorderThickness="2"
+                    CornerRadius="15">
+                    <Grid Margin="5,0">
+                        <mah:ColorPicker
+                            Width="55"
+                            Height="15"
+                            Margin="10,0,0,0"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Center"
+                            AdvancedTabHeader="高级"
+                            AvailableColorPaletteHeader="更多颜色"
+                            ColorPalettesTabHeader="预设"
+                            LabelColorName="名称"
+                            LabelColorPreview="预览"
+                            RecentColorPaletteHeader="最近使用"
+                            SelectedColor="{Binding Color}"
+                            StandardColorPaletteHeader="标准颜色">
+                            <mah:ColorPicker.SelectedColorTemplate>
+                                <DataTemplate>
+                                    <Rectangle
+                                        Width="15"
+                                        Height="15"
+                                        Fill="{Binding Converter={StaticResource ColorToBackgroundConverter}}" />
+                                </DataTemplate>
+                            </mah:ColorPicker.SelectedColorTemplate>
+                        </mah:ColorPicker>
+                        <TextBox
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            BorderThickness="{Binding Editable, Converter={StaticResource BooleanToBorderThickness}}"
+                            FontSize="18"
+                            Margin="0,5"
+                            FontWeight="Bold"
+                            IsReadOnly="{Binding Editable, Converter={StaticResource InverseBooleanConverter}}"
+                            Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" />
+                        <ContentPresenter
+                            Margin="0,0,10,0"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center"
+                            Content="{Binding CheckButton}"
+                            ContentTemplate="{StaticResource CircleButton}" />
+                        <ContentPresenter
+                            Margin="0,0,10,0"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center"
+                            Content="{Binding DeleteButton}"
+                            ContentTemplate="{StaticResource CircleButton}" />
+                    </Grid>
+                </Border>
+            </DataTemplate>
+        </ListBox.ItemTemplate>
+    </ListBox>
+</mah:MetroWindow>

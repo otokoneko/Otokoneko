@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30717.126
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Otokoneko.Client.WPFClient", "Otokoneko.Client.WPFClient.csproj", "{ACC5C15D-7EC0-464E-9683-013A741759AF}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Otokoneko.Base", "..\Otokoneko.Base\Otokoneko.Base.shproj", "{82B38B9C-F381-4335-8F3E-F8EB6F3F10EE}"
+EndProject
+Global
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		..\Otokoneko.Base\Otokoneko.Base.projitems*{82b38b9c-f381-4335-8f3e-f8eb6f3f10ee}*SharedItemsImports = 13
+		..\Otokoneko.Base\Otokoneko.Base.projitems*{acc5c15d-7ec0-464e-9683-013a741759af}*SharedItemsImports = 5
+	EndGlobalSection
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{ACC5C15D-7EC0-464E-9683-013A741759AF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ACC5C15D-7EC0-464E-9683-013A741759AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ACC5C15D-7EC0-464E-9683-013A741759AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ACC5C15D-7EC0-464E-9683-013A741759AF}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {503EE739-7571-4242-A547-D759BED75C6C}
+	EndGlobalSection
+EndGlobal

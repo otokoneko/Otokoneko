@@ -1,0 +1,56 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>TRACE;SERVER</DefineConstants>
+    <FileAlignment>512</FileAlignment>
+    <DebugType>portable</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DefineConstants>TRACE;SERVER</DefineConstants>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Autofac" Version="6.1.0" />
+    <PackageReference Include="Autofac.Extras.DynamicProxy" Version="6.0.0" />
+    <PackageReference Include="Google.Protobuf" Version="3.15.0" />
+    <PackageReference Include="HtmlAgilityPack" Version="1.11.31" />
+    <PackageReference Include="IdGen" Version="3.0.0" />
+    <PackageReference Include="LevelDB.Standard" Version="2.1.6.1" />
+    <PackageReference Include="log4net" Version="2.0.12" />
+    <PackageReference Include="Lucene.Net" Version="4.8.0-beta00012" />
+    <PackageReference Include="Lucene.Net.QueryParser" Version="4.8.0-beta00012" />
+    <PackageReference Include="MessagePack" Version="2.2.85" />
+    <PackageReference Include="MessagePack.Annotations" Version="2.2.85" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="5.0.0" />
+    <PackageReference Include="NaturalSort.Extension" Version="3.0.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1-beta1" />
+    <PackageReference Include="OptimizedPriorityQueue" Version="5.1.0" />
+    <PackageReference Include="Pidgin" Version="2.5.0" />
+    <PackageReference Include="Quartz" Version="3.2.4" />
+    <PackageReference Include="SharpCompress" Version="0.28.1" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.3" />
+    <PackageReference Include="sqlSugar" Version="5.0.2.6" />
+    <PackageReference Include="SuperSocket" Version="2.0.0-beta7" />
+    <PackageReference Include="SuperSocket.Channel" Version="2.0.0-beta7" />
+    <PackageReference Include="SuperSocket.ProtoBase" Version="2.0.0-beta7" />
+    <PackageReference Include="SuperSocket.Server" Version="2.0.0-beta7" />
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.113.7" />
+    <PackageReference Include="YamlDotNet" Version="9.1.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Otokoneko.Plugins\Otokoneko.Plugins.Interface\Otokoneko.Plugins.Interface.csproj" />
+  </ItemGroup>
+
+  <Import Project="..\Otokoneko.Base\Otokoneko.Base.projitems" Label="Shared" />
+
+</Project>

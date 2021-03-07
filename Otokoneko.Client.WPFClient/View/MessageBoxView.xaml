@@ -1,0 +1,81 @@
+﻿<mah:MetroContentControl
+    x:Class="Otokoneko.Client.WPFClient.View.MessageBoxView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:Otokoneko.Client.WPFClient.View"
+    xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="800"
+    d:DesignWidth="1200"
+    mc:Ignorable="d">
+    <Grid>
+        <mah:MetroTabControl
+            KeepVisualTreeInMemoryWhenChangingTabs="True"
+            Name="MetroTabControl"
+            Margin="30,30"
+            ItemsSource="{Binding MessageBoxes}"
+            SelectedIndex="{Binding SelectedIndex}">
+            <mah:MetroTabControl.Resources>
+                <Style BasedOn="{StaticResource {x:Type mah:MetroTabItem}}" TargetType="{x:Type mah:MetroTabItem}">
+                    <Setter Property="Header" Value="{Binding Item1}" />
+                </Style>
+            </mah:MetroTabControl.Resources>
+            <mah:MetroTabControl.ContentTemplate>
+                <DataTemplate>
+                    <ListBox
+                        Margin="20"
+                        ItemContainerStyle="{StaticResource NoFocusListBox}"
+                        ItemsSource="{Binding Item2}"
+                        VirtualizingPanel.IsVirtualizing="True"
+                        VirtualizingPanel.ScrollUnit="Pixel">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Border
+                                    IsVisibleChanged="UIElement_OnIsVisibleChanged"
+                                    Margin="10"
+                                    Background="{DynamicResource MahApps.Brushes.ThemeBackground}"
+                                    BorderBrush="Gray"
+                                    BorderThickness="2"
+                                    CornerRadius="10">
+                                    <StackPanel>
+                                        <TextBlock
+                                            Margin="15,10,0,0"
+                                            FontSize="15"
+                                            FontWeight="Black"
+                                            Language="zh"
+                                            Text="{Binding CreateUtcTime}" />
+                                        <TextBox
+                                            Margin="10"
+                                            VerticalAlignment="Center"
+                                            BorderThickness="0"
+                                            FontSize="18"
+                                            FontWeight="Black"
+                                            IsReadOnly="True"
+                                            Text="{Binding Data}" />
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </DataTemplate>
+            </mah:MetroTabControl.ContentTemplate>
+        </mah:MetroTabControl>
+        <Button
+            Margin="90,40"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Top"
+            Command="{Binding ClearCheckedMessageCommand}"
+            Content="清空消息">
+            <Button.Resources>
+                <Style BasedOn="{StaticResource MahApps.Styles.Button.MetroSquare}" TargetType="{x:Type Button}">
+                    <!-- <Style.Triggers> -->
+                    <!--     <DataTrigger Binding="{Binding ElementName=MetroTabControl, Path=SelectedIndex}" Value="0"> -->
+                    <!--         <Setter Property="Button.Visibility" Value="Collapsed" /> -->
+                    <!--     </DataTrigger> -->
+                    <!-- </Style.Triggers> -->
+                </Style>
+            </Button.Resources>
+        </Button>
+    </Grid>
+</mah:MetroContentControl>

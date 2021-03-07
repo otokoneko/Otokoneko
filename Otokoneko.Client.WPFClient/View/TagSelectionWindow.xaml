@@ -1,0 +1,152 @@
+﻿<mah:MetroWindow
+    x:Class="Otokoneko.Client.WPFClient.View.TagSelectionWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:Otokoneko.Client.WPFClient.View"
+    xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Title="TagSelectionWindow"
+    Width="1000"
+    Height="650"
+    ResizeMode="NoResize"
+    WindowStartupLocation="CenterScreen"
+    mc:Ignorable="d">
+    <Grid>
+        <Grid
+            Width="400"
+            Height="40"
+            Margin="50"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top">
+            <TextBox
+                Margin="0,0,45,0"
+                VerticalContentAlignment="Center"
+                FontSize="17"
+                Text="{Binding Path=Keyword}"
+                TextWrapping="NoWrap">
+                <b:Interaction.Triggers>
+                    <b:KeyTrigger Key="Enter">
+                        <b:InvokeCommandAction Command="{Binding Path=SearchCommand}" />
+                    </b:KeyTrigger>
+                </b:Interaction.Triggers>
+            </TextBox>
+            <Button
+                Width="40"
+                Height="40"
+                HorizontalAlignment="Right"
+                Background="{x:Null}"
+                BorderThickness="1"
+                Command="{Binding Path=SearchCommand}"
+                Cursor="Hand">
+                <Rectangle Width="20" Height="20">
+                    <Rectangle.OpacityMask>
+                        <ImageBrush ImageSource="/icon/search.png" />
+                    </Rectangle.OpacityMask>
+                    <Rectangle.Fill>
+                        <SolidColorBrush Color="{DynamicResource MahApps.Colors.ThemeForeground}" />
+                    </Rectangle.Fill>
+                </Rectangle>
+            </Button>
+        </Grid>
+        <Border
+            Width="400"
+            Margin="50,100,50,80"
+            HorizontalAlignment="Left"
+            BorderBrush="{DynamicResource MahApps.Brushes.ThemeForeground}"
+            BorderThickness="1">
+            <ListBox
+                Margin="6"
+                ItemContainerStyle="{DynamicResource NoFocusListBox}"
+                ItemTemplate="{DynamicResource TagListItemTemplate}"
+                ItemsSource="{Binding Path=SearchResult}"
+                ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                ScrollViewer.ScrollChanged="ScrollViewer_OnScrollChanged"
+                ScrollViewer.VerticalScrollBarVisibility="Hidden"
+                VirtualizingPanel.IsVirtualizing="True"
+                VirtualizingPanel.VirtualizationMode="Recycling">
+                <ListBox.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                </ListBox.ItemsPanel>
+                <ListBox.Resources>
+                    <Style TargetType="Border">
+                        <Setter Property="CornerRadius" Value="10" />
+                    </Style>
+                </ListBox.Resources>
+            </ListBox>
+        </Border>
+        <Border
+            Width="400"
+            Margin="50,50,50,80"
+            HorizontalAlignment="Right"
+            BorderBrush="{DynamicResource MahApps.Brushes.ThemeForeground}"
+            BorderThickness="1">
+            <ListBox
+                Name="MangaTags"
+                Margin="6"
+                ItemContainerStyle="{DynamicResource NoFocusListBox}"
+                ItemTemplate="{DynamicResource TagListItemTemplate}"
+                ItemsSource="{Binding Path=SelectedTags}"
+                ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                ScrollViewer.VerticalScrollBarVisibility="Hidden"
+                VirtualizingPanel.IsVirtualizing="True"
+                VirtualizingPanel.VirtualizationMode="Recycling">
+                <ListBox.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                </ListBox.ItemsPanel>
+                <ListBox.Resources>
+                    <Style TargetType="Border">
+                        <Setter Property="CornerRadius" Value="10" />
+                    </Style>
+                </ListBox.Resources>
+            </ListBox>
+        </Border>
+        <Rectangle
+            Width="32"
+            Height="32"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center">
+            <Rectangle.Fill>
+                <SolidColorBrush Color="{DynamicResource MahApps.Colors.ThemeForeground}" />
+            </Rectangle.Fill>
+            <Rectangle.OpacityMask>
+                <ImageBrush ImageSource="/icon/transfer.png" />
+            </Rectangle.OpacityMask>
+        </Rectangle>
+        <Grid
+            Width="400"
+            Height="100"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Bottom">
+            <Button
+                Name="Confirm"
+                Width="60"
+                Height="35"
+                Margin="90,20"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Bottom"
+                Click="Confirm_OnClick"
+                Content="确定"
+                Cursor="Hand"
+                FontSize="15"
+                Style="{StaticResource MahApps.Styles.Button.Square}" />
+            <Button
+                Name="Cancel"
+                Width="60"
+                Height="35"
+                Margin="90,20"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Bottom"
+                Click="Cancel_OnClick"
+                Content="取消"
+                Cursor="Hand"
+                FontSize="15"
+                Style="{StaticResource MahApps.Styles.Button.Square}" />
+        </Grid>
+    </Grid>
+</mah:MetroWindow>

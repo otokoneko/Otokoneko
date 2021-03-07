@@ -1,0 +1,133 @@
+﻿<mah:MetroContentControl
+    x:Class="Otokoneko.Client.WPFClient.View.PlanManager"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:Otokoneko.Client.WPFClient.View"
+    xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Name="Root"
+    d:DesignHeight="800"
+    d:DesignWidth="1200"
+    mc:Ignorable="d">
+    <DockPanel>
+        <Grid Width="450" Margin="10,40,10,10">
+            <DataGrid
+                AutoGenerateColumns="False"
+                CanUserAddRows="False"
+                ItemsSource="{Binding Plans}">
+                <DataGrid.Columns>
+                    <DataGridTextColumn
+                        Width="130"
+                        Binding="{Binding Path=Name}"
+                        CanUserSort="True"
+                        Header="计划名称"
+                        IsReadOnly="True" />
+                    <DataGridTextColumn
+                        Binding="{Binding Path=Plan, Converter={StaticResource ObjectTypeNameToResourceConverter}}"
+                        CanUserSort="True"
+                        Header="计划类型"
+                        IsReadOnly="True" />
+                    <DataGridTextColumn
+                        Binding="{Binding Path=LastTriggeredLocalTime}"
+                        CanUserSort="True"
+                        Header="上一次触发时间"
+                        IsReadOnly="True" />
+                    <DataGridCheckBoxColumn
+                        Binding="{Binding Path=Enable}"
+                        CanUserSort="True"
+                        Header="启用"
+                        IsReadOnly="True" />
+                    <DataGridTemplateColumn
+                        CanUserResize="False"
+                        CanUserSort="False"
+                        Header="操作">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <Button
+                                        Width="20"
+                                        Height="20"
+                                        Margin="10,0,0,0"
+                                        BorderThickness="0"
+                                        Command="{Binding DataContext.EditCommand, ElementName=Root}"
+                                        CommandParameter="{Binding Plan}"
+                                        Cursor="Hand"
+                                        Style="{StaticResource MahApps.Styles.Button.Circle}"
+                                        ToolTip="编辑">
+                                        <Rectangle Width="16" Height="16">
+                                            <Rectangle.OpacityMask>
+                                                <ImageBrush ImageSource="/icon/edit.png" />
+                                            </Rectangle.OpacityMask>
+                                            <Rectangle.Fill>
+                                                <SolidColorBrush Color="{DynamicResource MahApps.Colors.ThemeForeground}" />
+                                            </Rectangle.Fill>
+                                        </Rectangle>
+                                    </Button>
+                                    <Button
+                                        Width="20"
+                                        Height="20"
+                                        Margin="10,0,0,0"
+                                        BorderThickness="0"
+                                        Command="{Binding DataContext.ExecuteCommand, ElementName=Root}"
+                                        CommandParameter="{Binding Plan}"
+                                        Cursor="Hand"
+                                        Style="{StaticResource MahApps.Styles.Button.Circle}"
+                                        ToolTip="立即执行">
+                                        <Rectangle Width="16" Height="16">
+                                            <Rectangle.OpacityMask>
+                                                <ImageBrush ImageSource="/icon/flash.png" />
+                                            </Rectangle.OpacityMask>
+                                            <Rectangle.Fill>
+                                                <SolidColorBrush Color="{DynamicResource MahApps.Colors.ThemeForeground}" />
+                                            </Rectangle.Fill>
+                                        </Rectangle>
+                                    </Button>
+                                    <Button
+                                        Width="20"
+                                        Height="20"
+                                        Margin="10,0,0,0"
+                                        BorderThickness="0"
+                                        Command="{Binding DataContext.DeleteCommand, ElementName=Root}"
+                                        CommandParameter="{Binding Plan}"
+                                        Cursor="Hand"
+                                        Style="{StaticResource MahApps.Styles.Button.Circle}"
+                                        ToolTip="删除计划">
+                                        <Rectangle Width="16" Height="16">
+                                            <Rectangle.OpacityMask>
+                                                <ImageBrush ImageSource="/icon/trash.png" />
+                                            </Rectangle.OpacityMask>
+                                            <Rectangle.Fill>
+                                                <SolidColorBrush Color="{DynamicResource MahApps.Colors.ThemeForeground}" />
+                                            </Rectangle.Fill>
+                                        </Rectangle>
+                                    </Button>
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+            <Button
+                Width="60"
+                Height="60"
+                Margin="20,50"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Bottom"
+                Background="{DynamicResource MahApps.Brushes.Accent}"
+                BorderBrush="{DynamicResource MahApps.Brushes.Accent}"
+                Command="{Binding RefreshCommand}"
+                Style="{StaticResource MahApps.Styles.Button.Circle}">
+                <Rectangle Width="30" Height="30">
+                    <Rectangle.Fill>
+                        <SolidColorBrush Color="White" />
+                    </Rectangle.Fill>
+                    <Rectangle.OpacityMask>
+                        <ImageBrush ImageSource="/icon/refresh.png" />
+                    </Rectangle.OpacityMask>
+                </Rectangle>
+            </Button>
+        </Grid>
+        <local:Explorer Margin="0,40,0,0" DataContext="{Binding PlanExplorerViewModel}" />
+    </DockPanel>
+</mah:MetroContentControl>

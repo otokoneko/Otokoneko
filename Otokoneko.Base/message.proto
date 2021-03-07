@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package Otokoneko.Base.Network;
+
+message Request {
+	int32 Id = 1;
+	string Method = 2;
+	string Token = 3;
+	Message Data = 4;
+}
+
+message Response {
+	int32 Id = 1;
+	bool Completed = 2;
+	ResponseStatus Status = 3;
+	Message Data = 4;
+	Message ServerMessage = 5;
+}
+
+message Message {
+	int64 ObjectId = 2;
+	int32 Offset = 3;
+	bytes Data = 1;
+}
+
+enum ResponseStatus {
+	Success = 0;
+	NotFound = 1;
+	Forbidden = 2;
+	BadRequest = 3;
+};

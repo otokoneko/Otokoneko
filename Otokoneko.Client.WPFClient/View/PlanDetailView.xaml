@@ -1,0 +1,297 @@
+﻿<mah:MetroContentControl
+    x:Class="Otokoneko.Client.WPFClient.View.PlanDetailView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:dataType="clr-namespace:Otokoneko.DataType"
+    xmlns:local="clr-namespace:Otokoneko.Client.WPFClient.View"
+    xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d">
+    <mah:MetroContentControl.Resources>
+        <ResourceDictionary>
+            <DataTemplate DataType="{x:Type dataType:DownloadPlan}">
+                <StackPanel>
+                    <Grid Margin="50,20">
+                        <Border
+                            BorderBrush="#a5a5a5"
+                            BorderThickness="2"
+                            CornerRadius="15">
+                            <TextBox
+                                Margin="10,5"
+                                AcceptsReturn="True"
+                                Background="Transparent"
+                                BorderThickness="0,0,0,0"
+                                FontSize="20"
+                                Text="{Binding Path=LibraryPath, UpdateSourceTrigger=PropertyChanged}"
+                                TextWrapping="Wrap" />
+                        </Border>
+                        <TextBlock
+                            Margin="15,-10,0,0"
+                            Padding="2,0"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Top"
+                            Background="#333333"
+                            FontSize="16"
+                            Foreground="#FFA5A5A5"
+                            Text="下载位置" />
+                    </Grid>
+                    <Grid Margin="50,20">
+                        <Border
+                            BorderBrush="#a5a5a5"
+                            BorderThickness="2"
+                            CornerRadius="15"
+                            ToolTip="下载链接，每行一个">
+                            <TextBox
+                                Margin="10,5"
+                                AcceptsReturn="True"
+                                Background="Transparent"
+                                BorderThickness="0,0,0,0"
+                                FontSize="20"
+                                HorizontalScrollBarVisibility="Auto"
+                                Text="{Binding Path=Urls, UpdateSourceTrigger=PropertyChanged}"
+                                TextWrapping="NoWrap" />
+                        </Border>
+                        <TextBlock
+                            Margin="15,-10,0,0"
+                            Padding="2,0"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Top"
+                            Background="#333333"
+                            FontSize="16"
+                            Foreground="#FFA5A5A5"
+                            Text="下载链接" />
+                    </Grid>
+                </StackPanel>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type dataType:ScanPlan}">
+                <StackPanel>
+                    <Grid Margin="50,20">
+                        <Border
+                            BorderBrush="#a5a5a5"
+                            BorderThickness="2"
+                            CornerRadius="15">
+                            <ComboBox
+                                Margin="15,5"
+                                Background="Transparent"
+                                BorderThickness="0,0,0,0"
+                                FontSize="20"
+                                ItemsSource="{Binding Libraries, IsAsync=True}"
+                                SelectedItem="{Binding SelectedLibrary}">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Name}" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </Border>
+                        <TextBlock
+                            Margin="15,-10,0,0"
+                            Padding="2,0"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Top"
+                            Background="#333333"
+                            FontSize="16"
+                            Foreground="#FFA5A5A5"
+                            Text="待扫描库" />
+                    </Grid>
+                </StackPanel>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type dataType:DisposableTrigger}" />
+            <DataTemplate DataType="{x:Type dataType:CronTrigger}">
+                <StackPanel>
+                    <Grid Margin="50,20">
+                        <Border
+                            BorderBrush="#a5a5a5"
+                            BorderThickness="2"
+                            CornerRadius="15">
+                            <mah:DateTimePicker
+                                Margin="10"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                FontSize="16"
+                                IsTodayHighlighted="True"
+                                Language="zh"
+                                SelectedDateFormat="Short"
+                                SelectedDateTime="{Binding LocalDateTime}" />
+                        </Border>
+                        <TextBlock
+                            Margin="15,-10,0,0"
+                            Padding="2,0"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Top"
+                            Background="#333333"
+                            FontSize="16"
+                            Foreground="#FFA5A5A5"
+                            Text="开始时间" />
+                    </Grid>
+                    <Grid Margin="50,20">
+                        <Border
+                            BorderBrush="#a5a5a5"
+                            BorderThickness="2"
+                            CornerRadius="15">
+                            <DockPanel Margin="10" ToolTip="两次触发间的时间间隔，单位分钟">
+                                <TextBox
+                                    Width="600"
+                                    Background="#333333"
+                                    BorderThickness="0"
+                                    FontSize="16"
+                                    Text="{Binding Interval}">
+                                    <b:Interaction.Behaviors>
+                                        <local:OnlyReceiveIntBehavior />
+                                    </b:Interaction.Behaviors>
+                                </TextBox>
+                                <ComboBox
+                                    Background="#333333"
+                                    BorderThickness="1,0,0,0"
+                                    FontSize="16"
+                                    ItemsSource="{Binding Intervals}"
+                                    SelectedItem="{Binding SelectedInterval, Mode=OneWayToSource}">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Item1}" />
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                            </DockPanel>
+                        </Border>
+                        <TextBlock
+                            Margin="15,-10,0,0"
+                            Padding="2,0"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Top"
+                            Background="#333333"
+                            FontSize="16"
+                            Foreground="#FFA5A5A5"
+                            Text="间隔时间" />
+                    </Grid>
+                </StackPanel>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type dataType:TaskCompletedTrigger}">
+                <StackPanel>
+                    <Grid Margin="50,20">
+                        <Border
+                            BorderBrush="#a5a5a5"
+                            BorderThickness="2"
+                            CornerRadius="15">
+                            <ComboBox
+                                Margin="15,5"
+                                Background="Transparent"
+                                BorderThickness="0,0,0,0"
+                                FontSize="20"
+                                ItemsSource="{Binding Plans, IsAsync=True}"
+                                SelectedItem="{Binding SelectedPlan}"
+                                ToolTip="在该计划添加的所有任务完成后（成功、失败或取消）触发当前计划">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Name}" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </Border>
+                        <TextBlock
+                            Margin="15,-10,0,0"
+                            Padding="2,0"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Top"
+                            Background="#333333"
+                            FontSize="16"
+                            Foreground="#FFA5A5A5"
+                            Text="目标计划" />
+                    </Grid>
+                </StackPanel>
+            </DataTemplate>
+        </ResourceDictionary>
+    </mah:MetroContentControl.Resources>
+    <ScrollViewer>
+        <StackPanel>
+            <Grid>
+                <Button
+                    Margin="50,10"
+                    HorizontalAlignment="Right"
+                    Command="{Binding SaveCommand}"
+                    Content="保存"
+                    Style="{StaticResource MahApps.Styles.Button.MetroSquare}" />
+                <TextBox
+                    MaxWidth="300"
+                    Margin="10"
+                    HorizontalAlignment="Center"
+                    Background="Transparent"
+                    BorderBrush="#a5a5a5"
+                    BorderThickness="0,0,0,1"
+                    FontSize="26"
+                    FontWeight="Black"
+                    Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
+                    TextWrapping="Wrap" />
+            </Grid>
+            <Grid Margin="50,20">
+                <Border
+                    BorderBrush="#a5a5a5"
+                    BorderThickness="2"
+                    CornerRadius="15">
+                    <ComboBox
+                        Margin="15,5"
+                        Background="Transparent"
+                        BorderThickness="0,0,0,0"
+                        FontSize="20"
+                        ItemsSource="{Binding PlanTypes}"
+                        SelectedItem="{Binding SelectedPlanType}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Name, Converter={StaticResource StaticResourceConverter}}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </Border>
+                <TextBlock
+                    Margin="15,-10,0,0"
+                    Padding="2,0"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
+                    Background="#333333"
+                    FontSize="16"
+                    Foreground="#FFA5A5A5"
+                    Text="{StaticResource TaskType}" />
+            </Grid>
+            <ContentPresenter Content="{Binding Plan}" />
+            <Grid Margin="50,20">
+                <Border
+                    BorderBrush="#a5a5a5"
+                    BorderThickness="2"
+                    CornerRadius="15">
+                    <ComboBox
+                        Margin="15,5"
+                        Background="Transparent"
+                        BorderThickness="0,0,0,0"
+                        FontSize="20"
+                        ItemsSource="{Binding TriggerTypes}"
+                        SelectedItem="{Binding SelectedTriggerType}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Name, Converter={StaticResource StaticResourceConverter}}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </Border>
+                <TextBlock
+                    Margin="15,-10,0,0"
+                    Padding="2,0"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
+                    Background="#333333"
+                    FontSize="16"
+                    Foreground="#FFA5A5A5"
+                    Text="{StaticResource TriggerType}" />
+            </Grid>
+            <ContentPresenter Content="{Binding Trigger}" />
+            <CheckBox
+                Margin="50"
+                HorizontalAlignment="Right"
+                Content="启用该任务"
+                IsChecked="{Binding Enable}" />
+        </StackPanel>
+    </ScrollViewer>
+</mah:MetroContentControl>

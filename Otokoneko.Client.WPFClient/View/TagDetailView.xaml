@@ -1,0 +1,132 @@
+﻿<mah:MetroContentControl
+    x:Class="Otokoneko.Client.WPFClient.View.TagDetailView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:Otokoneko.Client.WPFClient.View"
+    xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d">
+    <ScrollViewer>
+        <StackPanel>
+            <Grid>
+                <Button
+                    Margin="50,10"
+                    HorizontalAlignment="Right"
+                    Command="{Binding EditCommand}"
+                    Content="编辑"
+                    Style="{StaticResource MahApps.Styles.Button.MetroSquare}"
+                    Visibility="{Binding Editable, Converter={StaticResource InverseBoolToVisibilityConverter}}" />
+                <Button
+                    Margin="50,10"
+                    HorizontalAlignment="Right"
+                    Command="{Binding SaveCommand}"
+                    Content="保存"
+                    Style="{StaticResource MahApps.Styles.Button.MetroSquare}"
+                    Visibility="{Binding Editable, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                <TextBox
+                    MaxWidth="300"
+                    Margin="10"
+                    HorizontalAlignment="Center"
+                    Background="Transparent"
+                    BorderBrush="#a5a5a5"
+                    BorderThickness="0,0,0,1"
+                    FontSize="26"
+                    FontWeight="Black"
+                    IsReadOnly="{Binding Editable, Converter={StaticResource InverseBooleanConverter}}"
+                    Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
+                    TextWrapping="Wrap" />
+            </Grid>
+            <Grid Margin="50,20">
+                <Border
+                    BorderBrush="#a5a5a5"
+                    BorderThickness="2"
+                    CornerRadius="15">
+                    <ComboBox
+                        Margin="15,5"
+                        Background="Transparent"
+                        BorderThickness="0,0,0,0"
+                        Focusable="{Binding Editable}"
+                        FontSize="20"
+                        IsHitTestVisible="{Binding Editable}"
+                        IsReadOnly="{Binding Editable, Converter={StaticResource InverseBooleanConverter}}"
+                        ItemsSource="{Binding TagTypes}"
+                        SelectedIndex="{Binding SelectedTypeIndex}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Name}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </Border>
+                <TextBlock
+                    Margin="15,-10,0,0"
+                    Padding="2,0"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
+                    Background="#333333"
+                    FontSize="16"
+                    Foreground="#FFA5A5A5"
+                    Text="{StaticResource Type}" />
+            </Grid>
+            <Grid Margin="50,20">
+                <Border
+                    BorderBrush="#a5a5a5"
+                    BorderThickness="2"
+                    CornerRadius="15">
+                    <TextBox
+                        Margin="10,5"
+                        AcceptsReturn="True"
+                        Background="Transparent"
+                        BorderThickness="0,0,0,0"
+                        FontSize="20"
+                        IsReadOnly="{Binding Editable, Converter={StaticResource InverseBooleanConverter}}"
+                        Text="{Binding Detail, UpdateSourceTrigger=PropertyChanged}"
+                        TextWrapping="Wrap" />
+                </Border>
+                <TextBlock
+                    Margin="15,-10,0,0"
+                    Padding="2,0"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
+                    Background="#333333"
+                    FontSize="16"
+                    Foreground="#FFA5A5A5"
+                    Text="{StaticResource Description}" />
+            </Grid>
+            <Grid Margin="50,20">
+                <Border
+                    BorderBrush="#a5a5a5"
+                    BorderThickness="2"
+                    CornerRadius="15">
+                    <ListBox
+                        MinHeight="20"
+                        Margin="6"
+                        Background="Transparent"
+                        ItemContainerStyle="{StaticResource NoFocusListBox}"
+                        ItemTemplate="{StaticResource TagListItemTemplate}"
+                        ItemsSource="{Binding Path=Aliases}"
+                        ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                        ScrollViewer.VerticalScrollBarVisibility="Hidden">
+                        <ListBox.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel Orientation="Horizontal" />
+                            </ItemsPanelTemplate>
+                        </ListBox.ItemsPanel>
+                    </ListBox>
+                </Border>
+                <TextBlock
+                    Margin="15,-10,0,0"
+                    Padding="2,0"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
+                    Background="#333333"
+                    FontSize="16"
+                    Foreground="#FFA5A5A5"
+                    Text="{StaticResource Aliases}" />
+            </Grid>
+        </StackPanel>
+    </ScrollViewer>
+</mah:MetroContentControl>

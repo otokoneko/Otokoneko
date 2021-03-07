@@ -1,0 +1,121 @@
+﻿<mah:MetroWindow
+    x:Class="Otokoneko.Client.WPFClient.View.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:Otokoneko.Client.WPFClient.View"
+    xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:viewModel="clr-namespace:Otokoneko.Client.WPFClient.ViewModel"
+    Title="OTOKONEKO"
+    GlowBrush="{DynamicResource MahApps.Brushes.Accent}"
+    IgnoreTaskbarOnMaximize="False"
+    MouseUp="MainWindow_OnMouseUp"
+    ShowTitleBar="False"
+    WindowStartupLocation="CenterScreen"
+    mc:Ignorable="d">
+    <mah:MetroWindow.DataContext>
+        <viewModel:MainViewModel />
+    </mah:MetroWindow.DataContext>
+    <mah:MetroWindow.Resources>
+        <ResourceDictionary>
+            <DataTemplate x:Key="HamburgerMenuItem" DataType="{x:Type mah:HamburgerMenuGlyphItem}">
+                <DockPanel Height="48" LastChildFill="True">
+                    <Grid
+                        x:Name="IconPart"
+                        Width="{Binding RelativeSource={RelativeSource AncestorType={x:Type mah:HamburgerMenu}}, Path=CompactPaneLength}"
+                        DockPanel.Dock="Left">
+                        <mah:Badged
+                            Margin="11,10"
+                            Badge="{Binding Tag}"
+                            BadgePlacementMode="TopRight">
+                            <Rectangle Width="25" Height="25">
+                                <Rectangle.OpacityMask>
+                                    <ImageBrush ImageSource="{Binding Glyph}" />
+                                </Rectangle.OpacityMask>
+                                <Rectangle.Fill>
+                                    <SolidColorBrush Color="{DynamicResource MahApps.Colors.ThemeForeground}" />
+                                </Rectangle.Fill>
+                            </Rectangle>
+                        </mah:Badged>
+                    </Grid>
+                    <TextBlock
+                        x:Name="TextPart"
+                        VerticalAlignment="Center"
+                        FontSize="16"
+                        Text="{Binding Label}" />
+                </DockPanel>
+                <DataTemplate.Triggers>
+                    <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType={x:Type mah:HamburgerMenu}}, Path=PanePlacement}" Value="Right">
+                        <Setter TargetName="IconPart" Property="DockPanel.Dock" Value="Right" />
+                        <Setter TargetName="TextPart" Property="Margin" Value="8,0,0,0" />
+                    </DataTrigger>
+                </DataTemplate.Triggers>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type viewModel:MangaExplorerViewModel}">
+                <local:MangaExplorer />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type viewModel:LibraryManagerViewModel}">
+                <local:LibraryManager />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type viewModel:TagManagerViewModel}">
+                <local:TagManager />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type viewModel:PlanManagerViewModel}">
+                <local:PlanManager />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type viewModel:TaskSchedulerViewModel}">
+                <local:TaskScheduler />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type viewModel:MessageBoxViewModel}">
+                <local:MessageBoxView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type viewModel:SettingViewModel}">
+                <local:SettingView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type viewModel:UserManagerViewModel}">
+                <local:UserManager />
+            </DataTemplate>
+        </ResourceDictionary>
+    </mah:MetroWindow.Resources>
+    <mah:HamburgerMenu
+        Content="{Binding SelectedViewModel}"
+        ItemTemplate="{StaticResource HamburgerMenuItem}"
+        OptionsItemTemplate="{StaticResource HamburgerMenuItem}"
+        SelectedIndex="{Binding SelectedIndex}"
+        SelectedOptionsIndex="{Binding SelectedOptionIndex}">
+        <!-- <mah:HamburgerMenu.ContentTemplate> -->
+        <!--     <DataTemplate> -->
+        <!--         <mah:TransitioningContentControl RestartTransitionOnContentChange="True" Content="{Binding}" /> -->
+        <!--     </DataTemplate> -->
+        <!-- </mah:HamburgerMenu.ContentTemplate> -->
+        <mah:HamburgerMenu.HamburgerMenuHeaderTemplate>
+            <DataTemplate>
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    FontSize="16"
+                    Foreground="White" />
+            </DataTemplate>
+        </mah:HamburgerMenu.HamburgerMenuHeaderTemplate>
+        <mah:HamburgerMenu.ItemsSource>
+            <mah:HamburgerMenuItemCollection>
+                <mah:HamburgerMenuGlyphItem Glyph="/icon/books.png" Label="{StaticResource ExploreManga}" />
+                <mah:HamburgerMenuGlyphItem Glyph="/icon/hard-disc.png" Label="{StaticResource ManageLibrary}" />
+                <mah:HamburgerMenuGlyphItem Glyph="/icon/label.png" Label="{StaticResource ManageTag}" />
+                <mah:HamburgerMenuGlyphItem Glyph="/icon/clipboard.png" Label="{StaticResource ScheduleTask}" />
+                <mah:HamburgerMenuGlyphItem Glyph="/icon/direct-download.png" Label="{StaticResource TaskQueue}" />
+            </mah:HamburgerMenuItemCollection>
+        </mah:HamburgerMenu.ItemsSource>
+        <mah:HamburgerMenu.OptionsItemsSource>
+            <mah:HamburgerMenuItemCollection>
+                <mah:HamburgerMenuGlyphItem Glyph="/icon/gear.png" Label="{StaticResource Setting}" />
+                <mah:HamburgerMenuGlyphItem
+                    Glyph="/icon/envelope.png"
+                    Label="{StaticResource Message}"
+                    Tag="{Binding UncheckedMessageNumber}" />
+                <mah:HamburgerMenuGlyphItem Glyph="/icon/user.png" Label="{StaticResource User}" />
+            </mah:HamburgerMenuItemCollection>
+        </mah:HamburgerMenu.OptionsItemsSource>
+    </mah:HamburgerMenu>
+</mah:MetroWindow>

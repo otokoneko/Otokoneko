@@ -1,0 +1,74 @@
+﻿<mah:MetroContentControl
+    x:Class="Otokoneko.Client.WPFClient.View.Explorer"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:view="clr-namespace:Otokoneko.Client.WPFClient.View"
+    xmlns:viewModel="clr-namespace:Otokoneko.Client.WPFClient.ViewModel"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d">
+    <mah:MetroContentControl.Resources>
+        <ResourceDictionary>
+            <Style BasedOn="{StaticResource {x:Type mah:MetroTabItem}}" TargetType="{x:Type mah:MetroTabItem}">
+                <Setter Property="CloseButtonEnabled" Value="{Binding ExplorerHeader.CloseButtonEnabled}" />
+                <Setter Property="Header" Value="{Binding ExplorerHeader.Header}" />
+                <Setter Property="Visibility" Value="{Binding ExplorerHeader.Visible, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                <Setter Property="mah:HeaderedControlHelper.HeaderMargin" Value="5" />
+                <Setter Property="CloseButtonMargin" Value="10,12" />
+                <Setter Property="Margin" Value="0,0,1,0" />
+                <Setter Property="AllowDrop" Value="True" />
+                <EventSetter Event="MouseLeftButtonUp" Handler="MouseLeftButtonUpHandler" />
+                <EventSetter Event="PreviewMouseLeftButtonDown" Handler="PreviewMouseLeftButtonDownHandler" />
+                <EventSetter Event="PreviewMouseMove" Handler="PreviewMouseMoveHandler" />
+                <EventSetter Event="Drop" Handler="DropHandler" />
+            </Style>
+            <DataTemplate DataType="{x:Type viewModel:TagDetailViewModel}">
+                <view:TagDetailView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type viewModel:PlanDetailViewModel}">
+                <view:PlanDetailView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type viewModel:TaskDetailViewModel}">
+                <view:TaskDetailView />
+            </DataTemplate>
+        </ResourceDictionary>
+    </mah:MetroContentControl.Resources>
+    <mah:MetroTabControl
+        Name="TabControl"
+        Margin="0"
+        mah:TabControlHelper.UnderlinePlacement="Top"
+        mah:TabControlHelper.Underlined="SelectedTabItem"
+        Background="#333333"
+        ItemsSource="{Binding Explorer}"
+        SelectionChanged="Selector_OnSelectionChanged">
+        <mah:MetroTabControl.Template>
+            <ControlTemplate TargetType="{x:Type TabControl}">
+                <Grid Background="#333333">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition />
+                    </Grid.RowDefinitions>
+                    <ScrollViewer
+                        Grid.Row="0"
+                        VerticalAlignment="Top"
+                        Background="{DynamicResource MahApps.Brushes.Control.Background}"
+                        HorizontalScrollBarVisibility="Auto"
+                        VerticalScrollBarVisibility="Disabled">
+                        <TabPanel x:Name="HeaderPanel" IsItemsHost="True" />
+                    </ScrollViewer>
+                    <ContentPresenter
+                        x:Name="PART_SelectedContentHost"
+                        Grid.Row="1"
+                        ContentSource="SelectedContent">
+                        <ContentPresenter.ContentTemplateSelector>
+                            <view:AlwaysRefreshDataTemplateSelector />
+                        </ContentPresenter.ContentTemplateSelector>
+                    </ContentPresenter>
+                </Grid>
+            </ControlTemplate>
+        </mah:MetroTabControl.Template>
+    </mah:MetroTabControl>
+</mah:MetroContentControl>

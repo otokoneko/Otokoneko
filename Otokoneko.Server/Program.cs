@@ -152,6 +152,7 @@ namespace Otokoneko.Server
             Directory.CreateDirectory(@"./certificate");
             Directory.CreateDirectory(@"./data");
             Directory.CreateDirectory(@"./data/thumbnail");
+            Directory.CreateDirectory(@"./data/library");
             Directory.CreateDirectory(@"./plugins");
 
             Console.CancelKeyPress += ConsoleOnCancelKeyPress;

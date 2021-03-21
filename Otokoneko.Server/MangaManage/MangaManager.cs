@@ -25,9 +25,9 @@ namespace Otokoneko.Server.MangaManage
             CreateContext = createContext;
             var context = createContext(DbConnectionString);
             context.CodeFirst.InitTables(
-                typeof(Manga), 
-                typeof(Chapter), 
-                typeof(Image), 
+                typeof(Manga),
+                typeof(Chapter),
+                typeof(Image),
                 typeof(MangaTagMapping),
                 typeof(Favorite),
                 typeof(Comment),
@@ -167,7 +167,7 @@ namespace Otokoneko.Server.MangaManage
                 }
 
                 var result = await tagService.Insert(tags);
-                FtsIndexService.CreateFtsIndex(result.InsertList.Select(it=>it.Item).ToList());
+                FtsIndexService.CreateFtsIndex(result.InsertList.Select(it => it.Item).ToList());
                 var realTags = await tagService.GetTags(tags.Select(it => new Tuple<long, string>(it.TypeId, it.Name)).ToList());
                 context.CommitTran();
                 return realTags;
@@ -201,7 +201,7 @@ namespace Otokoneko.Server.MangaManage
                 {
                     var mangaTagMappingService = new MangaTagMappingService(context);
                     var mappings = manga.Tags.Select(it => new MangaTagMapping()
-                        { MangaId = manga.ObjectId, TagId = it.Key }).ToList();
+                    { MangaId = manga.ObjectId, TagId = it.Key }).ToList();
                     await mangaTagMappingService.Insert(mappings);
                 }
 
@@ -236,16 +236,17 @@ namespace Otokoneko.Server.MangaManage
 
                 if (updateChapters && manga.Chapters != null && manga.Chapters.Count != 0)
                 {
+                    foreach (var chapter in manga.Chapters.Where(it => it.ObjectId <= 0))
+                    {
+                        DataFormatter.Format(chapter);
+                    }
                     var chapterService = new ChapterService(context);
                     var imageService = new ImageService(context);
                     var result = await chapterService.Upsert(manga.Chapters);
-                    if (result.InsertList.Count != 0)
+
+                    foreach (var insertItem in result.InsertList)
                     {
-                        foreach (var storageableMessage in result.InsertList)
-                        {
-                            DataFormatter.Format(storageableMessage.Item);
-                            await imageService.Upsert(storageableMessage.Item.Images);
-                        }
+                        await imageService.Upsert(insertItem.Item.Images);
                     }
                 }
 
@@ -258,7 +259,7 @@ namespace Otokoneko.Server.MangaManage
                         MangaId = manga.ObjectId,
                         TagId = tag.Key
                     }).ToList();
-                    if(mangaTagMappings.Count > 0)
+                    if (mangaTagMappings.Count > 0)
                         await mangaTagMappingService.Insert(mangaTagMappings);
                 }
 
@@ -421,13 +422,13 @@ namespace Otokoneko.Server.MangaManage
             manga.Tags = await mangaTagMappingService.GetTagByMangaId(mangaId);
 
             if (userId <= 0) return manga;
-            
+
             manga.IsFavorite = await favoriteService.IsAnyAsync(it => it.EntityId == mangaId && it.UserId == userId);
-            
+
             manga.ReadProgresses = await readProgressService.GetListAsync(it => it.MangaId == mangaId && it.UserId == userId);
-            
+
             manga.Comment = await commentProgressService.GetSingleAsync(it => it.EntityId == mangaId && it.UserId == userId);
-            
+
             return manga;
         }
 
@@ -499,7 +500,7 @@ namespace Otokoneko.Server.MangaManage
             context.BeginTran();
             try
             {
-                if(await favoriteService.DeleteAsync(it => it.EntityId == mangaId && it.UserId == userId))
+                if (await favoriteService.DeleteAsync(it => it.EntityId == mangaId && it.UserId == userId))
                 {
                     context.CommitTran();
                     return true;

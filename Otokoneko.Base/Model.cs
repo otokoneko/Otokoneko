@@ -289,7 +289,8 @@ namespace Otokoneko.Client
                 new UserHelper
                 {
                     Name = username,
-                    Password = PasswordHashProvider.CreateHash(username, password)
+                    Password = PasswordHashProvider.CreateHash(username, password),
+                    SessionKeepTime = SessionKeepTime.OneMonth
                 },
                 millisecondsTimeout);
             var result = !(string.IsNullOrEmpty(token));

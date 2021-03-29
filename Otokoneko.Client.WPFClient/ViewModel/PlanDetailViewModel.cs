@@ -113,7 +113,8 @@ namespace Otokoneko.DataType
 
         public override async ValueTask OnLoaded()
         {
-            LocalDateTime = DateTime.Now;
+            if(StartDateTime == default)
+                LocalDateTime = DateTime.Now;
         }
     }
 

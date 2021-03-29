@@ -66,7 +66,7 @@ namespace Otokoneko.Server.MangaManage
                 var chapterService = new ChapterService(context);
                 readProgress.MangaId = (await chapterService.GetSingleAsync(it => it.ObjectId == readProgress.ChapterId)).MangaId;
                 var readProgressService = new ReadProgressService(context);
-                var result = readProgressService.Upsert(readProgress);
+                var result = await readProgressService.Upsert(readProgress);
                 context.CommitTran();
                 return true;
             }
@@ -181,7 +181,7 @@ namespace Otokoneko.Server.MangaManage
 
         public async ValueTask<bool> Insert(Manga manga)
         {
-            if (!DataFormatter.Format(manga)) return false;
+            if (!DataFormatter.Format(manga, false, false)) return false;
             using var context = Context;
             try
             {
@@ -222,24 +222,15 @@ namespace Otokoneko.Server.MangaManage
 
         public async ValueTask<bool> Update(Manga manga, bool updateChapters)
         {
+            if (!DataFormatter.Format(manga, !updateChapters, true)) return false;
             using var context = Context;
             var mangaService = new MangaService(context);
             try
             {
                 context.BeginTran();
-                if ((await mangaService.GetSingleAsync(it => it.ObjectId == manga.ObjectId)).Version >= manga.Version)
-                {
-                    context.RollbackTran();
-                    return false;
-                }
-                manga.UpdateTime = DateTime.Now;
 
                 if (updateChapters && manga.Chapters != null && manga.Chapters.Count != 0)
                 {
-                    foreach (var chapter in manga.Chapters.Where(it => it.ObjectId <= 0))
-                    {
-                        DataFormatter.Format(chapter);
-                    }
                     var chapterService = new ChapterService(context);
                     var imageService = new ImageService(context);
                     var result = await chapterService.Upsert(manga.Chapters);

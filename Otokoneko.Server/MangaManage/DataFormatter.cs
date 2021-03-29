@@ -9,36 +9,42 @@ namespace Otokoneko.Server.MangaManage
         private static readonly IdGenerator IdGenerator =
             new IdGenerator(1, new IdGeneratorOptions(new IdStructure(41, 6, 16)));
 
-        public static bool Format(Manga manga)
+        public static bool Format(Manga manga, bool ignoreChapter, bool ignoreCover)
         {
             if (manga.ObjectId <= 0) manga.ObjectId = IdGenerator.CreateId();
-
-            if (manga.Chapters == null) return false;
-            var order = 0;
-            foreach (var chapter in manga.Chapters)
+            if (!ignoreChapter)
             {
-                chapter.MangaId = manga.ObjectId;
-                chapter.Order = order++;
-                if (!Format(chapter))
+                if (manga.Chapters == null) return false;
+                var order = 0;
+                foreach (var chapter in manga.Chapters)
                 {
-                    return false;
+                    chapter.MangaId = manga.ObjectId;
+                    chapter.Order = order++;
+                    if (!Format(chapter))
+                    {
+                        return false;
+                    }
                 }
+
+            }
+
+            if (!ignoreCover)
+            {
+                if (manga.Cover == null) return false;
+                Format(manga.Cover);
+                manga.Cover.ChapterId = manga.ObjectId;
+                manga.CoverId = manga.Cover.ObjectId;
             }
 
             if (manga.Path != null) manga.PathId = manga.Path.ObjectId;
-
-            if (manga.Cover == null) return false;
-            Format(manga.Cover);
-            manga.Cover.ChapterId = manga.ObjectId;
-            manga.CoverId = manga.Cover.ObjectId;
             manga.CreateTime = manga.UpdateTime = DateTime.UtcNow;
-
             return true;
         }
 
         public static bool Format(Chapter chapter)
         {
             if (chapter.ObjectId <= 0) chapter.ObjectId = IdGenerator.CreateId();
+            else return true; // 已完成格式化
 
             if (chapter.Images == null) return false;
             var order = 0;
@@ -53,7 +59,6 @@ namespace Otokoneko.Server.MangaManage
             }
 
             if (chapter.Path != null) chapter.PathId = chapter.Path.ObjectId;
-
             chapter.CreateTime = chapter.UpdateTime = DateTime.UtcNow;
             return true;
         }

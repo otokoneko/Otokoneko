@@ -10,6 +10,7 @@ namespace Otokoneko.Client.WPFClient.ViewModel
 
     abstract class ExplorerViewModel<TContent> : BaseViewModel where TContent : ExplorerContent, new()
     {
+        public int SelectedIndex { get; set; }
         public ObservableCollection<TContent> Explorer { get; } = new ObservableCollection<TContent>();
         public bool CouldCreateNewTab { get; }
 
@@ -37,6 +38,7 @@ namespace Otokoneko.Client.WPFClient.ViewModel
 
         protected ExplorerViewModel(bool couldCreateNewTab=true)
         {
+            SelectedIndex = -1;
             CouldCreateNewTab = couldCreateNewTab;
             Explorer.Add(new TContent()
             {

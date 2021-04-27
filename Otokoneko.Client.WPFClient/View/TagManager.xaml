@@ -34,11 +34,13 @@
         </ResourceDictionary>
     </mah:MetroContentControl.Resources>
     <DockPanel>
-        <StackPanel
+        <DockPanel
             Width="400"
             Margin="5,0"
+            VerticalAlignment="Stretch"
             HorizontalAlignment="Left">
             <Border
+                DockPanel.Dock="Top"
                 Margin="10,40,10,0"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Top"
@@ -79,8 +81,8 @@
                 </DockPanel>
             </Border>
             <ListBox
-                Height="700"
-                Margin="10,10,10,0"
+                DockPanel.Dock="Bottom"
+                Margin="10"
                 ItemContainerStyle="{StaticResource NoFocusListBox}"
                 ItemsSource="{Binding Tags}"
                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
@@ -112,7 +114,7 @@
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
-        </StackPanel>
+        </DockPanel>
         <local:Explorer Margin="0,40,0,0" DataContext="{Binding TagExplorerViewModel}" />
     </DockPanel>
 </mah:MetroContentControl>

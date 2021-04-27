@@ -38,6 +38,7 @@
     </mah:MetroContentControl.Resources>
     <mah:MetroTabControl
         Name="TabControl"
+        SelectedIndex="{Binding SelectedIndex, Mode=TwoWay}"
         Margin="0"
         mah:TabControlHelper.UnderlinePlacement="Top"
         mah:TabControlHelper.Underlined="SelectedTabItem"

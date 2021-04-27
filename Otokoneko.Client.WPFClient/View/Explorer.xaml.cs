@@ -1,17 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using MahApps.Metro.Controls;
 
 namespace Otokoneko.Client.WPFClient.View
@@ -92,14 +81,13 @@ namespace Otokoneko.Client.WPFClient.View
             if (((dynamic)DataContext).CouldCreateNewTab && tabItem == _mouseDownItem && TabControl.Items.IndexOf(tabItem.DataContext) == TabControl.Items.Count - 1)
             {
                 ((dynamic)DataContext).CreateNewTab();
-                TabControl.SelectedIndex = TabControl.Items.Count - 2;
             }
         }
 
         private void Selector_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             UpdateLayout();
-            // if (DataContext!= null && ((dynamic) DataContext).CouldCreateNewTab == false) return;
+            if (DataContext != null && ((dynamic) DataContext).CouldCreateNewTab == false) return;
             if (e.AddedItems.Count > 0 &&
                 TabControl.SelectedIndex == TabControl.Items.Count - 1 &&
                 !_dragging)

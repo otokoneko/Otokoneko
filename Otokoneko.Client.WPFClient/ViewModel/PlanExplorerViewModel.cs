@@ -27,6 +27,8 @@ namespace Otokoneko.Client.WPFClient.ViewModel
                     }
                 };
                 Explorer.Insert(Explorer.Count - 1, planDetail);
+                SelectedIndex = Explorer.Count - 2;
+                OnPropertyChanged(nameof(SelectedIndex));
             }
             else
             {
@@ -38,6 +40,8 @@ namespace Otokoneko.Client.WPFClient.ViewModel
                 }
                 var planDetail = new PlanDetailViewModel(plan);
                 Explorer.Insert(Explorer.Count - 1, planDetail);
+                SelectedIndex = Explorer.Count - 2;
+                OnPropertyChanged(nameof(SelectedIndex));
             }
         }
 

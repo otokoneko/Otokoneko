@@ -38,6 +38,8 @@ namespace Otokoneko.Client.WPFClient.ViewModel
                     }
                 };
                 Explorer.Insert(Explorer.Count - 1, tagDetail);
+                SelectedIndex = Explorer.Count - 2;
+                OnPropertyChanged(nameof(SelectedIndex));
             }
             else
             {
@@ -49,6 +51,8 @@ namespace Otokoneko.Client.WPFClient.ViewModel
                 }
                 var tagDetail = new TagDetailViewModel(tag, TagTypes);
                 Explorer.Insert(Explorer.Count - 1, tagDetail);
+                SelectedIndex = Explorer.Count - 2;
+                OnPropertyChanged(nameof(SelectedIndex));
             }
         }
     }

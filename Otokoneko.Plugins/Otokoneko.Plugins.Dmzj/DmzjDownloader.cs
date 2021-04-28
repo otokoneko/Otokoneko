@@ -1,12 +1,15 @@
 ﻿using Otokoneko.Plugins.Interface;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using HtmlAgilityPack;
 using Newtonsoft.Json;
+using Dmzj;
 
 
 namespace Otokoneko.Plugins.Dmzj
@@ -16,11 +19,14 @@ namespace Otokoneko.Plugins.Dmzj
         public string Name => nameof(Dmzj);
         public string Author => "Otokoneko";
         public Version Version => new Version(1, 0, 0);
-        private static string MangaApiBase { get; } = "https://v3api.dmzj1.com/comic/comic_{0}.json";
+        private static string MangaApiBase { get; } = "https://nnv4api.dmzj1.com/comic/detail/{0}?uid=1";
         private static string ChapterApiBase { get; } = "https://m.dmzj1.com/view/{0}/{1}.html";
         private static Regex MangaIdRe { get; } = new Regex("(?:(?:obj_id)|(?:g_current_id)) = \"([0-9]+)\"");
         private static Regex ImageListRe { get; } = new Regex("\"page_url\":(.+?]),");
         private static HttpClient Client { get; } = new HttpClient();
+
+        private byte[] PrivateKey { get; } = Convert.FromBase64String(
+            "MIICXgIBAAKBgQCvJzUdZU5yHyHrOqEViTY95gejrLAxsdLhjKYKW1QqX+vlcJ7iNrLZoWTaEHDONeyM+1qpT821JrvUeHRCpixhBKjoTnVWnofV5NiDz46iLuU25C2UcZGN3STNYbW8+e3f66HrCS5GV6rLHxuRCWrjXPkXAAU3y2+CIhY0jJU7JwIDAQABAoGBAIs/6YtoSjiSpb3Ey+I6RyRo5/PpS98GV/i3gB5Fw6E4x2uO4NJJ2GELXgm7/mMDHgBrqQVoi8uUcsoVxaBjSm25737TGCueoR/oqsY7Qy540gylp4XAe9PPbDSmhDPSJYpersVjKzDAR/b9jy3WLKjAR6j7rSrv0ooHhj3oge1RAkEA4s1ZTb+u4KPfUACL9p/4GuHtMC4s1bmjQVxPPAHTp2mdCzk3p4lRKrz7YFJOt8245dD/6c0M8o4rcHuh6AgCKQJBAMWzrZwptbihKeR7DWlxCU8BO1kH+z6yw+PgaRrTSpII2un+heJXeEGdk0Oqr7Aos0hia4zqTXY1Rie24GDHHM8CQQC7yVjy5g4u06BXxkwdBLDR2VShOupGf/Ercfns7npHuEueel6Zajn5UAY2549j4oMATf9Gn0/kGVDgTo1s6AyZAkApc6PqA0DLxlbPRhGo0v99pid4YlkGa1rxM4M2Eakn911XBHuz2l0nfM98t5QAnngArEoakKHPMBpWh1yCTh03AkEAmcOddu2RrPGQ00q6IKx+9ysPx71+ecBgHoqymHL9vHmrr3ghu4shUdDxQfz/xA2Z8m/on78hBZbnD1CNPmPOxQ==");
 
         #region RequiredParameters
 
@@ -44,98 +50,6 @@ namespace Otokoneko.Plugins.Dmzj
 
         #endregion
 
-        #region JsonObject
-
-        public class Type
-        {
-            public int tag_id { get; set; }
-            public string tag_name { get; set; }
-        }
-
-        public class Author_
-        {
-            public int tag_id { get; set; }
-            public string tag_name { get; set; }
-        }
-
-        public class Status
-        {
-            public int tag_id { get; set; }
-            public string tag_name { get; set; }
-        }
-
-        public class Datum
-        {
-            public int chapter_id { get; set; }
-            public string chapter_title { get; set; }
-            public int updatetime { get; set; }
-            public int filesize { get; set; }
-            public int chapter_order { get; set; }
-        }
-
-        public class Chapter
-        {
-            public string title { get; set; }
-            public List<Datum> data { get; set; }
-        }
-
-        public class LatestComment
-        {
-            public int comment_id { get; set; }
-            public int uid { get; set; }
-            public string content { get; set; }
-            public int createtime { get; set; }
-            public string nickname { get; set; }
-            public string avatar { get; set; }
-        }
-
-        public class Comment
-        {
-            public int comment_count { get; set; }
-            public List<LatestComment> latest_comment { get; set; }
-        }
-
-        public class DhUrlLink
-        {
-            public string title { get; set; }
-            public List<object> list { get; set; }
-        }
-
-        public class MangaDetail_
-        {
-            public int id { get; set; }
-            public int islong { get; set; }
-            public int direction { get; set; }
-            public string title { get; set; }
-            public int is_dmzj { get; set; }
-            public string cover { get; set; }
-            public string description { get; set; }
-            public int last_updatetime { get; set; }
-            public string last_update_chapter_name { get; set; }
-            public int copyright { get; set; }
-            public string first_letter { get; set; }
-            public string comic_py { get; set; }
-            public int hidden { get; set; }
-            public int hot_num { get; set; }
-            public int hit_num { get; set; }
-            public object uid { get; set; }
-            public int is_lock { get; set; }
-            public int last_update_chapter_id { get; set; }
-            public List<Type> types { get; set; }
-            public List<Author_> authors { get; set; }
-            public List<Status> status { get; set; }
-            public int subscribe_num { get; set; }
-            public List<Chapter> chapters { get; set; }
-            public Comment comment { get; set; }
-            public int is_need_login { get; set; }
-            public List<object> url_links { get; set; }
-            public string isHideChapter { get; set; }
-            public List<DhUrlLink> dh_url_links { get; set; }
-            public string is_dot { get; set; }
-        }
-
-        #endregion
-
         public bool IsLegalUrl(string url, DownloadTaskType downloadTaskType)
         {
             switch (downloadTaskType)
@@ -149,6 +63,30 @@ namespace Otokoneko.Plugins.Dmzj
             }
 
             return false;
+        }
+
+        internal static byte[] RsaDecrypt(byte[] encryptedBytes, RSACryptoServiceProvider rsa)
+        {
+            using var decrypted = new MemoryStream();
+            var length = encryptedBytes.Length;
+            var blockSize = rsa.KeySize / 8;
+            for (var offset = 0; offset < length; offset += blockSize)
+            {
+                var bufferLength = Math.Min(blockSize, length - offset);
+                var buffer = encryptedBytes.Skip(offset).Take(bufferLength).ToArray();
+                var decryptedData = rsa.Decrypt(buffer, false);
+                decrypted.Write(decryptedData, 0, decryptedData.Length);
+            }
+            decrypted.Position = 0;
+            return decrypted.ToArray();
+        }
+
+        private byte[] Decrypt(string data)
+        {
+            var bytes = Convert.FromBase64String(data);
+            using var rsa = new RSACryptoServiceProvider();
+            rsa.ImportRSAPrivateKey(PrivateKey, out _);
+            return RsaDecrypt(bytes, rsa);
         }
 
         public async ValueTask<MangaDetail> GetManga(string url)
@@ -167,32 +105,36 @@ namespace Otokoneko.Plugins.Dmzj
             {
                 aliases = aliasesNode.InnerText.Trim().Split(',').ToList();
             }
-            page = await Client.GetStringAsync(string.Format(MangaApiBase, mangaId));
-            var mangaDetail = JsonConvert.DeserializeObject<MangaDetail_>(page);
+
+            var apiResponse = await Client.GetStringAsync(string.Format(MangaApiBase, mangaId));
+            var mangaDetailResponse = MangaDetailResponse.Parser.ParseFrom(Decrypt(apiResponse));
+
+            var mangaDetail = mangaDetailResponse.Manga;
             var result = new MangaDetail()
             {
-                Cover = mangaDetail.cover,
+                Cover = mangaDetail.Cover,
                 Id = mangaId,
-                Name = mangaDetail.title,
-                Description = mangaDetail.description,
+                Name = mangaDetail.Title,
+                Description = mangaDetail.Descrition,
                 Tags = new List<TagDetail>(),
                 Aliases = aliases,
                 Url = url,
-                Chapters = mangaDetail.chapters.SelectMany(chapters => chapters.data.Select(chapter =>
-                    new ChapterDetail()
-                    {
-                        Id = chapter.chapter_id.ToString(),
-                        Name = chapter.chapter_title,
-                        Type = chapters.title,
-                        Url = string.Format(ChapterApiBase, mangaId, chapter.chapter_id)
-                    })).Reverse().ToList()
+                Chapters = mangaDetail.Volume.SelectMany(volume => volume.Chapter.OrderBy(chapter => chapter.Order)
+                    .Select(chapter =>
+                        new ChapterDetail()
+                        {
+                            Id = chapter.Id.ToString(),
+                            Name = chapter.Name,
+                            Type = volume.Name,
+                            Url = string.Format(ChapterApiBase, mangaId, chapter.Id)
+                        })).ToList()
             };
-            result.Tags.AddRange(mangaDetail.authors.Select(author => new TagDetail()
-            { Name = author.tag_name, Type = TagTypeAuthorName }));
-            result.Tags.AddRange(mangaDetail.types.Select(type => new TagDetail()
-            { Name = type.tag_name, Type = TagTypeContentName }));
-            result.Tags.AddRange(mangaDetail.status.Select(status => new TagDetail()
-            { Name = status.tag_name, Type = TagTypeStatusName }));
+            result.Tags.AddRange(mangaDetail.Author.Select(author => new TagDetail()
+            { Name = author.Name, Type = TagTypeAuthorName }));
+            result.Tags.AddRange(mangaDetail.Tag.Select(type => new TagDetail()
+            { Name = type.Name, Type = TagTypeContentName }));
+            result.Tags.AddRange(mangaDetail.Status.Select(status => new TagDetail()
+            { Name = status.Name, Type = TagTypeStatusName }));
             return result;
         }
 

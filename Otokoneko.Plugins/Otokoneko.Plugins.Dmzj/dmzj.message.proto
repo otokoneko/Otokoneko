@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package dmzj;
+
+message MangaDetailResponse {
+    int32 Errno = 1;
+    string Errmsg = 2;
+    Manga Manga= 3;
+}
+
+message Manga {
+    int32 Id = 1;
+    string Title = 2;
+    string Cover = 6;
+    string Descrition = 7;
+    int64 LastUpdateTime = 8;
+    string LastUpdateChapterName = 9;
+	string FirstLetter = 11;
+	string Pinyin = 12;
+    string LastUpdateChapterId = 18;
+	repeated Tag Tag = 19;
+	repeated Tag Status = 20;
+	repeated Author Author = 21;
+	repeated Volume Volume = 23;
+}
+
+message Tag {
+	int32 Id = 1;
+	string Name = 2;
+}
+
+message Author {
+	int32 Id = 1;
+	string Name = 2;
+}
+
+message Volume {
+	string Name = 1;
+	repeated Chapter Chapter = 2;
+}
+
+message Chapter {
+	int32 Id = 1;
+	string Name = 2;
+	int32 Order = 5;
+}

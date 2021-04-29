@@ -20,6 +20,13 @@
                     Style="{StaticResource MahApps.Styles.Button.MetroSquare}"
                     Visibility="{Binding Editable, Converter={StaticResource InverseBoolToVisibilityConverter}}" />
                 <Button
+                    Margin="120,10"
+                    HorizontalAlignment="Right"
+                    Command="{Binding DeleteCommand}"
+                    Content="删除"
+                    Style="{StaticResource MahApps.Styles.Button.MetroSquare}"
+                    Visibility="{Binding Editable, Converter={StaticResource InverseBoolToVisibilityConverter}}" />
+                <Button
                     Margin="50,10"
                     HorizontalAlignment="Right"
                     Command="{Binding SaveCommand}"

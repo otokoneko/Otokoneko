@@ -469,9 +469,10 @@ namespace Otokoneko.Client
             return result;
         }
 
-        public async ValueTask DeleteTag(long tagId)
+        public async ValueTask<bool> DeleteTag(long tagId)
         {
             var (result, status) = await SendRequest<object, bool>(tagId, null);
+            return result;
         }
 
 #endregion

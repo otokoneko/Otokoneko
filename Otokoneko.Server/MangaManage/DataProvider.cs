@@ -137,6 +137,7 @@ namespace Otokoneko.Server.MangaManage
             return await Context
                 .Queryable<Tag>()
                 .Where(whereExpression)
+                .OrderBy(it => new {it.TypeId, it.Name})
                 .Select(it => it.ObjectId)
                 .ToListAsync();
         }

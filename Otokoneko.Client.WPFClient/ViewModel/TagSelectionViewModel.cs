@@ -3,13 +3,14 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Input;
 using AsyncAwaitBestPractices.MVVM;
 using Otokoneko.DataType;
 
 namespace Otokoneko.Client.WPFClient.ViewModel
 {
-    class TagSelectionViewModel: BaseViewModel
+    class TagSelectionViewModel : BaseViewModel
     {
         private readonly TagQueryHelper _query;
         private bool _loaded = false;
@@ -18,9 +19,35 @@ namespace Otokoneko.Client.WPFClient.ViewModel
         public ObservableCollection<DisplayTag> SearchResult { get; set; }
         public ObservableCollection<DisplayTag> SelectedTags { get; set; }
 
+        #region QuicklyCreateTag
+
+        public ObservableCollection<TagType> TagTypes => Model.TagTypes;
+
+        public ICommand QuicklyCreateTag { get; } = new AsyncCommand<object[]>(async parameter =>
+        {
+            var tagType = (TagType)parameter[0];
+            var tagName = (string)parameter[1];
+
+            if (tagType == null)
+            {
+                MessageBox.Show(Constant.ShouldSelectTagType);
+                return;
+            }
+            if (string.IsNullOrEmpty(tagName))
+            {
+                MessageBox.Show(Constant.TagNameShouldNotBeEmpty);
+                return;
+            }
+
+            var success = await Model.AddTag(new Tag() {Name = tagName, TypeId = tagType.ObjectId});
+            MessageBox.Show(success != null ? Constant.AddTagSuccess : Constant.AddTagFail);
+        });
+
+        #endregion
+
         public List<Tag> GetResult()
         {
-            return SelectedTags.Select(it => new Tag() {Name = it.Name, ObjectId = it.ObjectId, TypeId = it.TypeId, Key = it.Key}).ToList();
+            return SelectedTags.Select(it => new Tag() { Name = it.Name, ObjectId = it.ObjectId, TypeId = it.TypeId, Key = it.Key }).ToList();
         }
 
         public TagSelectionViewModel(long typeId, List<Tag> selectedTags)
@@ -33,7 +60,7 @@ namespace Otokoneko.Client.WPFClient.ViewModel
                 TypeId = typeId
             };
             SelectedTags = new ObservableCollection<DisplayTag>();
-            if(selectedTags == null) return;
+            if (selectedTags == null) return;
             foreach (var selectedTag in selectedTags)
             {
                 var displayTag = new DisplayTag(selectedTag);

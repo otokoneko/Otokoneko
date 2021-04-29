@@ -18,6 +18,8 @@ namespace Otokoneko.Client.WPFClient.ViewModel
 
         public const string TagNameShouldNotBeEmpty = "标签名不可为空";
         public const string ShouldSelectTagType = "请选择一个标签类型";
+
+        public const string DeleteTagNotice = "删除该标签？";
     }
 
     class TagDetailViewModel : ExplorerContent
@@ -39,6 +41,20 @@ namespace Otokoneko.Client.WPFClient.ViewModel
             Editable = true;
             OnPropertyChanged(nameof(Editable));
             DisplayAliases();
+        });
+
+        public ICommand DeleteCommand => new AsyncCommand(async () =>
+        {
+            if (Tag.ObjectId < 0)
+            {
+                return;
+            }
+
+            var checkedResult = MessageBox.Show(Constant.DeleteTagNotice, Constant.OperateNotice, MessageBoxButton.YesNo);
+            if(checkedResult != MessageBoxResult.Yes) return;
+
+            var success = await Model.DeleteTag(Tag.ObjectId);
+            MessageBox.Show(success ? Constant.DeleteSuccess : Constant.DeleteFail);
         });
 
         public ICommand SaveCommand => new AsyncCommand(async () =>

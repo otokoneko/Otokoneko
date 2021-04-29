@@ -39,7 +39,8 @@
                 Background="{x:Null}"
                 BorderThickness="1"
                 Command="{Binding Path=SearchCommand}"
-                Cursor="Hand">
+                Cursor="Hand"
+                Style="{StaticResource MahApps.Styles.Button.Square}">
                 <Rectangle Width="20" Height="20">
                     <Rectangle.OpacityMask>
                         <ImageBrush ImageSource="/icon/search.png" />
@@ -78,9 +79,51 @@
                 </ListBox.Resources>
             </ListBox>
         </Border>
+        <StackPanel
+            Width="400"
+            Height="40"
+            Margin="50"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Top"
+            Orientation="Horizontal">
+            <ComboBox
+                Name="TagTypeSelector"
+                Width="100"
+                FontSize="17"
+                ItemsSource="{Binding TagTypes}">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Name}" />
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+            <TextBox
+                Name="TagNameInput"
+                Width="200"
+                Margin="10,0,0,0"
+                VerticalContentAlignment="Center"
+                FontSize="17" />
+            <Button
+                Width="80"
+                Margin="10,0,0,0"
+                VerticalContentAlignment="Center"
+                BorderThickness="1"
+                Command="{Binding QuicklyCreateTag}"
+                Content="{DynamicResource QuicklyCreate}"
+                Cursor="Hand"
+                FontSize="15"
+                Style="{StaticResource MahApps.Styles.Button.Square}">
+                <Button.CommandParameter>
+                    <MultiBinding Converter="{StaticResource MultiValueConverter}">
+                        <Binding ElementName="TagTypeSelector" Path="SelectedItem" />
+                        <Binding ElementName="TagNameInput" Path="Text" />
+                    </MultiBinding>
+                </Button.CommandParameter>
+            </Button>
+        </StackPanel>
         <Border
             Width="400"
-            Margin="50,50,50,80"
+            Margin="50,100,50,80"
             HorizontalAlignment="Right"
             BorderBrush="{DynamicResource MahApps.Brushes.ThemeForeground}"
             BorderThickness="1">
@@ -130,11 +173,12 @@
                 Margin="90,20"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Bottom"
+                BorderThickness="1"
                 Click="Confirm_OnClick"
                 Content="确定"
                 Cursor="Hand"
                 FontSize="15"
-                Style="{StaticResource MahApps.Styles.Button.Square}" />
+                Style="{StaticResource MahApps.Styles.Button.Square.Accent}" />
             <Button
                 Name="Cancel"
                 Width="60"
@@ -142,6 +186,7 @@
                 Margin="90,20"
                 HorizontalAlignment="Right"
                 VerticalAlignment="Bottom"
+                BorderThickness="1"
                 Click="Cancel_OnClick"
                 Content="取消"
                 Cursor="Hand"

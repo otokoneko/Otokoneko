@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Otokoneko\Otokoneko.Plugins.Interface\Otokoneko.Plugins.Interface.csproj" />
+    <ProjectReference Include="..\Otokoneko.Plugins.Interface\Otokoneko.Plugins.Interface.csproj" />
   </ItemGroup>
 
 </Project>

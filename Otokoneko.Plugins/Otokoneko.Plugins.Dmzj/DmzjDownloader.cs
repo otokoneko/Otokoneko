@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using HtmlAgilityPack;
 using Newtonsoft.Json;
@@ -14,16 +15,44 @@ using Dmzj;
 
 namespace Otokoneko.Plugins.Dmzj
 {
+    public class RetryHandler : DelegatingHandler
+    {
+        private const int MaxRetries = 3;
+
+        public RetryHandler(HttpMessageHandler innerHandler)
+            : base(innerHandler)
+        { }
+
+        protected override async Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
+        {
+            for (var i = 0; i < MaxRetries; i++)
+            {
+                var response = await base.SendAsync(request, cancellationToken);
+                if (response.IsSuccessStatusCode)
+                {
+                    return response;
+                }
+
+                await Task.Delay(new Random().Next(1000, 10000), cancellationToken);
+            }
+
+            return null;
+        }
+    }
+
+
     public class DmzjDownloader : IMangaDownloader
     {
         public string Name => nameof(Dmzj);
         public string Author => "Otokoneko";
         public Version Version => new Version(1, 0, 0);
-        private static string MangaApiBase { get; } = "https://nnv4api.dmzj1.com/comic/detail/{0}?uid=1";
+        private static string MangaApiBase { get; } = "https://nnv4api.muwai.com/comic/detail/{0}?uid=1";
         private static string ChapterApiBase { get; } = "https://m.dmzj1.com/view/{0}/{1}.html";
         private static Regex MangaIdRe { get; } = new Regex("(?:(?:obj_id)|(?:g_current_id)) = \"([0-9]+)\"");
         private static Regex ImageListRe { get; } = new Regex("\"page_url\":(.+?]),");
-        private static HttpClient Client { get; } = new HttpClient();
+        private static HttpClient Client { get; } = new HttpClient(new RetryHandler(new HttpClientHandler()));
 
         private byte[] PrivateKey { get; } = Convert.FromBase64String(
             "MIICXgIBAAKBgQCvJzUdZU5yHyHrOqEViTY95gejrLAxsdLhjKYKW1QqX+vlcJ7iNrLZoWTaEHDONeyM+1qpT821JrvUeHRCpixhBKjoTnVWnofV5NiDz46iLuU25C2UcZGN3STNYbW8+e3f66HrCS5GV6rLHxuRCWrjXPkXAAU3y2+CIhY0jJU7JwIDAQABAoGBAIs/6YtoSjiSpb3Ey+I6RyRo5/PpS98GV/i3gB5Fw6E4x2uO4NJJ2GELXgm7/mMDHgBrqQVoi8uUcsoVxaBjSm25737TGCueoR/oqsY7Qy540gylp4XAe9PPbDSmhDPSJYpersVjKzDAR/b9jy3WLKjAR6j7rSrv0ooHhj3oge1RAkEA4s1ZTb+u4KPfUACL9p/4GuHtMC4s1bmjQVxPPAHTp2mdCzk3p4lRKrz7YFJOt8245dD/6c0M8o4rcHuh6AgCKQJBAMWzrZwptbihKeR7DWlxCU8BO1kH+z6yw+PgaRrTSpII2un+heJXeEGdk0Oqr7Aos0hia4zqTXY1Rie24GDHHM8CQQC7yVjy5g4u06BXxkwdBLDR2VShOupGf/Ercfns7npHuEueel6Zajn5UAY2549j4oMATf9Gn0/kGVDgTo1s6AyZAkApc6PqA0DLxlbPRhGo0v99pid4YlkGa1rxM4M2Eakn911XBHuz2l0nfM98t5QAnngArEoakKHPMBpWh1yCTh03AkEAmcOddu2RrPGQ00q6IKx+9ysPx71+ecBgHoqymHL9vHmrr3ghu4shUdDxQfz/xA2Z8m/on78hBZbnD1CNPmPOxQ==");
@@ -106,7 +135,8 @@ namespace Otokoneko.Plugins.Dmzj
                 aliases = aliasesNode.InnerText.Trim().Split(',').ToList();
             }
 
-            var apiResponse = await Client.GetStringAsync(string.Format(MangaApiBase, mangaId));
+            var apiUrl = string.Format(MangaApiBase, mangaId);
+            var apiResponse = await Client.GetStringAsync(apiUrl);
             var mangaDetailResponse = MangaDetailResponse.Parser.ParseFrom(Decrypt(apiResponse));
 
             var mangaDetail = mangaDetailResponse.Manga;

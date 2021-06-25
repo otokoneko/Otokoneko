@@ -151,7 +151,11 @@ namespace Otokoneko.Server.ScheduleTaskManage
 
         public bool ScheduleAndStart(ScheduleTask task)
         {
-            if (_root.Children.Contains(task)) return false;
+            var taskId = _root.Children.FirstOrDefault(it => it.Equals(task))?.ObjectId;
+            if (taskId != null)
+            {
+                Cancel((long)taskId);
+            }
             _idToTask.TryAdd(task.ObjectId, task);
             _root.Children.Add(task);
             task.Parent = _root;

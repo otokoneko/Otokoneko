@@ -156,6 +156,14 @@ namespace Otokoneko.Server.ScheduleTaskManage
             try
             {
                 downloadImageTask.Update(TaskStatus.Executing);
+                var parent = Path.GetDirectoryName(downloadImageTask.ImagePath);
+                var fileName = Path.GetFileName(downloadImageTask.ImagePath);
+                if (Directory.GetFiles(parent, fileName + ".*").Length > 0)
+                {
+                    downloadImageTask.Update(TaskStatus.Success);
+                    return;
+                }
+
                 using var content = await downloader.GetImage(downloadImageTask.ImageUrl);
                 buffer = samePool.Rent((int)(content.Headers.ContentLength ?? 128 * 1024));
                 await using var stream = new MemoryStream(buffer);

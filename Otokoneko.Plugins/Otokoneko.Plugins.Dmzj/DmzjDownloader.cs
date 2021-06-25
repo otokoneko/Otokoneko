@@ -49,7 +49,7 @@ namespace Otokoneko.Plugins.Dmzj
         public string Author => "Otokoneko";
         public Version Version => new Version(1, 0, 0);
         private static string MangaApiBase { get; } = "https://nnv4api.muwai.com/comic/detail/{0}?uid=1";
-        private static string ChapterApiBase { get; } = "https://m.dmzj1.com/view/{0}/{1}.html";
+        private static string ChapterApiBase { get; } = "https://m.dmzj.com/view/{0}/{1}.html";
         private static Regex MangaIdRe { get; } = new Regex("(?:(?:obj_id)|(?:g_current_id)) = \"([0-9]+)\"");
         private static Regex ImageListRe { get; } = new Regex("\"page_url\":(.+?]),");
         private static HttpClient Client { get; } = new HttpClient(new RetryHandler(new HttpClientHandler()));

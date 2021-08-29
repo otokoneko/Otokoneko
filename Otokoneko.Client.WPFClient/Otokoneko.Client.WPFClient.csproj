@@ -36,9 +36,9 @@
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="Nito.AsyncEx.Tasks" Version="5.1.0" />
     <PackageReference Include="OptimizedPriorityQueue" Version="5.0.0" />
-    <PackageReference Include="SuperSocket" Version="2.0.0-beta7" />
-    <PackageReference Include="SuperSocket.Client" Version="2.0.0-beta7" />
-    <PackageReference Include="SuperSocket.ProtoBase" Version="2.0.0-beta7" />
+    <PackageReference Include="SuperSocket" Version="2.0.0-beta.10" />
+    <PackageReference Include="SuperSocket.Client" Version="2.0.0-beta.10" />
+    <PackageReference Include="SuperSocket.ProtoBase" Version="2.0.0-beta.10" />
     <PackageReference Include="VirtualizingWrapPanel" Version="1.5.3" />
   </ItemGroup>
 

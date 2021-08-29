@@ -92,6 +92,31 @@
                                                             </DataTemplate>
                                                         </ListBox.ItemTemplate>
                                                     </ListBox>
+                                                    <TextBlock
+                                                        Margin="5"
+                                                        FontWeight="Bold"
+                                                        Foreground="{DynamicResource MahApps.Brushes.ThemeForeground}"
+                                                        Text="缓存" />
+                                                    <Separator />
+                                                    <StackPanel Margin="5" Orientation="Horizontal">
+                                                        <TextBlock
+                                                            VerticalAlignment="Center"
+                                                            FontWeight="Bold"
+                                                            Foreground="{DynamicResource MahApps.Brushes.ThemeForeground}"
+                                                            Text="磁盘占用：" />
+                                                        <TextBlock
+                                                            VerticalAlignment="Center"
+                                                            FontWeight="Bold"
+                                                            Foreground="{DynamicResource MahApps.Brushes.ThemeForeground}"
+                                                            Text="{Binding Path=CacheUsage}" />
+                                                    </StackPanel>
+                                                    <Button
+                                                        Margin="5"
+                                                        HorizontalAlignment="Left"
+                                                        VerticalAlignment="Center"
+                                                        Command="{Binding Path=ClearCacheCommand}"
+                                                        Content="清理缓存"
+                                                        Style="{DynamicResource MahApps.Styles.Button.Square.Accent}" />
                                                 </StackPanel>
                                             </Border>
                                         </ScrollViewer>

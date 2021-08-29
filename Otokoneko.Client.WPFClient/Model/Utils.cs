@@ -10,6 +10,7 @@ namespace Otokoneko.Client.WPFClient.Model
 {
     public static class Utils
     {
+        private static readonly string[] SizeSuffixes = { "KB", "MB", "GB" };
         public static BitmapImage Convert(byte[] imageContent)
         {
             if (imageContent == null) return null;
@@ -28,6 +29,19 @@ namespace Otokoneko.Client.WPFClient.Model
             var time = (DateTime)localDateTime;
             return
                 $"{time.Year:D4}.{time.Month:D2}.{time.Day:D2} {time.Hour:D2}:{time.Minute:D2}";
+        }
+
+        public static string FormatSizeOfBytes(double size)
+        {
+            foreach (var suffix in SizeSuffixes)
+            {
+                size /= 1024;
+                if (size < 1024)
+                {
+                    return $"{size:F} {suffix}";
+                }
+            }
+            return $"{size:F} {SizeSuffixes.Last()}";
         }
     }
 }

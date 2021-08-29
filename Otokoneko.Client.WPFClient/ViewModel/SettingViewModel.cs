@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -120,12 +121,27 @@ namespace Otokoneko.Client.WPFClient.ViewModel
             }
         }
 
+        public string CacheUsage
+        {
+            get
+            {
+                var size = (double)Model.CacheSize;
+                return WPFClient.Model.Utils.FormatSizeOfBytes(size);
+            }
+        }
+
         public ICommand ResetCommand => new AsyncCommand(async () =>
         {
             var result = MessageBox.Show(Constant.ResetSettingNotice, Constant.OperateNotice, MessageBoxButton.YesNo);
             if (result != MessageBoxResult.Yes) return;
             Model.Setting = new Setting();
             Model.ChangeTheme();
+        });
+
+        public ICommand ClearCacheCommand => new AsyncCommand(async () =>
+        {
+            Model.ClearCache();
+            OnPropertyChanged(nameof(CacheUsage));
         });
 
         public SettingViewModel()

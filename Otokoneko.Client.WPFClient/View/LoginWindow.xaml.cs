@@ -19,7 +19,7 @@ namespace Otokoneko.Client.WPFClient.View
 
         private async void OnLoaded(object sender, RoutedEventArgs e)
         {
-            if (!(DataContext is LoginViewModel viewModel)) return;
+            if (DataContext is not LoginViewModel viewModel) return;
             viewModel.CloseWindow = Close;
             await viewModel.OnLoaded();
         }

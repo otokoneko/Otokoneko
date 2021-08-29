@@ -92,7 +92,7 @@ namespace Otokoneko.Server.MessageBox
 
     public static class MessageTemplate
     {
-        public const string MangaUpdateMessage = "您收藏的漫画 {0} 更新了新章节 {0}。";
+        public const string MangaUpdateMessage = "您收藏的漫画 《{0}》 更新了新章节 {1}。";
         public const string LibraryScanResultMessage = "扫描任务 {0} 完成，预计新建漫画 {1} 本，更新漫画 {2} 本。";
         public const string LibraryScanExceptionMessage = "扫描任务 {0} 失败，异常原因 {1}。";
         public const string DownloadExceptionMessage = "下载 {0} 失败，异常原因 {1}。";

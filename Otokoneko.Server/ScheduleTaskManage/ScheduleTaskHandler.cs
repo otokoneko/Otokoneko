@@ -259,6 +259,7 @@ namespace Otokoneko.Server.ScheduleTaskManage
         public ILog Logger { get; set; }
         public MangaManager MangaManager { get; set; }
         public LibraryManager LibraryManager { get; set; }
+        public MessageManager MessageManager { get; set; }
         public FileTreeNodeToMangaConverter FileTreeNodeToMangaConverter { get; set; }
 
         public async ValueTask Execute(ScanMangaTask scanMangaTask)
@@ -305,7 +306,7 @@ namespace Otokoneko.Server.ScheduleTaskManage
                 }
                 else
                 {
-                    var manga = await FileTreeNodeToMangaConverter.UpdateManga(scanMangaTask.MangaPath);
+                    var (manga, chapters) = await FileTreeNodeToMangaConverter.UpdateManga(scanMangaTask.MangaPath);
                     manga.Tags = await MangaManager.Insert(manga.Tags);
                     var success = await MangaManager.Update(manga, true);
                     if (!success)
@@ -317,6 +318,15 @@ namespace Otokoneko.Server.ScheduleTaskManage
                     {
                         LibraryManager.StoreFileTree(scanMangaTask.MangaPath);
                         scanMangaTask.Update(TaskStatus.Success);
+
+                        var subscribers = await MangaManager.GetSubscribers(manga.ObjectId);
+                        var message = new Message()
+                        {
+                            Data = string.Format(MessageTemplate.MangaUpdateMessage, 
+                                manga.Title,
+                                string.Join(", ", chapters.Select(it => it.Title)))
+                        };
+                        await MessageManager.Send(message, subscribers.ToHashSet());
                     }
                 }
             }

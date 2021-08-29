@@ -480,6 +480,13 @@ namespace Otokoneko.Server.MangaManage
             return await readProgressService.GetSingleAsync(it => it.UserId == userId && it.ChapterId == chapterId);
         }
 
+        public async ValueTask<List<long>> GetSubscribers(long mangaId)
+        {
+            using var context = Context;
+            var favoriteService = new FavoriteService(context);
+            return await favoriteService.QueryUserIdByEntityId(mangaId, EntityType.Manga);
+        }
+
         #endregion
 
         #region Delete

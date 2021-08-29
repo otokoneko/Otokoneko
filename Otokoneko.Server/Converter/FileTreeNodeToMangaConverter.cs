@@ -262,7 +262,7 @@ namespace Otokoneko.Server.Converter
             return mangaBuilder.Manga;
         }
 
-        public async ValueTask<Manga> UpdateManga(FileTreeNode path)
+        public async ValueTask<Tuple<Manga, List<Chapter>>> UpdateManga(FileTreeNode path)
         {
             var oldManga = await MangaManager.GetManga(path.ObjectId);
             oldManga.Cover = await MangaManager.GetImage(oldManga.CoverId);
@@ -283,7 +283,7 @@ namespace Otokoneko.Server.Converter
             }
 
             var chapters = GetChapterPaths(path).Select(CreateChapter).Where(chapter => chapter != null).ToList();
-
+            var newChapters = new List<Chapter>();
 
             for (int i = 0; i < chapters.Count; i++)
             {
@@ -295,6 +295,10 @@ namespace Otokoneko.Server.Converter
                     oldChapter.ChapterClass = chapter.ChapterClass;
                     chapters[i] = oldChapter;
                 }
+                else
+                {
+                    newChapters.Add(chapter);
+                }
             }
 
             mangaBuilder.Chapters =
@@ -302,7 +306,7 @@ namespace Otokoneko.Server.Converter
                     .ToList();
 
             mangaBuilder.Version = oldManga.Version + 1;
-            return mangaBuilder.Manga;
+            return new Tuple<Manga, List<Chapter>>(mangaBuilder.Manga, newChapters);
         }
 
         public async ValueTask<Manga> UpdateManga(Manga manga, MangaDetail detail)

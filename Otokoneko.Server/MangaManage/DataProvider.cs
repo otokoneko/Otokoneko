@@ -422,5 +422,14 @@ namespace Otokoneko.Server.MangaManage
                 .Distinct()
                 .ToListAsync();
         }
+
+        public async ValueTask<List<long>> QueryUserIdByEntityId(long entityId, EntityType entityType)
+        {
+            return await Context
+                .Queryable<Favorite>()
+                .Where(it => it.EntityId == entityId && it.EntityType == entityType)
+                .Select(it => it.UserId)
+                .ToListAsync();
+        }
     }
 }

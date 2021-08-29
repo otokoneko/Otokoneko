@@ -171,6 +171,8 @@ namespace Otokoneko.Utils
         private readonly int _maxFileSize;
         private readonly SemaphoreSlim _mutex = new SemaphoreSlim(1);
 
+        public long Size => _fileCache.Size;
+
         public LruCache(string storePath, int maxMemorySize, int maxFileSize)
         {
             Directory.CreateDirectory(storePath);
@@ -255,6 +257,12 @@ namespace Otokoneko.Utils
             {
                 _mutex.Release();
             }
+        }
+
+        public void Clear()
+        {
+            _inMemoryCache.Clear();
+            _fileCache.Clear();
         }
     }
 

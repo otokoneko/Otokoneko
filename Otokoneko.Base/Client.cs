@@ -103,7 +103,7 @@ namespace Otokoneko.Client
                     {
                         Security = new SecurityOptions()
                         {
-                            EnabledSslProtocols = SslProtocols.Tls12,
+                            EnabledSslProtocols = SslProtocols.None,
                             RemoteCertificateValidationCallback = (sender, certificate, chain, errors) => 
                                 certificate?.GetCertHashString() == _serverConfig.CertificateHash
                         }

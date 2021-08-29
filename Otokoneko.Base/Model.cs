@@ -96,6 +96,8 @@ namespace Otokoneko.Client
 
         private LruCache ImageCache { get; }
 
+        public long CacheSize => ImageCache.Size;
+        
         private readonly MessagePackSerializerOptions _lz4Option =
         MessagePackSerializerOptions.Standard.WithCompression(MessagePackCompression.Lz4Block);
 
@@ -130,6 +132,10 @@ namespace Otokoneko.Client
 
         public static Model Instance => Lazy.Value;
 
+        public void ClearCache()
+        {
+            ImageCache.Clear();
+        }
 
         #region ClientConfig
 

@@ -56,7 +56,7 @@ namespace Otokoneko.Server
                         {
                             new ListenOptions()
                             {
-                                Security = SslProtocols.Tls12,
+                                Security = SslProtocols.None,
                                 Ip = "Any",
                                 Port = port,
                                 BackLog = 100,

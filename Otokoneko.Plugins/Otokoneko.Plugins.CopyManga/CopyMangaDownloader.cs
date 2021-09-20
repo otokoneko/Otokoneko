@@ -30,7 +30,7 @@ namespace Otokoneko.Plugins.CopyManga
         [RequiredParameter(typeof(string), @"^https?://(www\.)?copymanga\.com/comic/[^/]+/chapter/[^/]+$", alias: "章节链接正则表达式")]
         public string ChapterRe { get; set; }
 
-        [RequiredParameter(typeof(string), @"^https?://?([^/]+\.)cdn77.org/comic/.+$", alias: "图片链接正则表达式")]
+        [RequiredParameter(typeof(string), @"^https?://?([^/]+\.)cdn77.org/.+$", alias: "图片链接正则表达式")]
         public string ImageRe { get; set; }
 
         [RequiredParameter(typeof(string), "xxxmanga.abc.key", alias: "返回值的解密密钥")]

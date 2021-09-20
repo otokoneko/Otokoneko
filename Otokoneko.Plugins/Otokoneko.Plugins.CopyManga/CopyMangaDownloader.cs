@@ -16,9 +16,8 @@ namespace Otokoneko.Plugins.CopyManga
     {
         public string Name => nameof(CopyManga);
         public string Author => "Otokoneko";
-        public Version Version => new Version(1, 0, 0);
+        public Version Version => new Version(1, 1, 0);
 
-        private static byte[] Key { get; } = Encoding.UTF8.GetBytes("hotmanga.aes.key");
         private string ChapterApiBase { get; } = "https://www.copymanga.com/comic/{0}/chapter/{1}";
 
         private static HttpClient Client { get; } = new HttpClient();
@@ -31,8 +30,11 @@ namespace Otokoneko.Plugins.CopyManga
         [RequiredParameter(typeof(string), @"^https?://(www\.)?copymanga\.com/comic/[^/]+/chapter/[^/]+$", alias: "章节链接正则表达式")]
         public string ChapterRe { get; set; }
 
-        [RequiredParameter(typeof(string), @"^https?://?([^.]+\.)mangafunc.fun/comic/.+$", alias: "图片链接正则表达式")]
+        [RequiredParameter(typeof(string), @"^https?://?([^/]+\.)cdn77.org/comic/.+$", alias: "图片链接正则表达式")]
         public string ImageRe { get; set; }
+
+        [RequiredParameter(typeof(string), "xxxmanga.abc.key", alias: "返回值的解密密钥")]
+        public string Key { get; set; }
 
         [RequiredParameter(typeof(string), "author", alias: "标签类别“作者”的默认名称")]
         public string TagTypeAuthorName { get; set; }
@@ -46,73 +48,34 @@ namespace Otokoneko.Plugins.CopyManga
         #endregion
 
         #region JsonObject
-
-        public class ChapterDetail_
+        public class Response
+        {
+            public int code { get; set; }
+            public string message { get; set; }
+            public string results { get; set; }
+        }
+        public class Image
         {
             public string uuid { get; set; }
             public string url { get; set; }
         }
-
-        public class 全部
+        public class Type
         {
-            public int index { get; set; }
-            public string uuid { get; set; }
-            public int count { get; set; }
-            public int size { get; set; }
+            public int id { get; set; }
             public string name { get; set; }
-            public string comic_id { get; set; }
-            public string comic_path_word { get; set; }
-            public object group_id { get; set; }
-            public string group_path_word { get; set; }
-            public int type { get; set; }
-            public int img_type { get; set; }
-            public string datetime_created { get; set; }
-            public string prev { get; set; }
-            public string next { get; set; }
         }
 
-        public class 話
+        public class Build
         {
-            public int index { get; set; }
-            public string uuid { get; set; }
-            public int count { get; set; }
-            public int size { get; set; }
-            public string name { get; set; }
-            public string comic_id { get; set; }
-            public string comic_path_word { get; set; }
-            public object group_id { get; set; }
-            public string group_path_word { get; set; }
-            public int type { get; set; }
-            public int img_type { get; set; }
-            public string datetime_created { get; set; }
-            public string prev { get; set; }
-            public string next { get; set; }
+            public string path_word { get; set; }
+            public List<Type> type { get; set; }
         }
 
-        public class 番外篇
+        public class Chapter
         {
-            public int index { get; set; }
-            public string uuid { get; set; }
-            public int count { get; set; }
-            public int size { get; set; }
-            public string name { get; set; }
-            public string comic_id { get; set; }
-            public string comic_path_word { get; set; }
-            public object group_id { get; set; }
-            public string group_path_word { get; set; }
             public int type { get; set; }
-            public int img_type { get; set; }
-            public string datetime_created { get; set; }
-            public string prev { get; set; }
-            public string next { get; set; }
-        }
-
-        public class Groups
-        {
-            public List<全部> 全部 { get; set; }
-            public List<話> 話 { get; set; }
-            public List<object> 卷 { get; set; }
-            public List<番外篇> 番外篇 { get; set; }
+            public string name { get; set; }
+            public string id { get; set; }
         }
 
         public class LastChapter
@@ -120,6 +83,7 @@ namespace Otokoneko.Plugins.CopyManga
             public int index { get; set; }
             public string uuid { get; set; }
             public int count { get; set; }
+            public int ordered { get; set; }
             public int size { get; set; }
             public string name { get; set; }
             public string comic_id { get; set; }
@@ -138,13 +102,19 @@ namespace Otokoneko.Plugins.CopyManga
             public string path_word { get; set; }
             public int count { get; set; }
             public string name { get; set; }
-            public Groups groups { get; set; }
+            public List<Chapter> chapters { get; set; }
             public LastChapter last_chapter { get; set; }
         }
 
-        public class MangaDetail_
+        public class Groups
         {
             public Default @default { get; set; }
+        }
+
+        public class Manga
+        {
+            public Build build { get; set; }
+            public Groups groups { get; set; }
         }
 
         #endregion
@@ -166,6 +136,19 @@ namespace Otokoneko.Plugins.CopyManga
             return false;
         }
 
+        private async ValueTask<Manga> GetComicDetail(string mangaUrl)
+        {
+            var detailUrl = mangaUrl.Replace("comic", "comicdetail");
+            if (detailUrl.Last() != '/')
+            {
+                detailUrl += '/';
+            }
+            detailUrl += "chapters";
+            var respText = await Client.GetStringAsync(detailUrl);
+            var resp = JsonConvert.DeserializeObject<Response>(respText);
+            return Decrypt<Manga>(resp.results);
+        }
+
         public async ValueTask<MangaDetail> GetManga(string url)
         {
             var html = await Client.GetStringAsync(url);
@@ -179,9 +162,8 @@ namespace Otokoneko.Plugins.CopyManga
             var coverNode = htmlDoc.DocumentNode.SelectSingleNode("/html/body/main/div[1]/div/div[1]/div/img");
             var descriptionNode = htmlDoc.DocumentNode.SelectSingleNode("/html/body/main/div[2]/div[2]/p");
             var subscribeNode = htmlDoc.DocumentNode.SelectSingleNode("/html/body/main/div[1]/div/div[2]/ul/li[8]/a[2]");
-            var disposableNode = htmlDoc.DocumentNode.SelectSingleNode("/html/body/main/div[3]");
-            var disposable = disposableNode.GetAttributeValue("disposable", null);
-            var mangaDetail = Decrypt<MangaDetail_>(disposable);
+
+            var mangaDetail = await GetComicDetail(url);
 
             var tags = authorsNode.ChildNodes.Where(it => it.Name == "a").Select(authorsNodeChildNode => new TagDetail()
             {
@@ -199,6 +181,9 @@ namespace Otokoneko.Plugins.CopyManga
                 Name = statusNode.InnerText.Trim()
             });
 
+            var path_word = mangaDetail.build.path_word;
+            var types = mangaDetail.build.type;
+
             return new MangaDetail
             {
                 Id = subscribeNode.GetAttributeValue("onclick", "").Replace("collect('", "").Replace("')", ""),
@@ -208,11 +193,12 @@ namespace Otokoneko.Plugins.CopyManga
                 Description = descriptionNode.InnerText,
                 Url = url,
                 Tags = tags,
-                Chapters = mangaDetail.@default.groups.全部.Select(it => new ChapterDetail
+                Chapters = mangaDetail.groups.@default.chapters.Select(it => new ChapterDetail
                 {
-                    Id = it.uuid,
+                    Id = it.id,
                     Name = it.name,
-                    Url = string.Format(ChapterApiBase, it.comic_path_word, it.uuid)
+                    Url = string.Format(ChapterApiBase, path_word, it.id),
+                    Type = types.Single(t => t.id == it.type).name,
                 }).ToList()
             };
         }
@@ -223,8 +209,8 @@ namespace Otokoneko.Plugins.CopyManga
             var htmlDoc = new HtmlDocument();
             htmlDoc.LoadHtml(html);
             var node = htmlDoc.DocumentNode.SelectSingleNode("/html/body/div[2]");
-            var disposable = node.GetAttributeValue("disposable", null);
-            var detail = Decrypt<List<ChapterDetail_>>(disposable);
+            var contentkey = node.GetAttributeValue("contentkey", null);
+            var detail = Decrypt<List<Image>>(contentkey);
             return detail.Select(it => it.url).ToList();
         }
 
@@ -240,7 +226,7 @@ namespace Otokoneko.Plugins.CopyManga
             plain = plain[0x10..];
             var toDecryptArray = Enumerable.Range(0, plain.Length / 2).Select(x => Convert.ToByte(plain.Substring(x * 2, 2), 16))
                 .ToArray();
-            var rijndaelManaged = new RijndaelManaged { IV = iv, Key = Key, Mode = CipherMode.CBC, Padding = PaddingMode.PKCS7 };
+            var rijndaelManaged = new RijndaelManaged { IV = iv, Key = Encoding.UTF8.GetBytes(Key), Mode = CipherMode.CBC, Padding = PaddingMode.PKCS7 };
             var decryptor = rijndaelManaged.CreateDecryptor();
             var result = decryptor.TransformFinalBlock(toDecryptArray, 0, toDecryptArray.Length);
             return JsonConvert.DeserializeObject<T>(Encoding.UTF8.GetString(result));

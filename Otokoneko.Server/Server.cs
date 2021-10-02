@@ -63,6 +63,8 @@ namespace Otokoneko.Server
         public MangaKeywordSearchService MangaKeywordSearchService { get; set; }
         public MangaReadHistorySearchService MangaReadHistorySearchService { get; set; }
         public TagKeywordSearchService TagKeywordSearchService { get; set; }
+        public MangaFtsIndexService MangaFtsIndexService { get; set; }
+        public TagFtsIndexService TagFtsIndexService { get; set; }
 
         private string Id { get; set; }
         private string Name { get; set; }
@@ -936,6 +938,22 @@ namespace Otokoneko.Server
                     }
                 }
             }
+        }
+
+        #endregion
+
+        #region ServerConfig
+
+        [RequestProcessMethod(UserAuthority.Admin)]
+        public virtual async ValueTask<Tuple<ResponseStatus, object>> ResetFtsIndex()
+        {
+            var mangas = await MangaManager.GetAllMangas();
+            MangaFtsIndexService.Clear();
+            MangaFtsIndexService.Create(mangas);
+            var tags = await MangaManager.GetAllTags();
+            TagFtsIndexService.Clear();
+            TagFtsIndexService.Create(tags);
+            return new Tuple<ResponseStatus, object>(ResponseStatus.Success, true);
         }
 
         #endregion

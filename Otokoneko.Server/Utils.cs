@@ -23,6 +23,7 @@ using SharpCompress.Writers;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Memory;
 using Image = SixLabors.ImageSharp.Image;
+using WebP.Net;
 
 namespace Otokoneko.Server
 {
@@ -104,6 +105,26 @@ namespace Otokoneko.Server
             var req = new CertificateRequest("cn=Otokoneko", RSA.Create(4096), HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
             var cert = req.CreateSelfSigned(DateTimeOffset.Now.AddDays(-10), DateTimeOffset.Now.AddYears(10));
             File.WriteAllBytes(path, cert.Export(X509ContentType.Pfx, password));
+        }
+    }
+
+    public sealed class WebpFormat : IImageFormat
+    {
+        public static WebpFormat Instance
+        {
+            get;
+        } = new WebpFormat();
+
+        public string Name => "WEBP";
+
+        public string DefaultMimeType => "image/webp";
+
+        public IEnumerable<string> MimeTypes => new string[] { "image/webp" };
+
+        public IEnumerable<string> FileExtensions => new string[] { "webp" };
+
+        private WebpFormat()
+        {
         }
     }
 
@@ -193,7 +214,7 @@ namespace Otokoneko.Server
             }
         }
 
-        public static bool ImageCheck(Stream imageStream, out IImageFormat format)
+        public static bool ImageCheck(Stream imageStream, long length, out IImageFormat format)
         {
             try
             {
@@ -203,8 +224,21 @@ namespace Otokoneko.Server
             catch
             {
                 format = null;
-                return false;
             }
+            try
+            {
+                var cache = new byte[length];
+                imageStream.Seek(0, SeekOrigin.Begin);
+                imageStream.Read(cache, 0, (int)length);
+                using var webp = new WebPObject(cache);
+                format = WebpFormat.Instance;
+                return true;
+            }
+            catch
+            {
+                format = null;
+            }
+            return false;
         }
     }
 

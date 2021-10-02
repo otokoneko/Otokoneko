@@ -185,7 +185,7 @@ namespace Otokoneko.Server
 
             try
             {
-                var root = library.Repository.GetTree();
+                var root = library.Repository.GetTree(0);
                 CreateFileTree(root);
 
                 foreach (var manga in root.Children.Where(it => it.Children != null && it.Children.Count > 0))
@@ -228,7 +228,7 @@ namespace Otokoneko.Server
 
         public bool StoreFileTree(FileTreeNode node)
         {
-            return node.Library.Repository.Put(node);
+            return node.Library.Repository.StoreTree(node);
         }
 
         public bool Delete(FileTreeNode node)
@@ -236,7 +236,7 @@ namespace Otokoneko.Server
             foreach (var library in _libraries.Values)
             {
                 if (!library.Repository.Contains(node.ObjectId)) continue;
-                library.Repository.Delete(node);
+                library.Repository.DeleteTree(node);
                 return true;
             }
 

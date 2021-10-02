@@ -87,6 +87,7 @@ namespace Otokoneko.Server.ScheduleTaskManage
     {
         public string ImageUrl { get; set; }
         public string ImagePath { get; set; }
+        public bool CouldCover { get; set; }
 
         public override int Priority => int.MaxValue - 3;
 

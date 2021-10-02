@@ -10,10 +10,10 @@ namespace Otokoneko.Server.LibraryManage
     public interface IFileTreeNodeRepository
     {
         public FileTreeNode Get(long objectId);
-        public bool Delete(FileTreeNode node);
-        public bool Put(FileTreeNode node);
+        public bool DeleteTree(FileTreeNode root);
+        public bool StoreTree(FileTreeNode root);
         public bool Contains(long objectId);
-        public FileTreeNode GetTree();
+        public FileTreeNode GetTree(long rootId);
         public List<long> GetAllNodeObjectId();
         public void Close();
     }
@@ -40,28 +40,68 @@ namespace Otokoneko.Server.LibraryManage
             return node;
         }
 
-        public bool Delete(FileTreeNode node)
+        public bool DeleteTree(FileTreeNode root)
         {
-            if (node.Children != null && node.Children.Any(child => !Delete(child)))
+            using var batch = new WriteBatch();
+            if (Delete(batch, root))
+            {
+                _db.Write(batch);
+                return true;
+            }
+
+            return false;
+        }
+
+        public void Delete(IEnumerable<FileTreeNode> nodes)
+        {
+            using var batch = new WriteBatch();
+            foreach(var node in nodes)
+            {
+                batch.Delete(BitConverter.GetBytes(node.ObjectId));
+            }
+            _db.Write(batch);
+        }
+
+        public bool Delete(WriteBatch batch, FileTreeNode node)
+        {
+            if (node.Children != null && node.Children.Any(child => !Delete(batch, child)))
             {
                 return false;
             }
-            _db.Delete(BitConverter.GetBytes(node.ObjectId));
+            batch.Delete(BitConverter.GetBytes(node.ObjectId));
             _items.Remove(node.ObjectId);
             _cache.TryRemove(node.ObjectId, out _);
             return true;
         }
 
-        public bool Put(FileTreeNode node)
+        public bool StoreTree(FileTreeNode root)
         {
-            if (node.Children != null && node.Children.Any(child => !Put(child)))
+            using var batch = new WriteBatch();
+            if(Put(batch, root))
+            {
+                _db.Write(batch);
+                return true;
+            }
+
+            return false;
+        }
+        private bool Put(WriteBatch batch, FileTreeNode node)
+        {
+            if (node.Children != null && node.Children.Any(child => !Put(batch, child)))
             {
                 return false;
             }
-            var bytes = _serializer(node);
-            _db.Put(BitConverter.GetBytes(node.ObjectId), bytes);
-            _items.Add(node.ObjectId);
-            return true;
+            try
+            {
+                var bytes = _serializer(node);
+                batch.Put(BitConverter.GetBytes(node.ObjectId), bytes);
+                _items.Add(node.ObjectId);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
         }
 
         public bool Contains(long objectId)
@@ -69,7 +109,7 @@ namespace Otokoneko.Server.LibraryManage
             return _items.Contains(objectId);
         }
 
-        public FileTreeNode GetTree()
+        public FileTreeNode GetTree(long rootId)
         {
             var deleted = new HashSet<FileTreeNode>();
             var mapper = new Dictionary<long, FileTreeNode>();
@@ -96,12 +136,9 @@ namespace Otokoneko.Server.LibraryManage
                 }
             }
 
-            foreach (var node in deleted)
-            {
-                Delete(node);
-            }
+            Delete(deleted);
 
-            return mapper[0];
+            return mapper.TryGetValue(rootId, out var tree) ? tree : null;
         }
 
         public List<long> GetAllNodeObjectId()
@@ -128,7 +165,7 @@ namespace Otokoneko.Server.LibraryManage
             }
             if (!Contains(0))
             {
-                Put(FileTreeNode.Root);
+                StoreTree(FileTreeNode.Root);
             }
         }
     }

@@ -68,7 +68,10 @@ namespace Otokoneko.Server.ScheduleTaskManage
                 {
                     var imageUrl = mangaDetail.Cover;
                     var imagePath = Path.Combine(downloadMangaTask.MangaPath, "cover");
-                    var imageTask = new DownloadImageScheduleTask(imageUrl, imagePath, "cover", downloadMangaTask);
+                    var imageTask = new DownloadImageScheduleTask(imageUrl, imagePath, "cover", downloadMangaTask)
+                    {
+                        CouldCover = true
+                    };
                     downloadMangaTask.Children.Add(imageTask);
                 }
 
@@ -148,41 +151,42 @@ namespace Otokoneko.Server.ScheduleTaskManage
             var downloader = PluginManager.MangaDownloaders.FirstOrDefault(it => it.IsLegalUrl(downloadImageTask.ImageUrl, DownloadTaskType.Image));
             var samePool = ArrayPool<byte>.Shared;
             byte[] buffer = null;
-            if (downloader == null)
-            {
-                downloadImageTask.Update(TaskStatus.Fail);
-                return;
-            }
             try
             {
+                if (downloader == null)
+                {
+                    throw new ArgumentException($"未找到合适的下载器，url: {downloadImageTask.ImageUrl}");
+                }
                 downloadImageTask.Update(TaskStatus.Executing);
                 var parent = Path.GetDirectoryName(downloadImageTask.ImagePath);
                 var fileName = Path.GetFileName(downloadImageTask.ImagePath);
-                if (Directory.GetFiles(parent, fileName + ".*").Length > 0)
+                var existsFile = Directory.GetFiles(parent, fileName + ".*").FirstOrDefault();
+                if (!downloadImageTask.CouldCover && existsFile != null)
                 {
                     downloadImageTask.Update(TaskStatus.Success);
                     return;
                 }
 
                 using var content = await downloader.GetImage(downloadImageTask.ImageUrl);
-                buffer = samePool.Rent((int)(content.Headers.ContentLength ?? 128 * 1024));
+                long length = content.Headers.ContentLength ?? 0;
+                buffer = samePool.Rent((int)(length > 0 ? length : 128 * 1024));
                 await using var stream = new MemoryStream(buffer);
                 using var source = new CancellationTokenSource();
                 var token = source.Token;
                 var timeout = 5 * 60 * 1000;
                 var copyToAsync = content.CopyToAsync(stream, token);
-                if (await Task.WhenAny(copyToAsync, Task.Delay(timeout, token)) != copyToAsync)
+                if (await Task.WhenAny(copyToAsync, Task.Delay(timeout, token)) != copyToAsync || stream.Position < length)
                 {
                     throw new TimeoutException();
                 }
+                length = stream.Position;
                 stream.Seek(0, SeekOrigin.Begin);
-                if (!ImageUtils.ImageCheck(stream, out var format))
+                if (!ImageUtils.ImageCheck(stream, length, out var format))
                 {
                     throw new BadImageFormatException();
                 }
-                var length = (int)stream.Position;
-                await using var fs = File.OpenWrite(downloadImageTask.ImagePath + "." + format.FileExtensions.First());
-                await fs.WriteAsync(buffer.AsMemory(0, length));
+                await using var fs = File.OpenWrite(existsFile ?? $"{downloadImageTask.ImagePath}.{format.FileExtensions.First()}");
+                await fs.WriteAsync(buffer.AsMemory(0, (int)length));
                 downloadImageTask.Update(TaskStatus.Success);
             }
             catch (Exception e)

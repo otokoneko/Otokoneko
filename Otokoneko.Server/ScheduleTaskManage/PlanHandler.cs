@@ -33,8 +33,13 @@ namespace Otokoneko.Server.ScheduleTaskManage
 
         public List<ScheduleTask> Execute(ScanPlan scanPlan)
         {
-            var task = new ScanLibraryTask(scanPlan.LibraryId, $"扫描-{LibraryManager.GetLibrary(scanPlan.LibraryId).Name}");
             var result = new List<ScheduleTask>();
+            var library = LibraryManager.GetLibrary(scanPlan.LibraryId);
+            if(library == null)
+            {
+                return result;
+            }
+            var task = new ScanLibraryTask(scanPlan.LibraryId, $"扫描-{library.Name}");
             if(Scheduler.ScheduleAndStart(task)) result.Add(task);
             return result;
         }

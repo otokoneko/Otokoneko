@@ -13,7 +13,8 @@ namespace Otokoneko.Server.MangaManage
     public class MangaManager
     {
         public LibraryManager LibraryManager { get; set; }
-        public FtsIndexService FtsIndexService { get; set; }
+        public MangaFtsIndexService MangaFtsIndexService { get; set; }
+        public TagFtsIndexService TagFtsIndexService { get; set; }
 
         private const string DbConnectionString = @"Data Source=./data/manga.db;";
         public Func<string, SqlSugarClient> CreateContext { get; set; }
@@ -131,7 +132,7 @@ namespace Otokoneko.Server.MangaManage
                 var tagService = new TagService(context);
                 var result = await tagService.Insert(tag);
                 if (!result) return null;
-                FtsIndexService.CreateFtsIndex(new List<Tag>() { tag });
+                TagFtsIndexService.Create(new List<Tag>() { tag });
                 context.CommitTran();
                 return tag;
             }
@@ -167,7 +168,7 @@ namespace Otokoneko.Server.MangaManage
                 }
 
                 var result = await tagService.Insert(tags);
-                FtsIndexService.CreateFtsIndex(result.InsertList.Select(it => it.Item).ToList());
+                TagFtsIndexService.Create(result.InsertList.Select(it => it.Item).ToList());
                 var realTags = await tagService.GetTags(tags.Select(it => new Tuple<long, string>(it.TypeId, it.Name)).ToList());
                 context.CommitTran();
                 return realTags;
@@ -205,7 +206,7 @@ namespace Otokoneko.Server.MangaManage
                     await mangaTagMappingService.Insert(mappings);
                 }
 
-                FtsIndexService.CreateFtsIndex(new List<Manga>() { manga });
+                MangaFtsIndexService.Create(new List<Manga>() { manga });
                 context.CommitTran();
                 return true;
             }
@@ -255,7 +256,7 @@ namespace Otokoneko.Server.MangaManage
                 }
 
                 await mangaService.Upsert(manga);
-                FtsIndexService.UpdateFtsIndex(manga);
+                MangaFtsIndexService.Update(manga);
                 context.CommitTran();
                 return true;
             }
@@ -340,7 +341,7 @@ namespace Otokoneko.Server.MangaManage
                     await mangaTagMappingService.Update(oldKey, tag.Key);
                 }
 
-                FtsIndexService.UpdateFtsIndex(tag);
+                TagFtsIndexService.Update(tag);
                 context.CommitTran();
                 return true;
             }
@@ -355,6 +356,18 @@ namespace Otokoneko.Server.MangaManage
 
         #region Query
 
+        public async ValueTask<List<Manga>> GetAllMangas()
+        {
+            using var context = Context;
+            var mangaService = new MangaService(context);
+            return await mangaService.GetListAsync();
+        }
+        public async ValueTask<List<Tag>> GetAllTags()
+        {
+            using var context = Context;
+            var tagService = new TagService(context);
+            return await tagService.GetListAsync();
+        }
         public async ValueTask<List<TagType>> GetTagTypes()
         {
             using var context = Context;
@@ -404,6 +417,11 @@ namespace Otokoneko.Server.MangaManage
             var commentProgressService = new CommentService(context);
 
             var manga = await mangaService.GetSingleAsync(it => it.ObjectId == mangaId);
+
+            if(manga == null)
+            {
+                return null;
+            }
 
             manga.Chapters = (await chapterService
                     .GetListAsync(it => it.MangaId == mangaId))
@@ -534,7 +552,7 @@ namespace Otokoneko.Server.MangaManage
                 await favoriteService.DeleteAsync(it => it.EntityId == mangaId);
                 await readProgressService.DeleteAsync(it => it.MangaId == mangaId);
                 context.CommitTran();
-                FtsIndexService.DeleteMangaFtxIndex(mangaId);
+                MangaFtsIndexService.Delete(mangaId);
                 return true;
             }
             catch (Exception e)
@@ -572,7 +590,7 @@ namespace Otokoneko.Server.MangaManage
 
                 await tagService.DeleteAsync(it => it.ObjectId == tagId);
                 context.CommitTran();
-                FtsIndexService.DeleteTagFtxIndex(tagId);
+                TagFtsIndexService.Delete(tagId);
                 return true;
             }
             catch (Exception e)

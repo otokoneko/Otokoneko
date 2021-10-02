@@ -9,7 +9,7 @@ namespace Otokoneko.Server.SearchService
 {
     public class TagKeywordSearchService
     {
-        public FtsIndexService FtsIndexService { get; set; }
+        public TagFtsIndexService TagFtsIndexService { get; set; }
         private const string DbConnectionString = @"Data Source=./data/manga.db;";
         public Func<string, SqlSugarClient> CreateContext { get; set; }
         private SqlSugarClient Context => CreateContext(DbConnectionString);
@@ -26,7 +26,7 @@ namespace Otokoneko.Server.SearchService
             }
             else
             {
-                var result = FtsIndexService.TagFts(queryString);
+                var result = TagFtsIndexService.Search(queryString);
                 result = await tagService.GetTagKeys(it => result.Contains(it.ObjectId));
                 if (typeId > 0) result = await tagService.GetTagIds(it => result.Contains(it.ObjectId) && it.TypeId == typeId);
                 return result.OrderBy(it => result.IndexOf(it)).ToList();

@@ -34,7 +34,8 @@ namespace Otokoneko.Server
             
             builder.RegisterType<Server>().PropertiesAutowired().EnableClassInterceptors().SingleInstance();
             
-            builder.RegisterType<FtsIndexService>().PropertiesAutowired().SingleInstance();
+            builder.RegisterType<MangaFtsIndexService>().PropertiesAutowired().SingleInstance();
+            builder.RegisterType<TagFtsIndexService>().PropertiesAutowired().SingleInstance();
             builder.RegisterType<MangaKeywordSearchService>().PropertiesAutowired().SingleInstance();
             builder.RegisterType<TagKeywordSearchService>().PropertiesAutowired().SingleInstance();
             builder.RegisterType<MangaReadHistorySearchService>().PropertiesAutowired().SingleInstance();

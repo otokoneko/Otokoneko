@@ -1,7 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Lucene.Net.Analysis;
-using Lucene.Net.Analysis.Core;
+using Lucene.Net.Analysis.Cjk;
 using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Queries.Function;
@@ -14,26 +15,68 @@ using Otokoneko.DataType;
 
 namespace Otokoneko.Server.SearchService
 {
-    public class FtsIndexService
+    public class FtsIndexServiceBase
     {
-        private static LuceneVersion AppLuceneVersion { get; } = LuceneVersion.LUCENE_48;
-        private static Analyzer Analyzer { get; } = new SimpleAnalyzer(AppLuceneVersion);
-        private static string MangaIndexPath { get; } = @"./data/mangaIndex";
-        private static string TagIndexPath { get; } = @"./data/tagIndex";
-
-        public FtsIndexService()
+        protected static LuceneVersion AppLuceneVersion { get; } = LuceneVersion.LUCENE_48;
+        protected static Analyzer Analyzer { get; } = new CJKAnalyzer(AppLuceneVersion);
+        private string IndexPath { get; }
+        public FtsIndexServiceBase(string indexPath)
         {
-            using var mangaFtsDirectory = FSDirectory.Open(MangaIndexPath);
-            using var tagFtsDirectory = FSDirectory.Open(TagIndexPath);
-            new IndexWriter(mangaFtsDirectory, new IndexWriterConfig(AppLuceneVersion, Analyzer)).Dispose();
-            new IndexWriter(tagFtsDirectory, new IndexWriterConfig(AppLuceneVersion, Analyzer)).Dispose();
+            IndexPath = indexPath;
+            using var ftsDirectory = FSDirectory.Open(IndexPath);
+            new IndexWriter(ftsDirectory, new IndexWriterConfig(AppLuceneVersion, Analyzer)).Dispose();
         }
 
-        public void CreateFtsIndex(List<Manga> mangas)
+        public void Create(List<Document> docs)
         {
-            using var ftsDirectory = FSDirectory.Open(MangaIndexPath);
+            using var ftsDirectory = FSDirectory.Open(IndexPath);
             var indexConfig = new IndexWriterConfig(AppLuceneVersion, Analyzer);
             using var ftsIndexWriter = new IndexWriter(ftsDirectory, indexConfig);
+            ftsIndexWriter.AddDocuments(docs, Analyzer);
+            ftsIndexWriter.Commit();
+        }
+        public void Update(Term term, Document doc)
+        {
+            using var ftsDirectory = FSDirectory.Open(IndexPath);
+            var indexConfig = new IndexWriterConfig(AppLuceneVersion, Analyzer);
+            using var ftsIndexWriter = new IndexWriter(ftsDirectory, indexConfig);
+            ftsIndexWriter.UpdateDocument(term, doc, Analyzer);
+            ftsIndexWriter.Commit();
+        }
+        public void Delete(Term term)
+        {
+            using var ftsDirectory = FSDirectory.Open(IndexPath);
+            var indexConfig = new IndexWriterConfig(AppLuceneVersion, Analyzer);
+            using var ftsIndexWriter = new IndexWriter(ftsDirectory, indexConfig);
+            ftsIndexWriter.DeleteDocuments(term);
+            ftsIndexWriter.Commit();
+        }
+        public void Clear()
+        {
+            using var ftsDirectory = FSDirectory.Open(IndexPath);
+            var indexConfig = new IndexWriterConfig(AppLuceneVersion, Analyzer);
+            using var ftsIndexWriter = new IndexWriter(ftsDirectory, indexConfig);
+            ftsIndexWriter.DeleteAll();
+            ftsIndexWriter.Commit();
+        }
+        public List<TResult> Search<TResult>(Query query, Func<ScoreDoc, IndexSearcher, TResult> selector)
+        {
+            using var ftsDirectory = FSDirectory.Open(IndexPath);
+            using var ftsIndexReader = DirectoryReader.Open(ftsDirectory);
+            var ftsIndexSearch = new IndexSearcher(ftsIndexReader);
+            return ftsIndexSearch
+                .Search(query, int.MaxValue).ScoreDocs
+                .Select(hit => selector(hit, ftsIndexSearch))
+                .ToList();
+        }
+    }
+
+    public class MangaFtsIndexService: FtsIndexServiceBase
+    {
+        public MangaFtsIndexService(): base(@"./data/mangaIndex") { }
+
+        public void Create(List<Manga> mangas)
+        {
             var docs = mangas.Select(it => new Document()
             {
                 new StringField("Id",
@@ -49,15 +92,50 @@ namespace Otokoneko.Server.SearchService
                     it.Aliases??"",
                     Field.Store.NO),
             }).ToList();
-            ftsIndexWriter.AddDocuments(docs, Analyzer);
-            ftsIndexWriter.Commit();
+            Create(docs);
         }
 
-        public void CreateFtsIndex(List<Tag> tags)
+        public void Update(Manga manga)
         {
-            using var ftsDirectory = FSDirectory.Open(TagIndexPath);
-            var indexConfig = new IndexWriterConfig(AppLuceneVersion, Analyzer);
-            using var ftsIndexWriter = new IndexWriter(ftsDirectory, indexConfig);
+            var term = new Term("Id", manga.ObjectId.ToString());
+            var doc = new Document()
+            {
+                new StringField("Id", manga.ObjectId.ToString(), Field.Store.YES),
+                new TextField("Title", manga.Title, Field.Store.NO),
+                new TextField("Description", manga.Description ?? "", Field.Store.NO),
+                new TextField("Aliases", manga.Aliases ?? "", Field.Store.NO)
+            };
+            Update(term, doc);
+        }
+
+        public void Delete(long mangaId)
+        {
+            var term = new Term("Id", mangaId.ToString());
+            Delete(term);
+        }
+
+        public List<long> Search(string queryString)
+        {
+            queryString = QueryParserBase.Escape(queryString);
+            var titleParser = new QueryParser(AppLuceneVersion, "Title", Analyzer);
+            var descriptionParser = new QueryParser(AppLuceneVersion, "Description", Analyzer);
+            var aliasesParser = new QueryParser(AppLuceneVersion, "Aliases", Analyzer);
+            var query = new BooleanQuery
+            {
+                {new BoostedQuery(titleParser.Parse(queryString), new DoubleConstValueSource(2.0)), Occur.SHOULD},
+                {new BoostedQuery(descriptionParser.Parse(queryString), new DoubleConstValueSource(0.5)), Occur.SHOULD},
+                {new BoostedQuery(aliasesParser.Parse(queryString), new DoubleConstValueSource(1.0)), Occur.SHOULD}
+            };
+            return Search(query, (hit, ftsIndexSearch) => long.Parse(ftsIndexSearch.Doc(hit.Doc).Get("Id")));
+        }
+    }
+    
+    public class TagFtsIndexService : FtsIndexServiceBase
+    {
+        public TagFtsIndexService() : base(@"./data/tagIndex") { }
+
+        public void Create(List<Tag> tags)
+        {
             var docs = tags.Select(it => new Document()
             {
                 new StringField("Id",
@@ -70,84 +148,29 @@ namespace Otokoneko.Server.SearchService
                     it.Detail??"",
                     Field.Store.NO),
             }).ToList();
-            ftsIndexWriter.AddDocuments(docs, Analyzer);
-            ftsIndexWriter.Commit();
+            Create(docs);
         }
 
-        public void UpdateFtsIndex(Manga manga)
+        public void Update(Tag tag)
         {
-            using var ftsDirectory = FSDirectory.Open(MangaIndexPath);
-            var indexConfig = new IndexWriterConfig(AppLuceneVersion, Analyzer);
-            using var ftsIndexWriter = new IndexWriter(ftsDirectory, indexConfig);
-            ftsIndexWriter.UpdateDocument(new Term("Id", manga.ObjectId.ToString()),
-                new Document()
-                {
-                    new StringField("Id", manga.ObjectId.ToString(), Field.Store.YES),
-                    new TextField("Title", manga.Title, Field.Store.NO),
-                    new TextField("Description", manga.Description ?? "", Field.Store.NO),
-                    new TextField("Aliases", manga.Aliases ?? "", Field.Store.NO)
-                }, Analyzer);
-            ftsIndexWriter.Commit();
-        }
-
-        public void UpdateFtsIndex(Tag tag)
-        {
-            using var ftsDirectory = FSDirectory.Open(TagIndexPath);
-            var indexConfig = new IndexWriterConfig(AppLuceneVersion, Analyzer);
-            using var ftsIndexWriter = new IndexWriter(ftsDirectory, indexConfig);
-            ftsIndexWriter.UpdateDocument(new Term("Id", tag.ObjectId.ToString()),
-                new Document()
-                {
-                    new StringField("Id", tag.ObjectId.ToString(), Field.Store.YES),
-                    new TextField("Name", tag.Name, Field.Store.NO),
-                    new TextField("Detail", tag.Detail ?? "", Field.Store.NO),
-                }, Analyzer);
-            ftsIndexWriter.Commit();
-        }
-
-        public void DeleteMangaFtxIndex(long mangaId)
-        {
-            using var ftsDirectory = FSDirectory.Open(MangaIndexPath);
-            var indexConfig = new IndexWriterConfig(AppLuceneVersion, Analyzer);
-            using var ftsIndexWriter = new IndexWriter(ftsDirectory, indexConfig);
-            ftsIndexWriter.DeleteDocuments(new Term("Id", mangaId.ToString()));
-            ftsIndexWriter.Commit();
-        }
-
-        public void DeleteTagFtxIndex(long tagId)
-        {
-            using var ftsDirectory = FSDirectory.Open(TagIndexPath);
-            var indexConfig = new IndexWriterConfig(AppLuceneVersion, Analyzer);
-            using var ftsIndexWriter = new IndexWriter(ftsDirectory, indexConfig);
-            ftsIndexWriter.DeleteDocuments(new Term("Id", tagId.ToString()));
-            ftsIndexWriter.Commit();
-        }
-
-        public List<long> MangaFts(string queryString)
-        {
-            queryString = QueryParserBase.Escape(queryString);
-            using var ftsDirectory = FSDirectory.Open(MangaIndexPath);
-            using var ftsIndexReader = DirectoryReader.Open(ftsDirectory);
-            var ftsIndexSearch = new IndexSearcher(ftsIndexReader);
-            var titleParser = new QueryParser(AppLuceneVersion, "Title", Analyzer);
-            var descriptionParser = new QueryParser(AppLuceneVersion, "Description", Analyzer);
-            var aliasesParser = new QueryParser(AppLuceneVersion, "Aliases", Analyzer);
-            var query = new BooleanQuery
+            var term = new Term("Id", tag.ObjectId.ToString());
+            var doc = new Document()
             {
-                {new BoostedQuery(titleParser.Parse(queryString), new DoubleConstValueSource(2.0)), Occur.SHOULD},
-                {new BoostedQuery(descriptionParser.Parse(queryString), new DoubleConstValueSource(0.5)), Occur.SHOULD},
-                {new BoostedQuery(aliasesParser.Parse(queryString), new DoubleConstValueSource(1.0)), Occur.SHOULD}
+                new StringField("Id", tag.ObjectId.ToString(), Field.Store.YES),
+                new TextField("Name", tag.Name, Field.Store.NO),
+                new TextField("Detail", tag.Detail ?? "", Field.Store.NO),
             };
-            var hits = ftsIndexSearch.Search(query, int.MaxValue).ScoreDocs.ToList();
-            return hits.Select(hit => long.Parse(ftsIndexSearch.Doc(hit.Doc).Get("Id"))).ToList();
+            Update(term, doc);
         }
 
-        public List<long> TagFts(string queryString)
+        public void Delete(long tagId)
+        {
+            var term = new Term("Id", tagId.ToString());
+            Delete(term);
+        }
+        public List<long> Search(string queryString)
         {
             queryString = QueryParserBase.Escape(queryString);
-            using var ftsDirectory = FSDirectory.Open(TagIndexPath);
-            using var ftsIndexReader = DirectoryReader.Open(ftsDirectory);
-            var ftsIndexSearch = new IndexSearcher(ftsIndexReader);
             var nameParser = new QueryParser(AppLuceneVersion, "Name", Analyzer);
             var detailParser = new QueryParser(AppLuceneVersion, "Detail", Analyzer);
             var query = new BooleanQuery
@@ -155,8 +178,7 @@ namespace Otokoneko.Server.SearchService
                 {nameParser.Parse(queryString + "*"), Occur.SHOULD},
                 {detailParser.Parse(queryString), Occur.SHOULD},
             };
-            var hits = ftsIndexSearch.Search(query, int.MaxValue).ScoreDocs.ToList();
-            return hits.Select(hit => long.Parse(ftsIndexSearch.Doc(hit.Doc).Get("Id"))).Distinct().ToList();
+            return Search(query, (hit, ftsIndexSearch) => long.Parse(ftsIndexSearch.Doc(hit.Doc).Get("Id")));
         }
     }
 }

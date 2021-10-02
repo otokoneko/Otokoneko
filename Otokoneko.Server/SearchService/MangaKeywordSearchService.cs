@@ -84,7 +84,7 @@ namespace Otokoneko.Server.SearchService
 
     public class MangaKeywordSearchService
     {
-        public FtsIndexService FtsIndexService { get; set; }
+        public MangaFtsIndexService MangaFtsIndexService { get; set; }
         private const string DbConnectionString = @"Data Source=./data/manga.db;";
         public Func<string, SqlSugarClient> CreateContext { get; set; }
         private SqlSugarClient Context => CreateContext(DbConnectionString);
@@ -268,7 +268,7 @@ namespace Otokoneko.Server.SearchService
 
             if (keywords.Count != 0)
             {
-                ftsResult = FtsIndexService.MangaFts(string.Join(' ', keywords));
+                ftsResult = MangaFtsIndexService.Search(string.Join(' ', keywords));
                 result = result.Intersect(ftsResult).ToList();
                 if (result.Count == 0) return result;
             }

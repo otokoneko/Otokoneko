@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30717.126
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31612.314
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Otokoneko.Plugins.Interface", "Otokoneko.Plugins.Interface\Otokoneko.Plugins.Interface.csproj", "{59935794-D97A-4C6A-A56F-4699EBBC0DE3}"
 EndProject
@@ -9,7 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Otokoneko.Plugins.Dmzj", "O
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Otokoneko.Plugins.CopyManga", "Otokoneko.Plugins.CopyManga\Otokoneko.Plugins.CopyManga.csproj", "{63A7688C-A3F8-4626-9424-3183BCB37438}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Otokoneko.Plugins.NHentai", "Otokoneko.Plugins.NHentai\Otokoneko.Plugins.NHentai.csproj", "{877A2952-80F1-47AE-B229-E76652EB1A24}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Otokoneko.Plugins.NHentai", "Otokoneko.Plugins.NHentai\Otokoneko.Plugins.NHentai.csproj", "{877A2952-80F1-47AE-B229-E76652EB1A24}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -29,10 +29,6 @@ Global
 		{63A7688C-A3F8-4626-9424-3183BCB37438}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{63A7688C-A3F8-4626-9424-3183BCB37438}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{63A7688C-A3F8-4626-9424-3183BCB37438}.Release|Any CPU.Build.0 = Release|Any CPU
-		{474C495C-C1E2-4DD2-9F5D-3528F1B9F149}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{474C495C-C1E2-4DD2-9F5D-3528F1B9F149}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{474C495C-C1E2-4DD2-9F5D-3528F1B9F149}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{474C495C-C1E2-4DD2-9F5D-3528F1B9F149}.Release|Any CPU.Build.0 = Release|Any CPU
 		{877A2952-80F1-47AE-B229-E76652EB1A24}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{877A2952-80F1-47AE-B229-E76652EB1A24}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{877A2952-80F1-47AE-B229-E76652EB1A24}.Release|Any CPU.ActiveCfg = Release|Any CPU

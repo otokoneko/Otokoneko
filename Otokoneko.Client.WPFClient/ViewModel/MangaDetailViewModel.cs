@@ -41,6 +41,8 @@ namespace Otokoneko.Client.WPFClient.ViewModel
         public const string ReadHistoryTemplate = "上次读到：\n{0}\n{1}";
 
         public const string DeletedMangaNotice = "确定删除漫画 {0}？";
+
+        public const string MangaNotFound = "该漫画不存在";
     }
 
     class MangaDetailViewModel:BaseViewModel, INavigationViewModel
@@ -209,7 +211,11 @@ namespace Otokoneko.Client.WPFClient.ViewModel
         public async ValueTask LoadManga()
         {
             var manga = await Model.GetManga(Manga.ObjectId);
-            if (manga == null) return;
+            if (manga == null)
+            {
+                MessageBox.Show(Constant.MangaNotFound);
+                return;
+            }
             Manga = manga;
             await Model.ListTagTypes();
             DisplayMetadata();

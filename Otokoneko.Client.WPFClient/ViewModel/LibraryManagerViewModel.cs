@@ -9,6 +9,9 @@ namespace Otokoneko.Client.WPFClient.ViewModel
 {
     class Library
     {
+        public delegate void DialogShowedHandler();
+
+        public DialogShowedHandler OnDialogShowed;
         public long ObjectId { get; set; }
         public LibraryType LibraryType { get; set; }
         public string Path { get; set; }
@@ -18,6 +21,7 @@ namespace Otokoneko.Client.WPFClient.ViewModel
         {
             var libraryDetailWindow = new LibraryDetailWindow(ObjectId);
             libraryDetailWindow.ShowDialog();
+            OnDialogShowed();
         });
 
         public Library(FileTreeRoot library)
@@ -47,10 +51,10 @@ namespace Otokoneko.Client.WPFClient.ViewModel
 
         private bool _loaded = false;
 
-        public ICommand RefreshCommand=>new AsyncCommand(async () =>
-        {
-            await Load();
-        });
+        public ICommand RefreshCommand => new AsyncCommand(async () =>
+          {
+              await Load();
+          });
 
         private async ValueTask Load()
         {
@@ -64,6 +68,12 @@ namespace Otokoneko.Client.WPFClient.ViewModel
             {
                 Libraries.Insert(0, new Library(library));
             }
+
+            foreach(var library in Libraries)
+            {
+                library.OnDialogShowed += () => Load();
+            }
+
             OnPropertyChanged(nameof(Libraries));
         }
 

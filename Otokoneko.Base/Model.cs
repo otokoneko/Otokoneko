@@ -379,9 +379,10 @@ namespace Otokoneko.Client
             var (result, status) = await SendRequest<object, bool>(libraryId, null);
         }
 
-        public async ValueTask DeleteLibrary(long libraryId)
+        public async ValueTask<bool> DeleteLibrary(long libraryId)
         {
             var (result, status) = await SendRequest<object, bool>(libraryId, null);
+            return result;
         }
 
 #endregion
@@ -719,6 +720,15 @@ namespace Otokoneko.Client
         public async ValueTask<List<string>> GetScrapers()
         {
             var (result, status) = await SendRequest<object, List<string>>(0, null);
+            return result;
+        }
+
+        #endregion
+
+        #region ServerConfig
+        public async ValueTask<bool> ResetFtsIndex()
+        {
+            var (result, status) = await SendRequest<object, bool>(0, null);
             return result;
         }
 

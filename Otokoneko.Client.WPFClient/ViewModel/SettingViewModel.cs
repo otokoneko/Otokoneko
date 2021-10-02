@@ -144,6 +144,11 @@ namespace Otokoneko.Client.WPFClient.ViewModel
             OnPropertyChanged(nameof(CacheUsage));
         });
 
+        public ICommand ResetFtsIndexCommand => new AsyncCommand(async () =>
+        {
+            await Model.ResetFtsIndex();
+        });
+
         public SettingViewModel()
         {
             ThemeColors = new ObservableCollection<Tuple<Brush, AsyncCommand>>();

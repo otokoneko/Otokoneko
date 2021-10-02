@@ -25,6 +25,7 @@ namespace Otokoneko.Client.WPFClient.ViewModel
     class LibraryDetailViewModel : BaseViewModel
     {
         private FileTreeRoot _library;
+        private Window _view;
 
         public long ObjectId { get; set; }
 
@@ -41,10 +42,11 @@ namespace Otokoneko.Client.WPFClient.ViewModel
             set => _library.ScraperName = (value > 0 && value < Scrapers?.Count) ? Scrapers[value] : null;
         }
 
-        public LibraryDetailViewModel(long libraryId)
+        public LibraryDetailViewModel(long libraryId, Window view)
         {
             ObjectId = libraryId;
             IsNewLibrary = libraryId <= 0;
+            _view = view;
         }
 
         public async ValueTask OnLoaded()
@@ -137,7 +139,12 @@ namespace Otokoneko.Client.WPFClient.ViewModel
             {
                 var result = MessageBox.Show(Constant.DeleteLibraryNotice, Constant.OperateNotice, MessageBoxButton.YesNo);
                 if (result != MessageBoxResult.Yes) return;
-                await Model.DeleteLibrary(ObjectId);
+                var succ = await Model.DeleteLibrary(ObjectId);
+                MessageBox.Show(succ ? Constant.DeleteSuccess : Constant.DeleteFail);
+                if (succ)
+                {
+                    _view.Close();
+                }
             }
         });
     }

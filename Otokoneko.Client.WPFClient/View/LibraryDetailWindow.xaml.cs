@@ -24,7 +24,7 @@ namespace Otokoneko.Client.WPFClient.View
         public LibraryDetailWindow(long libraryId)
         {
             InitializeComponent();
-            DataContext = new LibraryDetailViewModel(libraryId);
+            DataContext = new LibraryDetailViewModel(libraryId, this);
             Loaded += OnLoaded;
         }
 

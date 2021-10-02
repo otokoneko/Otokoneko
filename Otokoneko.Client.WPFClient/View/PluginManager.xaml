@@ -26,6 +26,7 @@
         BorderBrush="{DynamicResource MahApps.Brushes.ThemeForeground}"
         BorderThickness="1">
         <ListBox
+            ScrollViewer.HorizontalScrollBarVisibility="Disabled"
             ItemContainerStyle="{StaticResource NoFocusListBox}"
             ItemsSource="{Binding Plugins}"
             VirtualizingPanel.IsVirtualizing="True"

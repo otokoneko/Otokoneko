@@ -16,7 +16,7 @@ namespace Otokoneko.Plugins.CopyManga
     {
         public string Name => nameof(CopyManga);
         public string Author => "Otokoneko";
-        public Version Version => new Version(1, 1, 0);
+        public Version Version => new Version(1, 1, 2);
 
         private string ChapterApiBase { get; } = "https://www.copymanga.com/comic/{0}/chapter/{1}";
 
@@ -30,11 +30,17 @@ namespace Otokoneko.Plugins.CopyManga
         [RequiredParameter(typeof(string), @"^https?://(www\.)?copymanga\.com/comic/[^/]+/chapter/[^/]+$", alias: "章节链接正则表达式")]
         public string ChapterRe { get; set; }
 
-        [RequiredParameter(typeof(string), @"^https?://?([^/]+\.)cdn77.org/.+$", alias: "图片链接正则表达式")]
+        [RequiredParameter(typeof(string), @"^https?://?([^/]+\.)(cdn77.org)|(mangafunc.fun:12001)/.+$", alias: "图片链接正则表达式")]
         public string ImageRe { get; set; }
 
-        [RequiredParameter(typeof(string), "xxxmanga.abc.key", alias: "返回值的解密密钥")]
-        public string Key { get; set; }
+        [RequiredParameter(typeof(string), "xxxmanga.woo.key", alias: "漫画内容的解密密钥")]
+        public string MangaKey { get; set; }
+
+        [RequiredParameter(typeof(string), "xxxmanga.woo.key", alias: "章节内容的解密密钥")]
+        public string ChapterKey { get; set; }
+
+        [RequiredParameter(typeof(string), "/html/body/div[3]", alias: "章节内容的XPath")]
+        public string ImageDataXPath { get; set; }
 
         [RequiredParameter(typeof(string), "author", alias: "标签类别“作者”的默认名称")]
         public string TagTypeAuthorName { get; set; }
@@ -146,7 +152,14 @@ namespace Otokoneko.Plugins.CopyManga
             detailUrl += "chapters";
             var respText = await Client.GetStringAsync(detailUrl);
             var resp = JsonConvert.DeserializeObject<Response>(respText);
-            return Decrypt<Manga>(resp.results);
+            try
+            {
+                return Decrypt<Manga>(resp.results, MangaKey);
+            }
+            catch(Exception e)
+            {
+                throw new Exception("漫画内容解密失败", e);
+            }
         }
 
         public async ValueTask<MangaDetail> GetManga(string url)
@@ -208,10 +221,21 @@ namespace Otokoneko.Plugins.CopyManga
             var html = await Client.GetStringAsync(url);
             var htmlDoc = new HtmlDocument();
             htmlDoc.LoadHtml(html);
-            var node = htmlDoc.DocumentNode.SelectSingleNode("/html/body/div[2]");
-            var contentkey = node.GetAttributeValue("contentkey", null);
-            var detail = Decrypt<List<Image>>(contentkey);
-            return detail.Select(it => it.url).ToList();
+            var node = htmlDoc.DocumentNode.SelectSingleNode(ImageDataXPath);
+            var contentkey = node?.GetAttributeValue("contentkey", null);
+            if(string.IsNullOrEmpty(contentkey))
+            {
+                throw new Exception($"无法通过 XPath: {ImageDataXPath} 获取章节内容");
+            }
+            try
+            {
+                var detail = Decrypt<List<Image>>(contentkey, ChapterKey);
+                return detail.Select(it => it.url).ToList();
+            }
+            catch (Exception e)
+            {
+                throw new Exception("章节内容解密失败", e);
+            }
         }
 
         public async ValueTask<HttpContent> GetImage(string url)
@@ -220,13 +244,13 @@ namespace Otokoneko.Plugins.CopyManga
             return response.Content;
         }
 
-        public T Decrypt<T>(string plain)
+        public T Decrypt<T>(string plain, string key)
         {
             var iv = Encoding.UTF8.GetBytes(plain.Substring(0, 0x10));
             plain = plain[0x10..];
             var toDecryptArray = Enumerable.Range(0, plain.Length / 2).Select(x => Convert.ToByte(plain.Substring(x * 2, 2), 16))
                 .ToArray();
-            var rijndaelManaged = new RijndaelManaged { IV = iv, Key = Encoding.UTF8.GetBytes(Key), Mode = CipherMode.CBC, Padding = PaddingMode.PKCS7 };
+            var rijndaelManaged = new RijndaelManaged { IV = iv, Key = Encoding.UTF8.GetBytes(key), Mode = CipherMode.CBC, Padding = PaddingMode.PKCS7 };
             var decryptor = rijndaelManaged.CreateDecryptor();
             var result = decryptor.TransformFinalBlock(toDecryptArray, 0, toDecryptArray.Length);
             return JsonConvert.DeserializeObject<T>(Encoding.UTF8.GetString(result));

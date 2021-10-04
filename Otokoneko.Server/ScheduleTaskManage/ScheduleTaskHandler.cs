@@ -13,7 +13,7 @@ using Otokoneko.Server.Converter;
 using Otokoneko.Server.MangaManage;
 using Otokoneko.Server.MessageBox;
 using Otokoneko.Server.PluginManage;
-using Otokoneko.Server.UserManage;
+using Otokoneko.Server.Utils;
 using TaskStatus = Otokoneko.DataType.TaskStatus;
 
 namespace Otokoneko.Server.ScheduleTaskManage

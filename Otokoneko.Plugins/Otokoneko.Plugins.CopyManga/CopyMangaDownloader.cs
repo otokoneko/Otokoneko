@@ -6,6 +6,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Bert.RateLimiters;
 using HtmlAgilityPack;
 using Newtonsoft.Json;
 using Otokoneko.Plugins.Interface;
@@ -21,6 +22,8 @@ namespace Otokoneko.Plugins.CopyManga
         private string ChapterApiBase { get; } = "https://www.copymanga.com/comic/{0}/chapter/{1}";
 
         private static HttpClient Client { get; } = new HttpClient();
+
+        private FixedTokenBucket Limiters { get; set; } = new FixedTokenBucket(1, 1, 300);
 
         #region RequiredParameters
 
@@ -240,6 +243,7 @@ namespace Otokoneko.Plugins.CopyManga
 
         public async ValueTask<HttpContent> GetImage(string url)
         {
+            while (Limiters.ShouldThrottle(1, out var delayTime)) await Task.Delay(delayTime);
             var response = await Client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
             return response.Content;
         }

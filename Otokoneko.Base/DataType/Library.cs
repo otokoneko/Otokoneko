@@ -2,7 +2,6 @@
 using System.Linq;
 using MessagePack;
 #if SERVER
-using SqlSugar;
 #endif
 
 namespace Otokoneko.DataType

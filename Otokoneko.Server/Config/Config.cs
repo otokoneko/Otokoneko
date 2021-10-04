@@ -3,7 +3,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using log4net.Core;
+using Otokoneko.Server.Utils;
 
 namespace Otokoneko.Server.Config
 {

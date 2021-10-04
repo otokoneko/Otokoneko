@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using log4net;
 using Otokoneko.Server.SearchService;
 using Image = Otokoneko.DataType.Image;
+using Otokoneko.Server.Utils;
 
 namespace Otokoneko.Server.MangaManage
 {

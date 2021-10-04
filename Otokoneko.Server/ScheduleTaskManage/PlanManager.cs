@@ -10,7 +10,6 @@ using log4net;
 using MessagePack;
 using Otokoneko.DataType;
 using Otokoneko.Server.MessageBox;
-using Otokoneko.Server.UserManage;
 
 namespace Otokoneko.Server.ScheduleTaskManage
 {

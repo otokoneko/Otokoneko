@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Otokoneko.DataType;
-using Otokoneko.Utils;
 using Quartz;
 using Quartz.Impl;
 using TaskStatus = Otokoneko.DataType.TaskStatus;

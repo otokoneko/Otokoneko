@@ -20,6 +20,7 @@ using Otokoneko.Server.PluginManage;
 using Otokoneko.Server.ScheduleTaskManage;
 using Otokoneko.Server.SearchService;
 using Otokoneko.Server.UserManage;
+using Otokoneko.Server.Utils;
 using SqlSugar;
 
 namespace Otokoneko.Server
@@ -80,7 +81,7 @@ namespace Otokoneko.Server
                     var fileFilter = new LevelMatchFilter {LevelToMatch = level };
                     fileFilter.ActivateOptions();
 
-                    var fileAppender = new RollingFileAppender
+                    var fileAppender = new RollingFileByMaxAgeAppender
                     {
                         File = configLoader.Config.LogConfig.Path,
                         ImmediateFlush = true,
@@ -157,13 +158,13 @@ namespace Otokoneko.Server
             Directory.CreateDirectory(@"./plugins");
 
             Console.CancelKeyPress += ConsoleOnCancelKeyPress;
-            
+
             var server = container.Resolve<Server>();
             server.GenerateClientConfig();
-            
+
             var userManager = container.Resolve<UserManager>();
             await userManager.CreateRootUser();
-            
+
             await server.Run();
         }
 

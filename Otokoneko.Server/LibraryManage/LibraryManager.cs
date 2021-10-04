@@ -11,7 +11,7 @@ using IdGen;
 using log4net;
 using Otokoneko.Server.Converter;
 using Otokoneko.Server.LibraryManage;
-
+using Otokoneko.Server.Utils;
 
 namespace Otokoneko.Server
 {
@@ -125,7 +125,7 @@ namespace Otokoneko.Server
             _libraries.TryRemove(library.ObjectId, out _);
             _libraryDb.Delete(BitConverter.GetBytes(library.ObjectId));
             library.Repository.Close();
-            DirectoryHelper.Delete(Path.Combine(LibraryPath, library.ObjectId.ToString()));
+            DirectoryUtils.Delete(Path.Combine(LibraryPath, library.ObjectId.ToString()));
         }
 
         private bool RemoveIgnoreNodes(FileTreeNode root)

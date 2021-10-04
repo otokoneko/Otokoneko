@@ -19,6 +19,7 @@ using Otokoneko.Server.UserManage;
 using SuperSocket;
 using Message = Otokoneko.DataType.Message;
 using ServerConfig = Otokoneko.Server.Config.ServerConfig;
+using Otokoneko.Server.Utils;
 
 namespace Otokoneko.Server
 {

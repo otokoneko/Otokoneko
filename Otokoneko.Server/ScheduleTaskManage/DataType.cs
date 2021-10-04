@@ -1,11 +1,8 @@
 ﻿using IdGen;
-using Otokoneko.Server;
-using Quartz;
-using Quartz.Impl;
 using System;
 using System.Linq;
-using System.Threading.Tasks;
 using Otokoneko.Utils;
+using Otokoneko.Server.Utils;
 
 namespace Otokoneko.DataType
 {

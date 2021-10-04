@@ -27,14 +27,26 @@ namespace Otokoneko.Server.PluginManage
         {
             Plugins = new HashSet<IPlugin>();
             PluginDetails = new Dictionary<string, PluginDetail>();
-            var path = Path.Combine(Environment.CurrentDirectory, PluginDirectory);
-            foreach (var file in Directory.GetFiles(path, "*.dll"))
+
+            foreach (var dir in Directory.GetDirectories(PluginDirectory))
             {
-                var ass = Assembly.LoadFile(file);
-                var type = ass.GetTypes().FirstOrDefault(m => m.GetInterface(nameof(IPlugin)) != null);
-                if (type == null) continue;
-                var plugin = (IPlugin)Activator.CreateInstance(type);
-                Plugins.Add(plugin);
+                var dirName = Path.GetFileName(dir);
+                var pluginDll = Path.GetFullPath(Path.Combine(dir, dirName + ".dll"));
+                if (File.Exists(pluginDll))
+                {
+                    var loader = McMaster.NETCore.Plugins.PluginLoader.CreateFromAssemblyFile(
+                        pluginDll,
+                        sharedTypes: new[] { typeof(IPlugin) });
+
+                    foreach (var pluginType in loader
+                        .LoadDefaultAssembly()
+                        .GetTypes()
+                        .Where(t => typeof(IPlugin).IsAssignableFrom(t) && !t.IsAbstract))
+                    {
+                        IPlugin plugin = (IPlugin)Activator.CreateInstance(pluginType);
+                        Plugins.Add(plugin);
+                    }
+                }
             }
 
             foreach (var plugin in Plugins)

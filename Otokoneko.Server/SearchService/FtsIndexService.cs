@@ -124,7 +124,7 @@ namespace Otokoneko.Server.SearchService
             {
                 {new BoostedQuery(titleParser.Parse(queryString), new DoubleConstValueSource(2.0)), Occur.SHOULD},
                 {new BoostedQuery(descriptionParser.Parse(queryString), new DoubleConstValueSource(0.5)), Occur.SHOULD},
-                {new BoostedQuery(aliasesParser.Parse(queryString), new DoubleConstValueSource(1.0)), Occur.SHOULD}
+                {new BoostedQuery(aliasesParser.Parse(queryString), new DoubleConstValueSource(2.0)), Occur.SHOULD}
             };
             return Search(query, (hit, ftsIndexSearch) => long.Parse(ftsIndexSearch.Doc(hit.Doc).Get("Id")));
         }

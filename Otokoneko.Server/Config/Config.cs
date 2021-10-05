@@ -28,7 +28,7 @@ namespace Otokoneko.Server.Config
         [Description("日志级别：All, Debug, Info, Warn, Error, Fatal, Off")] 
         public string Level { get; set; } = "All";
 
-        [Description("最多保留的日志个数，-1为全部保留")] 
+        [Description("最多保留的日志个数，小于等于0为全部保留")] 
         public int MaxSizeRollBackups { get; set; } = 5;
     }
 

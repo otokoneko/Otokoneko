@@ -29,6 +29,7 @@
             <view:GetNameOfType x:Key="GetNameOfType" />
             <view:MinDateTimeFilter x:Key="MinDateTimeFilter" />
             <view:MultiValueConverter x:Key="MultiValueConverter" />
+            <view:StringToInt32 x:Key="StringToInt32" />
 
             <view:ValueConverterGroup x:Key="InverseBoolToVisibilityConverter">
                 <view:InverseBooleanConverter />

@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using log4net;
 using Otokoneko.DataType;
 using Otokoneko.Utils;
 using TaskStatus = Otokoneko.DataType.TaskStatus;
@@ -45,6 +46,8 @@ namespace Otokoneko.Server.ScheduleTaskManage
 
     public class Scheduler
     {
+        public ILog Logger { get; set; }
+
         private readonly List<Task> _worker;
         private readonly ConcurrentDictionary<long, ScheduleTask> _idToTask;
         private readonly AsyncQueue<ScheduleTaskPriority, ScheduleTask> _waitingScheduleTask;
@@ -79,23 +82,31 @@ namespace Otokoneko.Server.ScheduleTaskManage
 
         private async ValueTask Execute(ScheduleTask task)
         {
-            switch (task)
+            try
             {
-                case DownloadMangaScheduleTask downloadMangaScheduleTask:
-                    await DownloadMangaScheduleTaskHandler.Execute(downloadMangaScheduleTask);
-                    break;
-                case DownloadChapterScheduleTask downloadChapterScheduleTask:
-                    await DownloadChapterScheduleTaskHandler.Execute(downloadChapterScheduleTask);
-                    break;
-                case DownloadImageScheduleTask downloadImageScheduleTask:
-                    await DownloadImageScheduleTaskHandler.Execute(downloadImageScheduleTask);
-                    break;
-                case ScanLibraryTask scanLibraryTask:
-                    await ScanLibraryTaskHandler.Execute(scanLibraryTask);
-                    break;
-                case ScanMangaTask scanMangaTask:
-                    await ScanMangaTaskHandler.Execute(scanMangaTask);
-                    break;
+                switch (task)
+                {
+                    case DownloadMangaScheduleTask downloadMangaScheduleTask:
+                        await DownloadMangaScheduleTaskHandler.Execute(downloadMangaScheduleTask);
+                        break;
+                    case DownloadChapterScheduleTask downloadChapterScheduleTask:
+                        await DownloadChapterScheduleTaskHandler.Execute(downloadChapterScheduleTask);
+                        break;
+                    case DownloadImageScheduleTask downloadImageScheduleTask:
+                        await DownloadImageScheduleTaskHandler.Execute(downloadImageScheduleTask);
+                        break;
+                    case ScanLibraryTask scanLibraryTask:
+                        await ScanLibraryTaskHandler.Execute(scanLibraryTask);
+                        break;
+                    case ScanMangaTask scanMangaTask:
+                        await ScanMangaTaskHandler.Execute(scanMangaTask);
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"Not catched exception: {ex}");
+                task.Update(TaskStatus.Fail);
             }
         }
 

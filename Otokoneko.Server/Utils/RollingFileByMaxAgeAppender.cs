@@ -14,6 +14,11 @@ namespace Otokoneko.Server.Utils
         protected override void AdjustFileBeforeAppend()
         {
             base.AdjustFileBeforeAppend();
+            if(MaxSizeRollBackups <= 0)
+            {
+                return;
+            }
+
             var maxAgeRollBackups = DateTime.Today.AddDays(-1 * MaxSizeRollBackups);
 
             foreach (var file in Directory.GetFiles(Path.GetDirectoryName(File), "*.log"))

@@ -16,6 +16,13 @@
             <DataTemplate x:Key="StringTemplate">
                 <TextBox FontSize="16" Text="{Binding Value}" />
             </DataTemplate>
+            <DataTemplate x:Key="IntTemplate">
+                <TextBox FontSize="16" Text="{Binding Value, Converter={StaticResource StringToInt32}}" >
+                    <b:Interaction.Behaviors>
+                        <local:OnlyReceiveIntBehavior />
+                    </b:Interaction.Behaviors>
+                </TextBox>
+            </DataTemplate>
         </ResourceDictionary>
     </UserControl.Resources>
     <UserControl.DataContext>
@@ -103,6 +110,9 @@
                                                             <Style.Triggers>
                                                                 <DataTrigger Binding="{Binding Path=Type, Converter={StaticResource GetNameOfType}}" Value="String">
                                                                     <Setter Property="ContentPresenter.ContentTemplate" Value="{StaticResource StringTemplate}" />
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding Path=Type, Converter={StaticResource GetNameOfType}}" Value="Int32">
+                                                                    <Setter Property="ContentPresenter.ContentTemplate" Value="{StaticResource IntTemplate}" />
                                                                 </DataTrigger>
                                                             </Style.Triggers>
                                                         </Style>

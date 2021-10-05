@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using log4net;
 using Otokoneko.DataType;
 using Otokoneko.Plugins.Interface;
 
@@ -11,6 +12,7 @@ namespace Otokoneko.Server.PluginManage
     public class PluginLoader
     {
         public PluginParameterProvider PluginParameterProvider { get; set; }
+        public ILog Logger { get; set; }
 
         private const string PluginDirectory = "./plugins";
 
@@ -21,34 +23,53 @@ namespace Otokoneko.Server.PluginManage
         };
 
         private HashSet<IPlugin> Plugins { get; set; }
-        public Dictionary<string, PluginDetail> PluginDetails { get; private set; }
 
-        public void Load()
+        public PluginDetail GetPluginDetail(string type)
         {
-            Plugins = new HashSet<IPlugin>();
-            PluginDetails = new Dictionary<string, PluginDetail>();
-
-            foreach (var dir in Directory.GetDirectories(PluginDirectory))
-            {
-                var dirName = Path.GetFileName(dir);
-                var pluginDll = Path.GetFullPath(Path.Combine(dir, dirName + ".dll"));
-                if (File.Exists(pluginDll))
-                {
-                    var loader = McMaster.NETCore.Plugins.PluginLoader.CreateFromAssemblyFile(
-                        pluginDll,
-                        sharedTypes: new[] { typeof(IPlugin) });
-
-                    foreach (var pluginType in loader
-                        .LoadDefaultAssembly()
-                        .GetTypes()
-                        .Where(t => typeof(IPlugin).IsAssignableFrom(t) && !t.IsAbstract))
-                    {
-                        IPlugin plugin = (IPlugin)Activator.CreateInstance(pluginType);
-                        Plugins.Add(plugin);
-                    }
-                }
+            var plugin = GetPlugin(type);
+            if(plugin == null) { 
+                return null; 
             }
 
+            var pluginType = plugin.GetType();
+            var pluginDetail = new PluginDetail()
+            {
+                Name = plugin.Name,
+                Author = plugin.Author,
+                Version = plugin.Version,
+                Type = pluginType.FullName,
+                RequiredParameters = new List<PluginParameter>(),
+            };
+            var properties = pluginType.GetProperties();
+            foreach (var property in properties)
+            {
+                var attribute = property.GetCustomAttribute<RequiredParameterAttribute>();
+                if (attribute == null) continue;
+                var value = PluginParameterProvider.Get(pluginType, attribute.Name, attribute.Type) ?? attribute.DefaultValue;
+                property.SetValue(plugin, value);
+                pluginDetail.RequiredParameters.Add(new PluginParameter()
+                {
+                    Name = attribute.Name,
+                    Alias = attribute.Alias,
+                    Type = attribute.Type,
+                    IsReadOnly = attribute.IsReadOnly,
+                    Value = value,
+                    Comment = attribute.Comment,
+                });
+            }
+
+            pluginDetail.SupportInterface =
+                SupportInterface
+                    .Where(type => type.IsAssignableFrom(pluginType))
+                    .Select(it => it.Name)
+                    .ToList();
+
+            return pluginDetail;
+        }
+
+        public List<PluginDetail> GetPluginDetails()
+        {
+            var pluginDetails = new List<PluginDetail>();
             foreach (var plugin in Plugins)
             {
                 var pluginType = plugin.GetType();
@@ -81,10 +102,38 @@ namespace Otokoneko.Server.PluginManage
                 pluginDetail.SupportInterface =
                     SupportInterface
                         .Where(type => type.IsAssignableFrom(pluginType))
-                        .Select(it=>it.Name)
+                        .Select(it => it.Name)
                         .ToList();
 
-                PluginDetails.Add(pluginDetail.Type, pluginDetail);
+                pluginDetails.Add(pluginDetail);
+            }
+            return pluginDetails;
+        }
+
+        public void Load()
+        {
+            Plugins = new HashSet<IPlugin>();
+
+            foreach (var dir in Directory.GetDirectories(PluginDirectory))
+            {
+                var dirName = Path.GetFileName(dir);
+                var pluginDll = Path.GetFullPath(Path.Combine(dir, dirName + ".dll"));
+                if (File.Exists(pluginDll))
+                {
+                    var loader = McMaster.NETCore.Plugins.PluginLoader.CreateFromAssemblyFile(
+                        pluginDll,
+                        sharedTypes: new[] { typeof(IPlugin) });
+
+                    foreach (var pluginType in loader
+                        .LoadDefaultAssembly()
+                        .GetTypes()
+                        .Where(t => typeof(IPlugin).IsAssignableFrom(t) && !t.IsAbstract))
+                    {
+                        IPlugin plugin = (IPlugin)Activator.CreateInstance(pluginType);
+                        Plugins.Add(plugin);
+                        Logger.Info($"加载插件 - {plugin.Name} v{plugin.Version}");
+                    }
+                }
             }
         }
 
@@ -93,16 +142,14 @@ namespace Otokoneko.Server.PluginManage
             var plugin = GetPlugin(detail.Type);
             if (plugin == null) return false;
 
-            var properties = plugin.GetType().GetProperties()
-                .Where(it => it.GetCustomAttribute<RequiredParameterAttribute>() != null)
-                .ToDictionary(it => it.Name, it => it);
             foreach (var parameter in detail.RequiredParameters)
             {
-                if (properties.TryGetValue(parameter.Name, out var property) &&
+                var property = plugin.GetType().GetProperty(parameter.Name);
+                if (property.GetCustomAttribute<RequiredParameterAttribute>() != null &&
                     parameter.Value.GetType() == property.PropertyType)
                 {
-                    PluginParameterProvider.Put(plugin.GetType(), parameter.Name, parameter.Value);
                     property.SetValue(plugin, parameter.Value);
+                    PluginParameterProvider.Put(plugin.GetType(), parameter.Name, parameter.Value);
                 }
             }
 
@@ -112,7 +159,8 @@ namespace Otokoneko.Server.PluginManage
         public void ResetParameters(string pluginType)
         {
             var plugin = GetPlugin(pluginType);
-            if (plugin == null || !PluginDetails.TryGetValue(pluginType, out var detail)) return;
+            var detail = GetPluginDetail(pluginType);
+            if (plugin == null || detail == null) return;
 
             var requiredParameters = new List<PluginParameter>();
 

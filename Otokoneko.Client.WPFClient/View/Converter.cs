@@ -11,12 +11,12 @@ namespace Otokoneko.Client.WPFClient.View
     [ValueConversion(typeof(object), typeof(string))]
     class ObjectToTypeConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             return value?.GetType().Name;
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
             throw new InvalidOperationException();
         }
@@ -25,14 +25,14 @@ namespace Otokoneko.Client.WPFClient.View
     [ValueConversion(typeof(Type), typeof(string))]
     class GetNameOfType : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             if (value is Type type)
                 return type.Name;
             return null;
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
             throw new InvalidOperationException();
         }
@@ -41,7 +41,7 @@ namespace Otokoneko.Client.WPFClient.View
     [ValueConversion(typeof(DateTime), typeof(string))]
     class MinDateTimeFilter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             if (value is DateTime dateTime && dateTime == DateTime.MinValue)
             {
@@ -51,7 +51,7 @@ namespace Otokoneko.Client.WPFClient.View
             return value;
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
             throw new InvalidOperationException();
         }
@@ -60,13 +60,13 @@ namespace Otokoneko.Client.WPFClient.View
     [ValueConversion(typeof(bool), typeof(double))]
     class BooleanToOpacityConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             var b = value as bool?;
             return b == true ? 1 : 0.3;
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
             throw new InvalidOperationException();
         }
@@ -76,13 +76,13 @@ namespace Otokoneko.Client.WPFClient.View
     class InverseBooleanConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter,
-            System.Globalization.CultureInfo culture)
+            CultureInfo culture)
         {
             return !(bool)value;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter,
-            System.Globalization.CultureInfo culture)
+            CultureInfo culture)
         {
             return !(bool)value;
         }
@@ -91,13 +91,13 @@ namespace Otokoneko.Client.WPFClient.View
     [ValueConversion(typeof(bool), typeof(Thickness))]
     class BooleanToBorderThickness : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             var b = value as bool?;
             return b == true ? new Thickness(1) : new Thickness(0);
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
             throw new InvalidOperationException();
         }
@@ -112,14 +112,14 @@ namespace Otokoneko.Client.WPFClient.View
             return luminance > 0.65 ? Colors.Black : Colors.White;
         }
 
-        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             if (!(value is Color color)) return null;
             var contrastColor = ContrastColor(color);
             return new SolidColorBrush(contrastColor);
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
             throw new InvalidOperationException();
         }
@@ -128,13 +128,13 @@ namespace Otokoneko.Client.WPFClient.View
     [ValueConversion(typeof(Color), typeof(Brush))]
     class ColorToBackgroundConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             if (!(value is Color color)) return null;
             return new SolidColorBrush(color);
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
             throw new InvalidOperationException();
         }
@@ -143,12 +143,12 @@ namespace Otokoneko.Client.WPFClient.View
     [ValueConversion(typeof(bool), typeof(Brush))]
     class BooleanToBorderBrushConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             return (value is bool b && b == true) ? Brushes.Gray : Brushes.White;
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
             throw new InvalidOperationException();
         }
@@ -156,12 +156,12 @@ namespace Otokoneko.Client.WPFClient.View
 
     class ValueConverterGroup : List<IValueConverter>, IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             return this.Aggregate(value, (current, converter) => converter.Convert(current, targetType, parameter, culture));
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
             throw new NotImplementedException();
         }
@@ -207,7 +207,7 @@ namespace Otokoneko.Client.WPFClient.View
 
     class EnumBooleanConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             if (!(parameter is string parameterString))
                 return DependencyProperty.UnsetValue;
@@ -220,7 +220,7 @@ namespace Otokoneko.Client.WPFClient.View
             return parameterValue.Equals(value);
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
             if (!(parameter is string parameterString))
                 return DependencyProperty.UnsetValue;
@@ -239,6 +239,20 @@ namespace Otokoneko.Client.WPFClient.View
         public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
         {
             throw new NotImplementedException();
+        }
+    }
+
+    public class StringToInt32 : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return value.ToString();
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            int ret = 0;
+            return int.TryParse((string)value, out ret) ? ret : 0;
         }
     }
 }

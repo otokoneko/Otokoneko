@@ -25,5 +25,10 @@ namespace Otokoneko.Server.PluginManage
             var bytes = DB.Get(Encoding.UTF8.GetBytes($"{pluginType.Name}.{propertyName}"));
             return bytes == null ? null : MessagePackSerializer.Deserialize(propertyType, bytes);
         }
+
+        public void Delete(Type pluginType, string propertyName)
+        {
+            DB.Delete(Encoding.UTF8.GetBytes($"{pluginType.Name}.{propertyName}"));
+        }
     }
 }

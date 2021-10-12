@@ -39,6 +39,7 @@
     <PackageReference Include="SuperSocket" Version="2.0.0-beta.10" />
     <PackageReference Include="SuperSocket.Client" Version="2.0.0-beta.10" />
     <PackageReference Include="SuperSocket.ProtoBase" Version="2.0.0-beta.10" />
+    <PackageReference Include="System.Drawing.Common" Version="5.0.2" />
     <PackageReference Include="VirtualizingWrapPanel" Version="1.5.3" />
   </ItemGroup>
 

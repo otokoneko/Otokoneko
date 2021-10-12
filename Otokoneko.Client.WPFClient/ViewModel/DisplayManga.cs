@@ -32,7 +32,7 @@ namespace Otokoneko.Client.WPFClient.ViewModel
         private async Task LoadCover()
         {
             var imageContent = await Model.GetImage(CoverId);
-            Cover = Utils.FormatUtils.Convert(imageContent);
+            Cover = Utils.ImageUtils.Convert(imageContent);
         }
 
         public ICommand ClickCommand { get; set; }

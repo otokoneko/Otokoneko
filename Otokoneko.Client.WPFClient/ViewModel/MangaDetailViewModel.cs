@@ -244,7 +244,7 @@ namespace Otokoneko.Client.WPFClient.ViewModel
             DisplayReadHistory();
             DisplayChapters();
             var imageContent = await Model.GetImage(Manga.CoverId);
-            Cover = Utils.FormatUtils.Convert(imageContent);
+            Cover = Utils.ImageUtils.Convert(imageContent);
             OnPropertyChanged(nameof(Cover));
         }
 

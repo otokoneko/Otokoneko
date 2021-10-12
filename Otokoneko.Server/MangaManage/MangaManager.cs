@@ -469,20 +469,6 @@ namespace Otokoneko.Server.MangaManage
                 await readProgressService.GetSingleAsync(it => it.ChapterId == chapterId && it.UserId == userId);
             chapter.Images = await imageService.GetListAsync(it => it.ChapterId == chapterId);
 
-            var uncheckedImage = chapter.Images.Where(it => it.Height == 0).ToList();
-            if (uncheckedImage.Count == 0) return chapter;
-            foreach (var image in uncheckedImage)
-            {
-                await using var file = LibraryManager.GeFileTreeNode(image.PathId).OpenRead();
-                var (result, width, height) = await ImageUtils.GetMetadata(file);
-                file.Close();
-                image.Height = height;
-                image.Width = width;
-            }
-
-            context.BeginTran();
-            await imageService.Upsert(uncheckedImage);
-            context.CommitTran();
             return chapter;
         }
 

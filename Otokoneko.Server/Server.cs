@@ -399,8 +399,6 @@ namespace Otokoneko.Server
                 chapter);
         }
 
-        private int count;
-
         [RequestProcessMethod(UserAuthority.User, requestUserId: false, requestObjectId: true)]
         public virtual async ValueTask<Tuple<ResponseStatus, object>> GetImage(long imageId)
         {
@@ -420,11 +418,6 @@ namespace Otokoneko.Server
             }
 
             var data = await path.ReadAllBytes();
-
-            if(Interlocked.Increment(ref count) % 10 == 1)
-            {
-                //GC.Collect();
-            }
 
             return new Tuple<ResponseStatus, object>(
                 data != null

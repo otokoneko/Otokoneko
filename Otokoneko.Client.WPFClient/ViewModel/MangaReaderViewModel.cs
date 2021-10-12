@@ -7,6 +7,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using AsyncAwaitBestPractices.MVVM;
+using Otokoneko.Client.WPFClient.Utils;
 using Otokoneko.DataType;
 
 namespace Otokoneko.Client.WPFClient.ViewModel
@@ -27,6 +28,7 @@ namespace Otokoneko.Client.WPFClient.ViewModel
     {
         public override void ScrollTo(int page)
         {
+            page = MathUtils.LimitValue(page, 0, Images.Count - 1);
             SelectedItem = Images[page];
             OnPropertyChanged(nameof(SelectedItem));
         }
@@ -40,11 +42,9 @@ namespace Otokoneko.Client.WPFClient.ViewModel
             set
             {
                 _images = value;
-                var width = Images.Average(it => it.Width);
                 foreach (var image in Images)
                 {
-                    image.ActualHeight = image.Height * width / image.Width;
-                    image.ActualWidth = width;
+                    image.ImageResizeMode = ImageResizeMode.RespectWidth;
                 }
                 OnPropertyChanged(nameof(Images));
             }
@@ -61,6 +61,8 @@ namespace Otokoneko.Client.WPFClient.ViewModel
         public DisplayImage CurrentImage => Images != null && CurrentPage >= 0 && CurrentPage < Images.Count
             ? Images[CurrentPage]
             : null;
+
+        private Func<double> GetHeight;
 
         private int _currentPage = -1;
         public int CurrentPage
@@ -95,19 +97,20 @@ namespace Otokoneko.Client.WPFClient.ViewModel
             set
             {
                 _images = value;
-                var height = Images.Average(it => it.Height);
-                foreach (var image in Images)
+                var height = GetHeight();
+                foreach(var image in Images)
                 {
-                    image.ActualWidth = image.Width * height / image.Height;
-                    image.ActualHeight = height;
+                    image.ExpectedHeight = height;
+                    image.ImageResizeMode = ImageResizeMode.RespectHeight;
                 }
                 OnPropertyChanged(nameof(Images));
             }
         }
 
-        public SingleImageViewModel(Action<int> setProgress)
+        public SingleImageViewModel(Action<int> setProgress, Func<double> getHeight)
         {
             SetProgress = setProgress;
+            GetHeight = getHeight;
         }
     }
 
@@ -160,7 +163,7 @@ namespace Otokoneko.Client.WPFClient.ViewModel
             ImageExplorerViewModel = ImageDisplayMode switch
             {
                 ImageDisplayMode.ImageListMode => new ImageListBoxViewModel(SetProgress),
-                ImageDisplayMode.SinglePageMode => new SingleImageViewModel(SetProgress),
+                ImageDisplayMode.SinglePageMode => new SingleImageViewModel(SetProgress, GetHeight),
                 _ => ImageExplorerViewModel
             };
             if (Images != null)
@@ -283,10 +286,10 @@ namespace Otokoneko.Client.WPFClient.ViewModel
 
         private void ChangeWindowState()
         {
-            ShowCloseButton = (WindowMode == WindowMode.NormalWindow || WindowMode == WindowMode.BorderlessWindowWithControlButton);
-            ShowMinButton = (WindowMode == WindowMode.NormalWindow || WindowMode == WindowMode.BorderlessWindowWithControlButton);
-            ShowMaxRestoreButton = (WindowMode == WindowMode.NormalWindow || WindowMode == WindowMode.BorderlessWindowWithControlButton);
-            ShowTitleBar = (WindowMode == WindowMode.NormalWindow);
+            ShowCloseButton = WindowMode is WindowMode.NormalWindow or WindowMode.BorderlessWindowWithControlButton;
+            ShowMinButton = WindowMode is WindowMode.NormalWindow or WindowMode.BorderlessWindowWithControlButton;
+            ShowMaxRestoreButton = WindowMode is WindowMode.NormalWindow or WindowMode.BorderlessWindowWithControlButton;
+            ShowTitleBar = WindowMode == WindowMode.NormalWindow;
             WindowState = WindowMode == WindowMode.FullScreen ? WindowState.Maximized : WindowState.Normal;
             OnPropertyChanged(nameof(ShowCloseButton));
             OnPropertyChanged(nameof(ShowMinButton));
@@ -415,46 +418,15 @@ namespace Otokoneko.Client.WPFClient.ViewModel
             Images = new ObservableCollection<DisplayImage>();
             foreach (var image in _chapter.Images)
             {
-                var w = image.Width;
-                var h = image.Height;
-                if (w > h && AutoCropMode != AutoCropMode.None)
-                {
-                    if (AutoCropMode == AutoCropMode.RightToLeft)
-                    {
-                        Images.Add(new DisplayImage(
-                            image,
-                            w - (w / 2),
-                            h,
-                            new Int32Rect(w / 2, 0, w - (w / 2), h)));
-                        Images.Add(new DisplayImage(
-                            image,
-                            w / 2,
-                            h,
-                            new Int32Rect(0, 0, w / 2, h)));
-                    }
-                    else
-                    {
-                        Images.Add(new DisplayImage(
-                            image,
-                            w / 2,
-                            h,
-                            new Int32Rect(0, 0, w / 2, h)));
-                        Images.Add(new DisplayImage(
-                            image,
-                            w - (w / 2),
-                            h,
-                            new Int32Rect(w / 2, 0, w - (w / 2), h)));
-                    }
-                }
-                else
-                {
+                var w = 0.8 * GetWidth();
+                var h = 1.5 * w;
 
-                    Images.Add(new DisplayImage(
-                        image,
-                        w,
-                        h,
-                        null));
-                }
+                Images.Add(new DisplayImage(
+                    image,
+                    w,
+                    h,
+                    AutoCropMode,
+                    ImageResizeMode.RespectWidth));
             }
 
             ImageExplorerViewModel.Images = Images;
@@ -499,6 +471,8 @@ namespace Otokoneko.Client.WPFClient.ViewModel
         {
             if (_chapter != null)
                 await SaveProgress();
+            Images = null;
+            GC.Collect();
         }
 
         public MangaReaderViewModel(List<Chapter> chapters, int index)

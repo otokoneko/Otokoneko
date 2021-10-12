@@ -25,7 +25,7 @@ namespace Otokoneko.Server.MangaManage
         {
             logger.Info("加载漫画索引信息...");
             CreateContext = createContext;
-            var context = createContext(DbConnectionString);
+            using var context = createContext(DbConnectionString);
             context.CodeFirst.InitTables(
                 typeof(Manga),
                 typeof(Chapter),
@@ -447,6 +447,14 @@ namespace Otokoneko.Server.MangaManage
             using var context = Context;
             var mangaService = new MangaService(context);
             return await mangaService.GetMangaIds(it => fileTreeNodeId.Contains(it.PathId));
+        }
+
+        public async ValueTask<List<Image>> GetImages(long chapterId)
+        {
+            using var context = Context;
+            var imageService = new ImageService(context);
+            var images = await imageService.GetListAsync(it => it.ChapterId == chapterId);
+            return images;
         }
 
         public async ValueTask<Chapter> GetChapter(long chapterId, long userId)

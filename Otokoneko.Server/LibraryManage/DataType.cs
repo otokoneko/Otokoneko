@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using Otokoneko.Server.LibraryManage;
+using Microsoft.IO;
 
 namespace Otokoneko.DataType
 {
@@ -14,6 +15,9 @@ namespace Otokoneko.DataType
 
     public partial class FileTreeNode
     {
+        [IgnoreMember]
+        private static readonly RecyclableMemoryStreamManager Manager = new RecyclableMemoryStreamManager();
+        [IgnoreMember]
         private string _extension;
         [IgnoreMember] 
         public string Extension => _extension ??= Path.GetExtension(FullName)?.ToLower();
@@ -78,10 +82,10 @@ namespace Otokoneko.DataType
         public async ValueTask<byte[]> ReadAllBytes()
         {
             await using var stream = OpenRead();
-            await using var memoryStream = new MemoryStream();
-            await stream.CopyToAsync(memoryStream);
+            await using var buffer = Manager.GetStream();
+            await stream.CopyToAsync(buffer);
             stream.Close();
-            return memoryStream.ToArray();
+            return buffer.ToArray();
         }
     }
 }

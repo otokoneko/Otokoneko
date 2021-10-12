@@ -99,8 +99,12 @@ namespace Otokoneko.Base.Network
 
             if (Current?.Completed == true) return false;
             var data = _dataGenerator.Current;
+            Current = _serializer(data, false);
             var completed = !await _dataGenerator.MoveNextAsync();
-            Current = _serializer(data, completed);
+            if (completed)
+            {
+                Current.Completed = true;
+            }
             return true;
         }
 

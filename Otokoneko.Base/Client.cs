@@ -67,7 +67,6 @@ namespace Otokoneko.Client
 
     public class Client
     {
-        // private readonly Proxy _proxy;
         private int _requestId;
         private bool _running;
         private int _connecting;
@@ -81,7 +80,6 @@ namespace Otokoneko.Client
 
         public Client(ServerConfig serverConfig, Func<Response, Task> processServerNotify)
         {
-            // _proxy = proxy;
             _processServerNotify = processServerNotify;
             _serverConfig = serverConfig ?? throw new ArgumentNullException(nameof(serverConfig));
             _connecting = 0;
@@ -90,24 +88,11 @@ namespace Otokoneko.Client
             _running = true;
             _processResponses = new ConcurrentDictionary<int, TaskCompletionSource<Response>>();
             _uncheckedRequests = new ConcurrentDictionary<EasyClient<Response>, ThreadSafeList<Tuple<DateTime, RequestWithTimeout>>>();
-            var decoder = new FixedHeaderResponseDecoder()
-            {
-                Decoder = new ResponseDecoder()
-            };
+
             _clients = new List<IEasyClient<Response, Request>>();
             for (var i = 0; i < _serverConfig.Hosts.Count; i++)
             {
-                var client =
-                    new EasyClient<Response, Request>(decoder, new MessageEncoder(),
-                        new ChannelOptions() {MaxPackageLength = 64 * 1024 * 1024})
-                    {
-                        Security = new SecurityOptions()
-                        {
-                            EnabledSslProtocols = SslProtocols.None,
-                            RemoteCertificateValidationCallback = (sender, certificate, chain, errors) => 
-                                certificate?.GetCertHashString() == _serverConfig.CertificateHash
-                        }
-                    };
+                var client = CreateConnection();
                 client.PackageHandler += ResponseProcess;
                 client.Closed += OnChannelClosed;
                 _clients.Add(client);
@@ -123,6 +108,26 @@ namespace Otokoneko.Client
                 Interval = 60 * 1000
             };
             retryTimer.Elapsed += RequestRetry;
+        }
+
+        private EasyClient<Response, Request> CreateConnection()
+        {
+            var decoder = new FixedHeaderResponseDecoder()
+            {
+                Decoder = new ResponseDecoder()
+            };
+            var client =
+                    new EasyClient<Response, Request>(decoder, new MessageEncoder(),
+                        new ChannelOptions() { MaxPackageLength = 64 * 1024 * 1024 })
+                    {
+                        Security = new SecurityOptions()
+                        {
+                            EnabledSslProtocols = SslProtocols.None,
+                            RemoteCertificateValidationCallback = (sender, certificate, chain, errors) =>
+                                certificate?.GetCertHashString() == _serverConfig.CertificateHash
+                        }
+                    };
+            return client;
         }
 
         private void RequestRetry(object obj, ElapsedEventArgs args)
@@ -161,7 +166,7 @@ namespace Otokoneko.Client
             var success = false;
             while (!success)
             {
-                success = await Connect(index);
+                success = await Connect(index, client);
                 if (!success) Thread.Sleep(1000);
             }
             while (_running)
@@ -184,7 +189,7 @@ namespace Otokoneko.Client
                     if (!_running) return;
                     await _toBeSendRequests.Enqueue(request,
                         new RequestPriority(0, request.Request.Id));
-                    success = await Connect(index);
+                    success = await Connect(index, client);
                     if (!success) Thread.Sleep(200);
                 }
             }
@@ -210,7 +215,7 @@ namespace Otokoneko.Client
             }
         }
 
-        public async Task<bool> Connect(int index)
+        public async Task<bool> Connect(int index, IEasyClient<Response, Request> client)
         {
             if (Interlocked.Increment(ref _connecting) != 1)
             {
@@ -221,12 +226,12 @@ namespace Otokoneko.Client
             try
             {
                 var hostAndPort = _serverConfig.Hosts[index];
-                var task = _clients[index]
+                var task = client
                     .ConnectAsync(new IPEndPoint(IPAddress.Parse(hostAndPort.Host), hostAndPort.Port));
                 var success = await task;
                 if (success)
                 {
-                    _clients[index].StartReceive();
+                    client.StartReceive();
                 }
 
                 return success;
@@ -249,6 +254,26 @@ namespace Otokoneko.Client
             _processResponses.TryAdd(request.Id, taskCompletionSource);
             await _toBeSendRequests.Enqueue(new RequestWithTimeout(request, millisecondsTimeout),
                 new RequestPriority(priority, request.Id));
+        }
+    
+        public async Task SendWithNewConnection(Request request, Func<Response, ValueTask> processResponse)
+        {
+            var client = CreateConnection();
+            client.PackageHandler += async (sender, resp) =>
+            {
+                await processResponse(resp);
+                if (resp.Completed)
+                {
+                    await client.CloseAsync();
+                }
+            };
+            var success = false;
+            while (!success)
+            {
+                success = await Connect(0, client);
+                if (!success) Thread.Sleep(1000);
+            }
+            await client.SendAsync(request);
         }
     }
 }

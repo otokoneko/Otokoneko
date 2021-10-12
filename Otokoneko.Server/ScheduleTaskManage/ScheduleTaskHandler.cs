@@ -90,7 +90,7 @@ namespace Otokoneko.Server.ScheduleTaskManage
             }
             catch (Exception e)
             {
-                Logger.Warn(e);
+                Logger.Warn($"Download {downloadMangaTask.MangaUrl} fail", e);
                 downloadMangaTask.Update(TaskStatus.Fail);
                 await SendExceptionMessage(downloadMangaTask.Name, e.Message);
             }
@@ -135,7 +135,7 @@ namespace Otokoneko.Server.ScheduleTaskManage
             }
             catch (Exception e)
             {
-                Logger.Warn(e);
+                Logger.Warn($"Download {downloadChapterTask.ChapterUrl} fail", e);
                 downloadChapterTask.Update(TaskStatus.Fail);
             }
         }
@@ -186,6 +186,7 @@ namespace Otokoneko.Server.ScheduleTaskManage
                     throw new BadImageFormatException();
                 }
                 await using var fs = File.OpenWrite(existsFile ?? $"{downloadImageTask.ImagePath}.{format.FileExtensions.First()}");
+                fs.SetLength(0);
                 await fs.WriteAsync(buffer.AsMemory(0, (int)length));
                 downloadImageTask.Update(TaskStatus.Success);
             }

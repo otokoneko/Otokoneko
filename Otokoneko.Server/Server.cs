@@ -20,6 +20,8 @@ using SuperSocket;
 using Message = Otokoneko.DataType.Message;
 using ServerConfig = Otokoneko.Server.Config.ServerConfig;
 using Otokoneko.Server.Utils;
+using System.Buffers;
+using System.Threading;
 
 namespace Otokoneko.Server
 {
@@ -52,6 +54,7 @@ namespace Otokoneko.Server
     {
         public ILog Logger { get; set; }
 
+        private static ArrayPool<byte> BufferPool => ArrayPool<byte>.Shared;
         public MangaManager MangaManager { get; set; }
         public Scheduler Scheduler { get; set; }
         public UserManager UserManager { get; set; }
@@ -128,19 +131,19 @@ namespace Otokoneko.Server
                     }
 
                     var returnValue = attribute.Method.Invoke(this, parameters.ToArray());
-                    if (returnValue is ValueTask<Tuple<ResponseStatus, object>> task1)
-                    {
-                        var (status1, result) = await task1;
-                        Logger.Debug($"[{session.SessionID}] [{UserManager.GetUserByToken(request.Token)?.Name}] {request.Method} {status1}");
-                        return CreateResponse(request, status1, result);
-                    }
 
-                    if (returnValue is ValueTask<Tuple<ResponseStatus, IAsyncEnumerable<object>>> task2)
+                    if (returnValue is ValueTask<Tuple<ResponseStatus, object>> resp)
                     {
-                        var (status2, enumerableResult) = await task2;
-                        Logger.Debug($"[{session.SessionID}] [{UserManager.GetUserByToken(request.Token)?.Name}] {request.Method} {status2}");
-                        return new Responses(enumerableResult,
-                            (o, b) => CreateResponse(request, status2, o, b));
+                        var (status, result) = await resp;
+                        Logger.Debug($"[{session.SessionID}] [{UserManager.GetUserByToken(request.Token)?.Name}] {request.Method} {status}");
+                        
+                        if(result is IAsyncEnumerable<object> streamResult)
+                        {
+                            return new Responses(streamResult,
+                            (o, b) => CreateResponse(request, status, o, b));
+                        }
+                        
+                        return CreateResponse(request, status, result);
                     }
                 }
                 catch (Exception e)
@@ -180,6 +183,13 @@ namespace Otokoneko.Server
             {
                 response.Data.Data = ByteString.CopyFrom(MessagePackSerializer.Serialize(plan, SerializerOptions));
             }
+            //else if(data is Stream stream)
+            //{
+            //    var temp = BufferPool.Rent((int)stream.Length);
+            //    stream.Read(temp, 0, temp.Length);
+            //    response.Data.Data = ByteString.CopyFrom(MessagePackSerializer.Serialize(temp, SerializerOptions));
+            //    BufferPool.Return(temp);
+            //}
             else
             {
                 response.Data.Data = (data != null
@@ -389,6 +399,8 @@ namespace Otokoneko.Server
                 chapter);
         }
 
+        private int count;
+
         [RequestProcessMethod(UserAuthority.User, requestUserId: false, requestObjectId: true)]
         public virtual async ValueTask<Tuple<ResponseStatus, object>> GetImage(long imageId)
         {
@@ -408,6 +420,12 @@ namespace Otokoneko.Server
             }
 
             var data = await path.ReadAllBytes();
+
+            if(Interlocked.Increment(ref count) % 10 == 1)
+            {
+                //GC.Collect();
+            }
+
             return new Tuple<ResponseStatus, object>(
                 data != null
                     ? ResponseStatus.Success
@@ -498,6 +516,29 @@ namespace Otokoneko.Server
                     ? ResponseStatus.Success
                     : ResponseStatus.BadRequest,
                 success);
+        }
+
+        [RequestProcessMethod(UserAuthority.User, requestObjectId: true)]
+        public virtual async ValueTask<Tuple<ResponseStatus, object>> DownloadManga(long mangaId)
+        {
+            var files = new List<Tuple<string, FileTreeNode>>();
+            var manga = await MangaManager.GetManga(mangaId, 0);
+            manga.Cover = await MangaManager.GetImage(manga.CoverId);
+            manga.Cover.Path = LibraryManager.GeFileTreeNode(manga.Cover.PathId);
+
+            files.Add(new Tuple<string, FileTreeNode>($"{manga.Title}/{System.IO.Path.GetFileName(manga.Cover.Path.FullName)}", manga.Cover.Path));
+            foreach (var chapter in manga.Chapters)
+            {
+                chapter.Images = await MangaManager.GetImages(chapter.ObjectId);
+                foreach(var image in chapter.Images)
+                {
+                    image.Path = LibraryManager.GeFileTreeNode(image.PathId);
+                    var key = $"{manga.Title}/{chapter.ChapterClass}/{chapter.Title}/{System.IO.Path.GetFileName(image.Path.FullName)}";
+                    files.Add(new Tuple<string, FileTreeNode>(key, image.Path));
+                }
+            }
+
+            return new Tuple<ResponseStatus, object>(ResponseStatus.Success, new ArchiveFileDataGenerator(files, 2 * 1024 * 1024));
         }
 
         #endregion

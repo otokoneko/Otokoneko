@@ -31,6 +31,7 @@
     <PackageReference Include="MessagePack" Version="2.2.85" />
     <PackageReference Include="MessagePack.Annotations" Version="2.2.85" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="5.0.0" />
+    <PackageReference Include="Microsoft.IO.RecyclableMemoryStream" Version="2.2.0" />
     <PackageReference Include="NaturalSort.Extension" Version="3.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1-beta1" />
     <PackageReference Include="OptimizedPriorityQueue" Version="5.1.0" />

@@ -32,9 +32,9 @@ namespace Otokoneko.Server
                                     break;
                                 case Responses responses:
                                 {
-                                    await foreach (var response1 in responses)
+                                    await foreach (var response in responses)
                                     {
-                                        await session.SendAsync(_responseEncoder, response1);
+                                        await session.SendAsync(_responseEncoder, response);
                                     }
 
                                     break;

@@ -14,6 +14,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Nito.AsyncEx;
 using Message = Otokoneko.DataType.Message;
+using System.Diagnostics;
 
 namespace Otokoneko.Client
 {
@@ -253,6 +254,25 @@ namespace Otokoneko.Client
                 throw;
             }
         }
+        
+        public async Task SendRequestWithNewConnection<T, TResult>(long objectId, T obj, Func<TResult, ResponseStatus, bool, ValueTask> processResult, [CallerMemberName] string method = null)
+        {
+            var requestBuilder = new RequestBuilder
+            {
+                Method = method,
+                Token = Token,
+                ObjectId = objectId,
+                Data = obj == null ? null : MessagePackSerializer.Serialize(obj, _lz4Option)
+            };
+
+            await Client.SendWithNewConnection(requestBuilder.Request, async (response) =>
+            {
+                var result = response.Data.Data != ByteString.Empty
+                ? MessagePackSerializer.Deserialize<TResult>(response.Data.Data.ToByteArray(), _lz4Option)
+                : default;
+                await processResult(result, response.Status, response.Completed);
+            });
+        }
 
         #region SendRequestAboutUser
 
@@ -486,121 +506,119 @@ namespace Otokoneko.Client
 
         #region SendRequestAboutManga
 
-                public async ValueTask<int> CountMangas(MangaQueryHelper mangaQuery, int millisecondsTimeout = 10000)
+        public async ValueTask<int> CountMangas(MangaQueryHelper mangaQuery, int millisecondsTimeout = 10000)
+        {
+            var (result, status) = await 
+                SendRequest<MangaQueryHelper, int>(
+                0,
+                mangaQuery, 
+                millisecondsTimeout);
+            return result;
+        }
+
+        public async ValueTask<List<Manga>> ListMangas(MangaQueryHelper mangaQuery, int millisecondsTimeout = 10000)
+        {
+            var (result, status) = await
+                SendRequest<MangaQueryHelper, List<Manga>>(
+                    0,
+                    mangaQuery,
+                    millisecondsTimeout);
+            return result;
+        }
+
+        public async ValueTask<Manga> GetManga(long mangaId)
+        {
+            var (result, status) = await
+                SendRequest<object, Manga>(mangaId, null);
+            return result;
+        }
+
+        public async ValueTask<Chapter> GetChapter(long chapterId)
+        {
+            var (result, status) = await
+                SendRequest<object, Chapter>(chapterId, null);
+            return result;
+        }
+
+        public async ValueTask<byte[]> GetImage(long imageId)
+        {
+            if (await ImageCache.Contain(imageId))
+            {
+                return await ImageCache.Get(imageId);
+            }
+
+            var (result, status) = await SendRequest<object, byte[]>(imageId, null);
+            if (result != null)
+            {
+                await ImageCache.Add(imageId, result);
+            }
+
+            return result;
+        }
+
+        public async ValueTask<bool> DeleteManga(long mangaId, int millisecondsTimeout = 10000)
+        {
+            var (result, status) = await SendRequest<object, bool>(mangaId, null, millisecondsTimeout);
+            return result;
+        }
+
+        public async ValueTask<bool> UpdateManga(Manga manga, int millisecondsTimeout = 10000)
+        {
+            var (result, status) = await SendRequest<object, bool>(0, manga, millisecondsTimeout);
+            return result;
+        }
+
+        public async ValueTask<bool> RecordReadProgress(long chapterId, int progress, int millisecondsTimeout = 10000)
+        {
+            var (result, status) = await SendRequest<object, bool>(
+                0,
+                new ReadProgress
                 {
-                    var (result, status) = await 
-                        SendRequest<MangaQueryHelper, int>(
-                        0,
-                        mangaQuery, 
-                        millisecondsTimeout);
-                    return result;
-                }
+                    ChapterId = chapterId,
+                    Progress = progress
+                },
+                millisecondsTimeout);
+            return result;
+        }
 
-                public async ValueTask<List<Manga>> ListMangas(MangaQueryHelper mangaQuery, int millisecondsTimeout = 10000)
+        public async ValueTask<ReadProgress> GetChapterReadProgress(long chapterId)
+        {
+            var (result, status) = await SendRequest<object, ReadProgress>(chapterId, null);
+            return result;
+        }
+
+        public async ValueTask AddMangaFavorite(long mangaId)
+        {
+            var (result, status) = await SendRequest<object, bool>(mangaId, null);
+        }
+
+        public async ValueTask RemoveMangaFavorite(long mangaId)
+        {
+            var (result, status) = await SendRequest<object, bool>(mangaId, null);
+        }
+
+        public async ValueTask AddComment(Comment comment)
+        {
+            var (result, status) = await SendRequest<Comment, bool>(0, comment);
+        }
+
+        public async ValueTask DownloadManga(long mangaId, Stream stream)
+        {
+            await SendRequestWithNewConnection<object, byte[]>(mangaId, null, async (data, status, complete) =>
+            {
+                if(status != ResponseStatus.Success)
                 {
-                    var (result, status) = await
-                        SendRequest<MangaQueryHelper, List<Manga>>(
-                            0,
-                            mangaQuery,
-                            millisecondsTimeout);
-                    return result;
+                    stream.Close();
+                    return;
                 }
-
-                public async ValueTask<Manga> GetManga(long mangaId)
+                await stream.WriteAsync(data);
+                Trace.WriteLine(stream.Position);
+                if (complete)
                 {
-                    var (result, status) = await
-                        SendRequest<object, Manga>(mangaId, null);
-                    return result;
+                    stream.Close();
                 }
-
-                public async ValueTask<Chapter> GetChapter(long chapterId)
-                {
-                    var (result, status) = await
-                        SendRequest<object, Chapter>(chapterId, null);
-                    return result;
-                }
-
-                public async ValueTask<byte[]> GetImage(long imageId)
-                {
-                    if (await ImageCache.Contain(imageId))
-                    {
-                        return await ImageCache.Get(imageId);
-                    }
-
-                    // lock (_requestQueue)
-                    // {
-                    //     List<Action<byte[]>> callbacks;
-                    //     if (_requestQueue.ContainsKey(imageId))
-                    //     {
-                    //         callbacks = _requestQueue[imageId];
-                    //         lock (callbacks)
-                    //         {
-                    //             callbacks.Add(callback);
-                    //         }
-                    //         return;
-                    //     }
-                    //     callbacks = new List<Action<byte[]>>();
-                    //     _requestQueue.Add(imageId, callbacks);
-                    //     lock (callbacks)
-                    //     {
-                    //         callbacks.Add(callback);
-                    //     }
-                    // }
-
-                    var (result, status) = await SendRequest<object, byte[]>(imageId, null);
-                    if (result != null)
-                    {
-                        await ImageCache.Add(imageId, result);
-                    }
-
-                    return result;
-                }
-
-                public async ValueTask<bool> DeleteManga(long mangaId, int millisecondsTimeout = 10000)
-                {
-                    var (result, status) = await SendRequest<object, bool>(mangaId, null, millisecondsTimeout);
-                    return result;
-                }
-
-                public async ValueTask<bool> UpdateManga(Manga manga, int millisecondsTimeout = 10000)
-                {
-                    var (result, status) = await SendRequest<object, bool>(0, manga, millisecondsTimeout);
-                    return result;
-                }
-
-                public async ValueTask<bool> RecordReadProgress(long chapterId, int progress, int millisecondsTimeout = 10000)
-                {
-                    var (result, status) = await SendRequest<object, bool>(
-                        0,
-                        new ReadProgress
-                        {
-                            ChapterId = chapterId,
-                            Progress = progress
-                        },
-                        millisecondsTimeout);
-                    return result;
-                }
-
-                public async ValueTask<ReadProgress> GetChapterReadProgress(long chapterId)
-                {
-                    var (result, status) = await SendRequest<object, ReadProgress>(chapterId, null);
-                    return result;
-                }
-
-                public async ValueTask AddMangaFavorite(long mangaId)
-                {
-                    var (result, status) = await SendRequest<object, bool>(mangaId, null);
-                }
-
-                public async ValueTask RemoveMangaFavorite(long mangaId)
-                {
-                    var (result, status) = await SendRequest<object, bool>(mangaId, null);
-                }
-
-                public async ValueTask AddComment(Comment comment)
-                {
-                    var (result, status) = await SendRequest<Comment, bool>(0, comment);
-                }
+            });
+        }
 
         #endregion
 

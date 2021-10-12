@@ -41,7 +41,7 @@ namespace Otokoneko.Client.WPFClient.ViewModel
             Name = plan.Name;
             if (plan.LastTriggeredTime != null)
             {
-                LastTriggeredLocalTime = WPFClient.Model.Utils.FormatLocalDateTime(((DateTime) plan.LastTriggeredTime).ToLocalTime());
+                LastTriggeredLocalTime = Utils.FormatUtils.FormatLocalDateTime(((DateTime) plan.LastTriggeredTime).ToLocalTime());
             }
         }
     }

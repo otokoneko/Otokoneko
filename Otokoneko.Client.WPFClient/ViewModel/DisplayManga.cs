@@ -29,10 +29,10 @@ namespace Otokoneko.Client.WPFClient.ViewModel
             }
         }
 
-        private async ValueTask LoadCover()
+        private async Task LoadCover()
         {
             var imageContent = await Model.GetImage(CoverId);
-            Cover = WPFClient.Model.Utils.Convert(imageContent);
+            Cover = Utils.FormatUtils.Convert(imageContent);
         }
 
         public ICommand ClickCommand { get; set; }

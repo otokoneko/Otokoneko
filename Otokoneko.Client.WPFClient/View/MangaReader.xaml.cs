@@ -125,7 +125,7 @@ namespace Otokoneko.Client.WPFClient.View
                 if (!_hiding)
                     HideExplorerToolBar();
             }
-            else
+            else if(e.GetPosition(this).Y >= ActualHeight * 0.8)
             {
                 if (_hiding)
                     ShowExplorerToolBar();

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -8,6 +9,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using AsyncAwaitBestPractices.MVVM;
+using Microsoft.Win32;
 using Otokoneko.Client.WPFClient.View;
 using Otokoneko.DataType;
 
@@ -194,6 +196,24 @@ namespace Otokoneko.Client.WPFClient.ViewModel
             DisplayScore();
         });
 
+        public ICommand DownloadMangaCommand => new AsyncCommand(async () =>
+        {
+            var dialog = new SaveFileDialog();
+            dialog.DefaultExt = ".zip";
+            dialog.FileName = $"{Manga.Title}.zip";
+            dialog.Filter = "Compress file (.zip)|*.zip";
+            var result = dialog.ShowDialog();
+            if (result != true)
+            {
+                return;
+            }
+
+            string filename = dialog.FileName;
+            var stream = File.OpenWrite(filename);
+            stream.SetLength(0);
+            await Model.DownloadManga(Manga.ObjectId, stream);
+        });
+
         public INavigationState GetState()
         {
             return new MangaDetailState()
@@ -224,7 +244,7 @@ namespace Otokoneko.Client.WPFClient.ViewModel
             DisplayReadHistory();
             DisplayChapters();
             var imageContent = await Model.GetImage(Manga.CoverId);
-            Cover = WPFClient.Model.Utils.Convert(imageContent);
+            Cover = Utils.FormatUtils.Convert(imageContent);
             OnPropertyChanged(nameof(Cover));
         }
 
@@ -249,9 +269,9 @@ namespace Otokoneko.Client.WPFClient.ViewModel
             Title = Manga.Title;
             Description = Manga.Description;
             CreateTime = string.Format(Constant.CreateTimeTemplate,
-                WPFClient.Model.Utils.FormatLocalDateTime(Manga.CreateTime));
+                Utils.FormatUtils.FormatLocalDateTime(Manga.CreateTime));
             UpdateTime = string.Format(Constant.UpdateTimeTemplate,
-                WPFClient.Model.Utils.FormatLocalDateTime(Manga.UpdateTime));
+                Utils.FormatUtils.FormatLocalDateTime(Manga.UpdateTime));
             IsFavoriteColor = Manga.IsFavorite ? Constant.IsFavoriteColor : Constant.IsNotFavoriteColor;
             Aliases = Manga.Aliases;
             OnPropertyChanged(nameof(Aliases));

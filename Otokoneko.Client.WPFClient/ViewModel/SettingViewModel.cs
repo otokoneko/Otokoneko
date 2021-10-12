@@ -126,7 +126,7 @@ namespace Otokoneko.Client.WPFClient.ViewModel
             get
             {
                 var size = (double)Model.CacheSize;
-                return WPFClient.Model.Utils.FormatSizeOfBytes(size);
+                return Utils.FormatUtils.FormatSizeOfBytes(size);
             }
         }
 

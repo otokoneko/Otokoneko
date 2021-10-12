@@ -62,7 +62,7 @@ namespace Otokoneko.Client.WPFClient.ViewModel
         private async void LoadImage()
         {
             var imageContent = await Model.GetImage(Image.ObjectId);
-            RealSource = WPFClient.Model.Utils.Convert(imageContent);
+            RealSource = Utils.FormatUtils.Convert(imageContent);
         }
 
         public DisplayImage(Image image, double width, double height, Int32Rect? cropRect)

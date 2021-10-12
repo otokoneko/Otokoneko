@@ -1,16 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
 
-namespace Otokoneko.Client.WPFClient.Model
+namespace Otokoneko.Client.WPFClient.Utils
 {
-    public static class Utils
+    public static class FormatUtils
     {
         private static readonly string[] SizeSuffixes = { "KB", "MB", "GB" };
+
         public static BitmapImage Convert(byte[] imageContent)
         {
             if (imageContent == null) return null;
@@ -43,5 +41,6 @@ namespace Otokoneko.Client.WPFClient.Model
             }
             return $"{size:F} {SizeSuffixes.Last()}";
         }
+
     }
 }

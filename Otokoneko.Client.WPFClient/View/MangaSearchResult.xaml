@@ -148,8 +148,8 @@
             ItemsSource="{Binding Mangas}"
             MouseLeftButtonDown="MangaListBox_OnMouseLeftButtonDown"
             ScrollViewer.ScrollChanged="ScrollViewer_OnScrollChanged"
-            VirtualizingPanel.CacheLength="2"
-            VirtualizingPanel.IsContainerVirtualizable="True"
+            VirtualizingPanel.CacheLength="10"
+            VirtualizingPanel.IsContainerVirtualizable="False"
             VirtualizingPanel.IsVirtualizing="True"
             VirtualizingPanel.ScrollUnit="Pixel"
             VirtualizingPanel.VirtualizationMode="Recycling">
@@ -163,6 +163,17 @@
                 </ItemsPanelTemplate>
             </ListBox.ItemsPanel>
             <ListBox.Resources>
+                <Style TargetType="{x:Type ListBox}">
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="{x:Type ListBox}">
+                                <view:SmoothScrollViewer x:Name="ScrollViewer">
+                                    <ItemsPresenter/>
+                                </view:SmoothScrollViewer>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
                 <Style BasedOn="{StaticResource MahApps.Styles.ListBoxItem}" TargetType="{x:Type ListBoxItem}">
                     <Setter Property="Template">
                         <Setter.Value>

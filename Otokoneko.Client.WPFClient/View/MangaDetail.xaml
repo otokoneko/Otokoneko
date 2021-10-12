@@ -288,7 +288,7 @@
         <Button
             Width="30"
             Height="30"
-            Margin="0,0,160,0"
+            Margin="0,0,220,0"
             HorizontalAlignment="Right"
             VerticalAlignment="Top"
             BorderThickness="0"
@@ -321,6 +321,27 @@
             <Rectangle Width="20" Height="20">
                 <Rectangle.OpacityMask>
                     <ImageBrush ImageSource="/icon/edit.png" />
+                </Rectangle.OpacityMask>
+                <Rectangle.Fill>
+                    <SolidColorBrush Color="#FFA5A5A5" />
+                </Rectangle.Fill>
+            </Rectangle>
+        </Button>
+        <Button
+            Width="30"
+            Height="30"
+            Margin="0,0,160,0"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Top"
+            BorderThickness="0"
+            Command="{Binding Path=DownloadMangaCommand}"
+            Cursor="Hand"
+            Focusable="False"
+            Style="{DynamicResource MahApps.Styles.Button.Circle}"
+            Visibility="{Binding Path=Editable, Converter={StaticResource InverseBoolToVisibilityConverter}}">
+            <Rectangle Width="20" Height="20">
+                <Rectangle.OpacityMask>
+                    <ImageBrush ImageSource="/icon/direct-download.png" />
                 </Rectangle.OpacityMask>
                 <Rectangle.Fill>
                     <SolidColorBrush Color="#FFA5A5A5" />

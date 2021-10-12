@@ -99,27 +99,6 @@ namespace Otokoneko.Client.WPFClient.View
             ((dynamic)DataContext).VerticalOffset = e.VerticalOffset;
         }
         
-        // private void PageTextBox_OnPreviewTextInput(object sender, TextCompositionEventArgs e)
-        // {
-        //     e.Handled = !int.TryParse(e.Text, out _);
-        // }
-        //
-        // private void PageTextBox_OnPasting(object sender, DataObjectPastingEventArgs e)
-        // {
-        //     if (e.DataObject.GetDataPresent(typeof(string)))
-        //     {
-        //         var text = e.DataObject.GetData(typeof(string)) as string;
-        //         if (!int.TryParse(text, out _))
-        //         {
-        //             e.CancelCommand();
-        //         }
-        //     }
-        //     else
-        //     {
-        //         e.CancelCommand();
-        //     }
-        // }
-
         private void MangaListBox_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             Grid.Focus();

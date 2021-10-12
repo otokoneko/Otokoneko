@@ -12,6 +12,7 @@ using HtmlAgilityPack;
 using Newtonsoft.Json;
 using Dmzj;
 using System.Net;
+using System.Web;
 
 namespace Otokoneko.Plugins.Dmzj
 {
@@ -47,7 +48,7 @@ namespace Otokoneko.Plugins.Dmzj
     {
         public string Name => nameof(Dmzj);
         public string Author => "Otokoneko";
-        public Version Version => new Version(1, 0, 1);
+        public Version Version => new Version(1, 0, 2);
         private static string MangaApiBase { get; } = "https://nnv4api.muwai.com/comic/detail/{0}?uid=1";
         private static string ChapterApiBase { get; } = "https://m.dmzj.com/chapinfo/{0}/{1}.html";
         private static Regex MangaIdRe { get; } = new Regex("(?:(?:obj_id)|(?:g_current_id)) = \"([0-9]+)\"");
@@ -182,9 +183,24 @@ namespace Otokoneko.Plugins.Dmzj
         public async ValueTask<List<string>> GetChapter(string url)
         {
             var resp = await Client.GetStringAsync(url);
+            if (resp == "漫画不存在")
+            {
+                throw new ArgumentException("Chapter not exists", nameof(url));
+            }
             var chapter = JsonConvert.DeserializeObject<Chapter>(resp);
-            var imageList = chapter.page_url.Where(url => url != "https://images.dmzj.com/").ToList(); // dmzj 部分漫画的图片下载链接有误，直接过滤
+            var imageList = chapter.page_url
+                .Where(url => url != "https://images.dmzj.com/")// dmzj 部分漫画的图片下载链接有误，直接过滤
+                .Select(url => FixImageUrl(url))
+                .ToList();
             return imageList;
+        }
+
+        private string FixImageUrl(string url)
+        {
+            var urlWithoutScheme = url.Replace("http://", string.Empty).Replace("https://", string.Empty);
+            urlWithoutScheme = urlWithoutScheme.Replace("//", "/");
+            urlWithoutScheme = urlWithoutScheme.Replace("+", "%2B");
+            return $"http://{urlWithoutScheme}";
         }
 
         public async ValueTask<HttpContent> GetImage(string url)

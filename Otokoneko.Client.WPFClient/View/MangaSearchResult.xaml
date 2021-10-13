@@ -7,7 +7,7 @@
     xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:view="clr-namespace:Otokoneko.Client.WPFClient.View"
-    xmlns:wpftk="clr-namespace:WpfToolkit.Controls;assembly=VirtualizingWrapPanel"
+    xmlns:wpftk="clr-namespace:WpfToolkit.Controls;assembly=VirtualizingWrapPanel" xmlns:themes="clr-namespace:Microsoft.Windows.Themes;assembly=PresentationFramework.Luna"
     d:DesignHeight="800"
     d:DesignWidth="1200"
     mc:Ignorable="d">
@@ -71,40 +71,40 @@
                             </Style.Resources>
                         </Style>
                     </Border.Style>
-                    <Grid Width="210" Margin="5,10">
-                        <Border
-                            Width="210"
-                            Height="280"
-                            BorderBrush="DimGray"
-                            CornerRadius="11">
-                            <Border.Background>
-                                <ImageBrush ImageSource="{Binding Path=Cover, IsAsync=True}" Stretch="UniformToFill" />
-                            </Border.Background>
-                            <Rectangle Height="55" VerticalAlignment="Bottom">
-                                <Rectangle.Fill>
-                                    <VisualBrush Stretch="None">
-                                        <VisualBrush.Visual>
-                                            <Border
-                                                Width="210"
-                                                Height="55"
-                                                CornerRadius="0,0,10,10">
-                                                <Border.Background>
-                                                    <LinearGradientBrush MappingMode="RelativeToBoundingBox" SpreadMethod="Pad" StartPoint="0,0.0" EndPoint="0,1.0">
-                                                        <GradientStop Offset="0" Color="#00000000" />
-                                                        <GradientStop Offset="0.5" Color="#a0000000" />
-                                                        <GradientStop Offset="1.3" Color="#ff000000" />
-                                                    </LinearGradientBrush>
-                                                </Border.Background>
-                                            </Border>
-                                        </VisualBrush.Visual>
-                                    </VisualBrush>
-                                </Rectangle.Fill>
-                            </Rectangle>
-                            <Border.Effect>
-                                <DropShadowEffect BlurRadius="20" Color="Black" />
-                            </Border.Effect>
-                        </Border>
-
+                    <Grid Width="220" Margin="5,10">
+                        <themes:SystemDropShadowChrome  CornerRadius="11"
+                                                        Width="212"
+                                                        Height="282">
+                            <Border
+                                Width="210"
+                                Height="280"
+                                BorderBrush="DimGray"
+                                CornerRadius="11">
+                                <Border.Background>
+                                    <ImageBrush ImageSource="{Binding Path=Cover, IsAsync=True}" Stretch="UniformToFill" />
+                                </Border.Background>
+                                <Rectangle Height="55" VerticalAlignment="Bottom">
+                                    <Rectangle.Fill>
+                                        <VisualBrush Stretch="None">
+                                            <VisualBrush.Visual>
+                                                <Border
+                                                    Width="210"
+                                                    Height="55"
+                                                    CornerRadius="0,0,10,10">
+                                                    <Border.Background>
+                                                        <LinearGradientBrush MappingMode="RelativeToBoundingBox" SpreadMethod="Pad" StartPoint="0,0.0" EndPoint="0,1.0">
+                                                            <GradientStop Offset="0" Color="#00000000" />
+                                                            <GradientStop Offset="0.5" Color="#a0000000" />
+                                                            <GradientStop Offset="1.3" Color="#ff000000" />
+                                                        </LinearGradientBrush>
+                                                    </Border.Background>
+                                                </Border>
+                                            </VisualBrush.Visual>
+                                        </VisualBrush>
+                                    </Rectangle.Fill>
+                                </Rectangle>
+                            </Border>
+                        </themes:SystemDropShadowChrome>
                         <TextBox
                             MaxHeight="45"
                             Margin="5"

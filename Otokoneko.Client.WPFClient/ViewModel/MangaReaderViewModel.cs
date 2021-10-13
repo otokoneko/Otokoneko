@@ -471,8 +471,6 @@ namespace Otokoneko.Client.WPFClient.ViewModel
         {
             if (_chapter != null)
                 await SaveProgress();
-            Images = null;
-            GC.Collect();
         }
 
         public MangaReaderViewModel(List<Chapter> chapters, int index)

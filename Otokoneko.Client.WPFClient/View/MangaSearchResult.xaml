@@ -73,8 +73,8 @@
                     </Border.Style>
                     <Grid Width="220" Margin="5,10">
                         <themes:SystemDropShadowChrome  CornerRadius="11"
-                                                        Width="212"
-                                                        Height="282">
+                                                        Width="215"
+                                                        Height="285">
                             <Border
                                 Width="210"
                                 Height="280"

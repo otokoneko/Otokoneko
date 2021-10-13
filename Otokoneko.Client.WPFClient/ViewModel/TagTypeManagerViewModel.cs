@@ -1,9 +1,5 @@
 ﻿using System.Collections.ObjectModel;
 using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Input;
-using System.Windows.Media;
-using AsyncAwaitBestPractices.MVVM;
 using Otokoneko.DataType;
 
 namespace Otokoneko.Client.WPFClient.ViewModel

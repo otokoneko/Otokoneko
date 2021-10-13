@@ -16,6 +16,7 @@ namespace Otokoneko.Client.WPFClient.View
     {
         public ImageListBox()
         {
+            IsSynchronizedWithCurrentItem = true;
             SelectionChanged += ScrollToSelectedItem;
             Loaded += OnLoaded;
         }
@@ -46,7 +47,11 @@ namespace Otokoneko.Client.WPFClient.View
         {
             if (SelectedItem != null)
             {
-                ScrollIntoView(SelectedItem);
+                Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    UpdateLayout();
+                    ScrollIntoView(SelectedItem);
+                }));
             }
         }
     }
@@ -139,7 +144,14 @@ namespace Otokoneko.Client.WPFClient.View
 
         private void UIElement_OnMouseWheel(object sender, MouseWheelEventArgs e)
         {
-            ((dynamic) sender).DataContext.ChangePage(e.Delta / 120);
+            if(e.Delta < 0)
+            {
+                ((dynamic)DataContext).NextImageButton.Command.ExecuteAsync();
+            }
+            else
+            {
+                ((dynamic)DataContext).PrevImageButton.Command.ExecuteAsync();
+            }
         }
     }
 }

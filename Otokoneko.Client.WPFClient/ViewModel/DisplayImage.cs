@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Windows;
 using System.Windows.Media.Imaging;
 using Otokoneko.Client.WPFClient.Utils;
@@ -9,7 +8,6 @@ namespace Otokoneko.Client.WPFClient.ViewModel
 {
     public enum ImageCropMode
     {
-        None,
         Right,
         Left
     }
@@ -28,7 +26,8 @@ namespace Otokoneko.Client.WPFClient.ViewModel
 
         public Image Image { get; set; }
 
-        private AutoCropMode CropMode { get; set; }
+        private ImageCropMode ImageCropMode { get; set; }
+        private AutoCropMode AutoCropMode { get; set; }
 
         private ImageResizeMode _imageResizeMode;
         public ImageResizeMode ImageResizeMode
@@ -54,24 +53,32 @@ namespace Otokoneko.Client.WPFClient.ViewModel
                     {
                         case ImageResizeMode.RespectWidth:
                             ActualWidth = ExpectedWidth;
-                            if(RealSource.PixelHeight <= RealSource.PixelWidth && CropMode != AutoCropMode.None)
+                            if(RealSource.PixelHeight <= RealSource.PixelWidth && AutoCropMode != AutoCropMode.None)
                             {
                                 var width = (RealSource.PixelWidth + 1) / 2;
-                                ActualHeight = (double)RealSource.PixelHeight * 2 / width * ActualWidth;
+                                ActualHeight = (double)RealSource.PixelHeight / width * ActualWidth;
                             }
                             else
                             {
                                 ActualHeight = (double)RealSource.PixelHeight / RealSource.PixelWidth * ActualWidth;
+                                ActualHeight = AutoCropMode == AutoCropMode.LeftToRight
+                                ? (ImageCropMode == ImageCropMode.Left ? ActualHeight : 0)
+                                : (ImageCropMode == ImageCropMode.Right ? ActualHeight : 0);
                             }
                             break;
                         case ImageResizeMode.RespectHeight:
                             ActualHeight = ExpectedHeight;
                             ActualWidth = (double)RealSource.PixelWidth / RealSource.PixelHeight * ActualHeight;
                             break;
-
                     }
+
+                    Visable = (RealSource.PixelHeight <= RealSource.PixelWidth && AutoCropMode != AutoCropMode.None) ||
+                        (AutoCropMode == AutoCropMode.LeftToRight && ImageCropMode == ImageCropMode.Left) ||
+                        (AutoCropMode != AutoCropMode.LeftToRight && ImageCropMode == ImageCropMode.Right);
+
                     OnPropertyChanged(nameof(ActualWidth));
                     OnPropertyChanged(nameof(ActualHeight));
+                    OnPropertyChanged(nameof(Visable));
                 }
                 OnPropertyChanged(nameof(Source));
             }
@@ -82,22 +89,29 @@ namespace Otokoneko.Client.WPFClient.ViewModel
             get
             {
                 if (!_loaded)
+                {
+                    _loaded = true;
                     LoadImage();
-                _loaded = true;
-                if (RealSource == null || 
-                    CropMode == AutoCropMode.None || 
-                    ImageResizeMode == ImageResizeMode.RespectHeight || 
-                    RealSource.PixelHeight > RealSource.PixelWidth)
-                {
-                    return RealSource;
                 }
-                var width = (RealSource.PixelWidth + 1) / 2;
-                var right = new CroppedBitmap(RealSource, new Int32Rect(RealSource.PixelWidth - width, 0, width, RealSource.PixelHeight));
-                var left = new CroppedBitmap(RealSource, new Int32Rect(0, 0, width, RealSource.PixelHeight));
-                var source = CropMode switch
+
+                if (RealSource == null)
                 {
-                    AutoCropMode.RightToLeft => ImageUtils.Merge(right, left),
-                    AutoCropMode.LeftToRight => ImageUtils.Merge(left, right),
+                    return null;
+                }
+
+                if(RealSource.PixelHeight > RealSource.PixelWidth || AutoCropMode == AutoCropMode.None)
+                {
+                    return AutoCropMode == AutoCropMode.LeftToRight
+                        ? (ImageCropMode == ImageCropMode.Left ? RealSource : null)
+                        : (ImageCropMode == ImageCropMode.Right ? RealSource : null);
+                }
+
+                var width = (RealSource.PixelWidth + 1) / 2;
+                var source = ImageCropMode switch
+                {
+                    ImageCropMode.Right => new CroppedBitmap(RealSource, new Int32Rect(RealSource.PixelWidth - width, 0, width, RealSource.PixelHeight)),
+                    ImageCropMode.Left => new CroppedBitmap(RealSource, new Int32Rect(0, 0, width, RealSource.PixelHeight)),
+                    _ => throw new ArgumentOutOfRangeException(),
                 };
 
                 source.Freeze();
@@ -109,6 +123,7 @@ namespace Otokoneko.Client.WPFClient.ViewModel
         public double ExpectedHeight { get; set; }
         public double ActualWidth { get; set; }
         public double ActualHeight { get; set; }
+        public bool Visable { get; set; }
 
         private async void LoadImage()
         {
@@ -116,12 +131,14 @@ namespace Otokoneko.Client.WPFClient.ViewModel
             RealSource = ImageUtils.Convert(imageContent);
         }
 
-        public DisplayImage(Image image, double expectedWidth, double expectedHeight, AutoCropMode imageCropMode, ImageResizeMode imageResizeMode)
+        public DisplayImage(Image image, bool visable, double expectedWidth, double expectedHeight, AutoCropMode autoCropMode, ImageCropMode imageCropMode, ImageResizeMode imageResizeMode)
         {
             Image = image;
+            Visable = visable;
             ActualWidth = ExpectedWidth = expectedWidth;
             ActualHeight = ExpectedHeight = expectedHeight;
-            CropMode = imageCropMode;
+            AutoCropMode = autoCropMode;
+            ImageCropMode = imageCropMode;
             ImageResizeMode = imageResizeMode;
         }
     }

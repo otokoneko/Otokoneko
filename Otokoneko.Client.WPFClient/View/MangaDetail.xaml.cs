@@ -1,9 +1,5 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
-using System.Windows.Media;
-using Otokoneko.Client.WPFClient.ViewModel;
-using Otokoneko.DataType;
 
 namespace Otokoneko.Client.WPFClient.View
 {

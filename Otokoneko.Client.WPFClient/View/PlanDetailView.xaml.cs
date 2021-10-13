@@ -1,6 +1,4 @@
-﻿using System.Windows;
-
-namespace Otokoneko.Client.WPFClient.View
+﻿namespace Otokoneko.Client.WPFClient.View
 {
     /// <summary>
     /// PlanDetailView.xaml 的交互逻辑

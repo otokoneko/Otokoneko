@@ -80,13 +80,12 @@ namespace Otokoneko.Client.WPFClient.ViewModel
             }
         }
 
-        public void ChangePage(int delta)
-        {
-            CurrentPage -= delta;
-        }
-
         public override void ScrollTo(int page)
         {
+            if (!Images[page].Visable)
+            {
+                return;
+            }
             CurrentPage = page;
         }
 
@@ -103,7 +102,7 @@ namespace Otokoneko.Client.WPFClient.ViewModel
                     image.ExpectedHeight = height;
                     image.ImageResizeMode = ImageResizeMode.RespectHeight;
                 }
-                OnPropertyChanged(nameof(Images));
+                OnPropertyChanged(nameof(CurrentImage));
             }
         }
 
@@ -169,7 +168,13 @@ namespace Otokoneko.Client.WPFClient.ViewModel
             if (Images != null)
             {
                 ImageExplorerViewModel.Images = Images;
-                ImageExplorerViewModel.ScrollTo((int)CurrentSliderValue);
+                int page = (int)CurrentSliderValue;
+                if (!Images[page].Visable)
+                {
+                    if (page > 0) page--;
+                    else page++;
+                }
+                ImageExplorerViewModel.ScrollTo(page);
             }
             OnPropertyChanged(nameof(ImageExplorerViewModel));
         }
@@ -218,9 +223,14 @@ namespace Otokoneko.Client.WPFClient.ViewModel
             IsEnable = (int)CurrentSliderValue < Images?.Count || NextChapterButton.IsEnable,
             Command = new AsyncCommand(async () =>
             {
-                if ((int)CurrentSliderValue < Images?.Count)
+                int next = (int)CurrentSliderValue - 1 + 1;
+                if (next < Images.Count && !Images[next].Visable)
                 {
-                    ScrollTo((int)CurrentSliderValue - 1 + 1);
+                    next++;
+                }
+                if (Images != null && next < Images.Count)
+                {
+                    ScrollTo(next);
                 }
                 else
                 {
@@ -235,9 +245,14 @@ namespace Otokoneko.Client.WPFClient.ViewModel
             IsEnable = (int)CurrentSliderValue > 1 || PrevChapterButton.IsEnable,
             Command = new AsyncCommand(async () =>
             {
-                if ((int)CurrentSliderValue > 1)
+                int next = (int)CurrentSliderValue - 1 - 1;
+                if (next >= 0 && !Images[next].Visable)
                 {
-                    ScrollTo((int)CurrentSliderValue - 1 - 1);
+                    next--;
+                }
+                if (next >= 0)
+                {
+                    ScrollTo(next);
                 }
                 else
                 {
@@ -351,7 +366,7 @@ namespace Otokoneko.Client.WPFClient.ViewModel
         public void SetProgress(int progress)
         {
             _currentSliderValue = progress;
-            SliderText = $"{_currentSliderValue}/{Images?.Count}";
+            SliderText = $"{(progress + 1) / 2}/{_chapter?.Images?.Count}";
             OnPropertyChanged(nameof(SliderText));
             OnPropertyChanged(nameof(CurrentSliderValue));
             OnPropertyChanged(nameof(PrevImageButton));
@@ -421,12 +436,46 @@ namespace Otokoneko.Client.WPFClient.ViewModel
                 var w = 0.8 * GetWidth();
                 var h = 1.5 * w;
 
-                Images.Add(new DisplayImage(
-                    image,
-                    w,
-                    h,
-                    AutoCropMode,
-                    ImageResizeMode.RespectWidth));
+                switch (AutoCropMode)
+                {
+                    case AutoCropMode.None:
+                    case AutoCropMode.RightToLeft:
+                        Images.Add(new DisplayImage(
+                            image,
+                            true,
+                            w,
+                            h, 
+                            AutoCropMode,
+                            ImageCropMode.Right,
+                            ImageResizeMode.RespectWidth));
+                        Images.Add(new DisplayImage(
+                            image,
+                            true,
+                            w,
+                            h,
+                            AutoCropMode,
+                            ImageCropMode.Left,
+                            ImageResizeMode.RespectWidth));
+                        break;
+                    case AutoCropMode.LeftToRight:
+                        Images.Add(new DisplayImage(
+                            image,
+                            true,
+                            w,
+                            h,
+                            AutoCropMode,
+                            ImageCropMode.Left,
+                            ImageResizeMode.RespectWidth));
+                        Images.Add(new DisplayImage(
+                            image,
+                            true,
+                            w,
+                            h,
+                            AutoCropMode,
+                            ImageCropMode.Right,
+                            ImageResizeMode.RespectWidth));
+                        break;
+                }
             }
 
             ImageExplorerViewModel.Images = Images;
@@ -444,6 +493,7 @@ namespace Otokoneko.Client.WPFClient.ViewModel
 
         private async ValueTask LoadChapter()
         {
+            if (_chapterIndex < 0 || _chapterIndex >= _chapters.Count) return;
             if (_chapter != null) await SaveProgress();
             _chapter = await Model.GetChapter(_chapters[_chapterIndex].ObjectId);
             if (_chapter == null)

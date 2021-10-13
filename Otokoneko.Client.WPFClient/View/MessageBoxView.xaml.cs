@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Windows;
-using System.Windows.Controls;
-using Otokoneko.DataType;
+﻿using System.Windows;
 
 namespace Otokoneko.Client.WPFClient.View
 {

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Lucene.Net.Analysis;
-using Lucene.Net.Analysis.Cjk;
+using Lucene.Net.Analysis.Standard;
 using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Queries.Function;
@@ -18,7 +18,7 @@ namespace Otokoneko.Server.SearchService
     public class FtsIndexServiceBase
     {
         protected static LuceneVersion AppLuceneVersion { get; } = LuceneVersion.LUCENE_48;
-        protected static Analyzer Analyzer { get; } = new CJKAnalyzer(AppLuceneVersion);
+        protected static Analyzer Analyzer { get; } = new StandardAnalyzer(AppLuceneVersion);
         private string IndexPath { get; }
         public FtsIndexServiceBase(string indexPath)
         {
@@ -122,9 +122,9 @@ namespace Otokoneko.Server.SearchService
             var aliasesParser = new QueryParser(AppLuceneVersion, "Aliases", Analyzer);
             var query = new BooleanQuery
             {
-                {new BoostedQuery(titleParser.Parse(queryString), new DoubleConstValueSource(2.0)), Occur.SHOULD},
+                {new BoostedQuery(titleParser.Parse(queryString), new DoubleConstValueSource(80)), Occur.SHOULD},
                 {new BoostedQuery(descriptionParser.Parse(queryString), new DoubleConstValueSource(0.5)), Occur.SHOULD},
-                {new BoostedQuery(aliasesParser.Parse(queryString), new DoubleConstValueSource(2.0)), Occur.SHOULD}
+                {new BoostedQuery(aliasesParser.Parse(queryString), new DoubleConstValueSource(40)), Occur.SHOULD}
             };
             return Search(query, (hit, ftsIndexSearch) => long.Parse(ftsIndexSearch.Doc(hit.Doc).Get("Id")));
         }

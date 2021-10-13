@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using MessagePack;
 using Otokoneko.DataType;
 using Otokoneko.Plugins.Interface;
@@ -126,6 +127,15 @@ namespace Otokoneko.Server.ScheduleTaskManage
         {
             LibraryId = libraryId;
             Name = name;
+        }
+
+        protected override void OnUpdated()
+        {
+            if (Status == TaskStatus.Success || Status == TaskStatus.Fail)
+            {
+                GC.Collect();
+            }
+            base.OnUpdated();
         }
 
         public override bool Equals(object obj)

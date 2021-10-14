@@ -1,13 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30717.126
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31717.71
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Otokoneko.Server", "Otokoneko.Server.csproj", "{2E838F82-F2F0-4EA9-82EB-4E70B9ECC3CC}"
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Otokoneko.Base", "..\Otokoneko.Base\Otokoneko.Base.shproj", "{82B38B9C-F381-4335-8F3E-F8EB6F3F10EE}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Otokoneko.Plugins.Interface", "..\Otokoneko.Plugins\Otokoneko.Plugins.Interface\Otokoneko.Plugins.Interface.csproj", "{2F61EBAD-7FC5-4C8E-8C3F-99E92A98DDA8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Otokoneko.Server.Gui", "..\Otokoneko.Server.Gui\Otokoneko.Server.Gui.csproj", "{6514D1E2-E978-405B-B2C3-DB53673A5363}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
@@ -27,6 +29,10 @@ Global
 		{2F61EBAD-7FC5-4C8E-8C3F-99E92A98DDA8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2F61EBAD-7FC5-4C8E-8C3F-99E92A98DDA8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2F61EBAD-7FC5-4C8E-8C3F-99E92A98DDA8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6514D1E2-E978-405B-B2C3-DB53673A5363}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6514D1E2-E978-405B-B2C3-DB53673A5363}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6514D1E2-E978-405B-B2C3-DB53673A5363}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6514D1E2-E978-405B-B2C3-DB53673A5363}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

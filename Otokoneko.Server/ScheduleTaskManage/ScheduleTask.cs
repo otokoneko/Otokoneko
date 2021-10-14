@@ -133,6 +133,7 @@ namespace Otokoneko.Server.ScheduleTaskManage
         {
             if (Status == TaskStatus.Success || Status == TaskStatus.Fail)
             {
+                Children.Clear();
                 GC.Collect();
             }
             base.OnUpdated();

@@ -1,9 +1,11 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Autofac;
 using Autofac.Extras.DynamicProxy;
+using CommandLine;
 using log4net;
 using log4net.Appender;
 using log4net.Config;
@@ -27,12 +29,34 @@ namespace Otokoneko.Server
 {
     class Program
     {
+        public class Options
+        {
+            [Option("ansicolor", Required = false, HelpText = "Set color by ANSI escape code.")]
+            public bool UseAnsiEscapeColor { get; set; }
+        }
+
         private static ILog Logger { get; set; }
 
         static async Task Main(string[] args)
         {
+            var parseResulr = Parser.Default.ParseArguments<Options>(args);
+            if (parseResulr.Errors.FirstOrDefault() != null) return;
+
+            var options = parseResulr.Value;
+
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
             var builder = new ContainerBuilder();
-            
+
+            if (options.UseAnsiEscapeColor)
+            {
+                builder.RegisterType<AnsiConsoleColorConfig>().As<IConsoleColorConfig>();
+            }
+            else
+            {
+                builder.RegisterType<DefaultConsoleColorConfig>().As<IConsoleColorConfig>();
+            }
+
             builder.RegisterType<Server>().PropertiesAutowired().EnableClassInterceptors().SingleInstance();
             
             builder.RegisterType<MangaFtsIndexService>().PropertiesAutowired().SingleInstance();
@@ -98,11 +122,57 @@ namespace Otokoneko.Server
                     fileAppender.AddFilter(fileFilter);
                     fileAppender.ActivateOptions();
 
-                    var consoleAppender = new ConsoleAppender()
+                    IAppender consoleAppender;
+                    if (options.UseAnsiEscapeColor)
                     {
-                        Layout = layout,
-                        Name = "Otokoneko Console Appender",
-                    };
+                        var ansiColorTerminalAppender = new AnsiColorTerminalAppender()
+                        {
+                            Layout = layout,
+                            Name = "Otokoneko Console Appender",
+                        };
+                        ansiColorTerminalAppender.AddMapping(new AnsiColorTerminalAppender.LevelColors
+                        {
+                            ForeColor = AnsiColorTerminalAppender.AnsiColor.Red,
+                            Level = Level.Fatal
+                        });
+                        ansiColorTerminalAppender.AddMapping(new AnsiColorTerminalAppender.LevelColors
+                        {
+                            ForeColor = AnsiColorTerminalAppender.AnsiColor.Red,
+                            Level = Level.Error
+                        });
+                        ansiColorTerminalAppender.AddMapping(new AnsiColorTerminalAppender.LevelColors
+                        {
+                            ForeColor = AnsiColorTerminalAppender.AnsiColor.Yellow,
+                            Level = Level.Warn
+                        });
+                        ansiColorTerminalAppender.ActivateOptions();
+                        consoleAppender = ansiColorTerminalAppender;
+                    }
+                    else
+                    {
+                        var coloredConsoleAppender = new ColoredConsoleAppender()
+                        {
+                            Layout = layout,
+                            Name = "Otokoneko Console Appender",
+                        };
+                        coloredConsoleAppender.AddMapping(new ColoredConsoleAppender.LevelColors
+                        {
+                            ForeColor = ColoredConsoleAppender.Colors.Red,
+                            Level = Level.Fatal
+                        });
+                        coloredConsoleAppender.AddMapping(new ColoredConsoleAppender.LevelColors
+                        {
+                            ForeColor = ColoredConsoleAppender.Colors.Red,
+                            Level = Level.Error
+                        });
+                        coloredConsoleAppender.AddMapping(new ColoredConsoleAppender.LevelColors
+                        {
+                            ForeColor = ColoredConsoleAppender.Colors.Yellow,
+                            Level = Level.Warn
+                        });
+                        coloredConsoleAppender.ActivateOptions();
+                        consoleAppender = coloredConsoleAppender;
+                    }
 
                     var repository = LoggerManager.CreateRepository("Otokoneko Repository");
                     repository.Configured = true;

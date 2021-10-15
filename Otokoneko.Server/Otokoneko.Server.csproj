@@ -21,6 +21,7 @@
   <ItemGroup>
     <PackageReference Include="Autofac" Version="6.1.0" />
     <PackageReference Include="Autofac.Extras.DynamicProxy" Version="6.0.0" />
+    <PackageReference Include="CommandLineParser" Version="2.9.0-preview1" />
     <PackageReference Include="Google.Protobuf" Version="3.15.0" />
     <PackageReference Include="IdGen" Version="3.0.0" />
     <PackageReference Include="LevelDB.Standard" Version="2.1.6.1" />

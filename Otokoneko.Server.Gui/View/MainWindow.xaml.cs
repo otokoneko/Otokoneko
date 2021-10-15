@@ -10,14 +10,23 @@ namespace Otokoneko.Server.Gui
         public MainWindow()
         {
             InitializeComponent();
-            if(!ConsoleControl.ProcessInterface.IsProcessRunning)
-                ConsoleControl.StartProcess(App.CoreApp, "");
+
+            if (!ConsoleControl.IsProcessRunning)
+                ConsoleControl.StartProcess(App.CoreApp, "--ansicolor");
+
+            Activated += OnActivated;
+        }
+
+        private void OnActivated(object sender, System.EventArgs e)
+        {
+            ConsoleControl.ScrollToEnd();
         }
 
         public void Exit()
         {
-            if (ConsoleControl.ProcessInterface.IsProcessRunning)
+            if (ConsoleControl.IsProcessRunning)
                 ConsoleControl.StopProcess();
+
             Close();
         }
     }

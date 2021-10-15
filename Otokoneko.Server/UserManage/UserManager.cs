@@ -23,6 +23,8 @@ namespace Otokoneko.Server.UserManage
 
     public class UserManager
     {
+        public IConsoleColorConfig ConsoleColorSetter { get; set; }
+
         private readonly ConcurrentDictionary<string, Session> _sessions;
         private static readonly IdGenerator IdGenerator = new IdGenerator(2);
 
@@ -247,11 +249,11 @@ namespace Otokoneko.Server.UserManage
                 await invitationService.CountAsync(it => true) == 0)
             {
                 var invitationCode = await GenerateInvitationCode(context, -1, UserAuthority.Root);
-                Console.ForegroundColor = ConsoleColor.DarkYellow;
+                ConsoleColorSetter.SetForeground(ConsoleColor.DarkYellow);
                 Console.WriteLine("\nRoot用户邀请码:");
-                Console.ForegroundColor = ConsoleColor.White;
+                ConsoleColorSetter.SetForeground(ConsoleColor.White);
                 Console.WriteLine(invitationCode);
-                Console.ForegroundColor = ConsoleColor.Gray;
+                ConsoleColorSetter.SetForeground(ConsoleColor.Gray);
                 Console.WriteLine();
             }
             return null;

@@ -161,10 +161,14 @@ namespace Otokoneko.Server.ScheduleTaskManage
 
         public bool ScheduleAndStart(ScheduleTask task)
         {
-            var taskId = _root.Children.FirstOrDefault(it => it.Equals(task))?.ObjectId;
-            if (taskId != null)
+            var oldTask = _root.Children.FirstOrDefault(it => it.Equals(task));
+            if (oldTask != null)
             {
-                Cancel((long)taskId);
+                if (oldTask.Status == TaskStatus.Executing || oldTask.Status == TaskStatus.Running)
+                {
+                    return false;
+                }
+                Cancel(oldTask);
             }
             _idToTask.TryAdd(task.ObjectId, task);
             _root.Children.Add(task);
@@ -181,11 +185,17 @@ namespace Otokoneko.Server.ScheduleTaskManage
                    task.Restart();
         }
 
+        public bool Cancel(ScheduleTask task)
+        {
+            return task != null &&
+                   _root.Children.Contains(task) &&
+                   task.Stop();
+        }
+
         public bool Cancel(long taskId)
         {
             return _idToTask.TryGetValue(taskId, out var task) &&
-                   _root.Children.Contains(task) &&
-                   task.Stop();
+                   Cancel(task);
         }
 
         public List<DisplayTask> GetSubTasks(long taskId)

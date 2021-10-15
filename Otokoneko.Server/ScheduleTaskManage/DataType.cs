@@ -19,20 +19,13 @@ namespace Otokoneko.DataType
             get
             {
                 if (Children == null || Children.Count == 0)
-                    return
-                        Status == TaskStatus.Success
+                    return Status == TaskStatus.Success
                             ? 1
                             : (Counter.Target == 0
                                 ? 0
                                 : (double) Counter);
 
-                var result = .0;
-                foreach (var child in Children)
-                {
-                    result += child.Progress;
-                }
-
-                return result / Children.Count;
+                return Children.Sum(it => it.Progress) / Children.Count;
             }
         }
 

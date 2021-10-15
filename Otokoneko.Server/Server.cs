@@ -52,6 +52,7 @@ namespace Otokoneko.Server
 
     public partial class Server
     {
+        public IConsoleColorConfig ConsoleColorSetter { get; set; }
         public ILog Logger { get; set; }
 
         private static ArrayPool<byte> BufferPool => ArrayPool<byte>.Shared;
@@ -995,17 +996,17 @@ namespace Otokoneko.Server
 
         public void GenerateClientConfig()
         {
-            Console.ForegroundColor = ConsoleColor.DarkYellow;
+            ConsoleColorSetter.SetForeground(ConsoleColor.DarkYellow);
             Console.WriteLine("\n客户端配置字符串:");
             foreach (var server in ServerConfigs)
             {
-                Console.ForegroundColor = ConsoleColor.Green;
+                ConsoleColorSetter.SetForeground(ConsoleColor.Green);
                 Console.WriteLine($"{server.Host}:{server.Port}");
-                Console.ForegroundColor = ConsoleColor.White;
-                Console.WriteLine(ServerConfigStringGenerator.ServerConfigStringGenerate(server.Host, server.Port, CertificateHash, Name,Id));
+                ConsoleColorSetter.SetForeground(ConsoleColor.White);
+                Console.WriteLine(ServerConfigStringGenerator.ServerConfigStringGenerate(server.Host, server.Port, CertificateHash, Name, Id));
             }
 
-            Console.ForegroundColor = ConsoleColor.Gray;
+            ConsoleColorSetter.SetForeground(ConsoleColor.Gray);
             Console.WriteLine();
         }
     }

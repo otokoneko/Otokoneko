@@ -58,9 +58,11 @@ namespace Otokoneko.Server.Gui
                 {
                     if (string.IsNullOrEmpty(text.Text)) continue;
 
-                    TextRange textRange = new TextRange(Output.GetEndPointer(), Output.GetEndPointer());
-                    textRange.Text = text.Text;
-                    
+                    var textRange = new TextRange(Output.GetEndPointer(), Output.GetEndPointer())
+                    {
+                        Text = text.Text
+                    };
+
                     textRange.ApplyPropertyValue(TextElement.ForegroundProperty, new SolidColorBrush(foreground ?? text.Font.Foreground));
                     textRange.ApplyPropertyValue(TextElement.BackgroundProperty, new SolidColorBrush(background ?? text.Font.Background));
                     Output.ScrollToEnd();

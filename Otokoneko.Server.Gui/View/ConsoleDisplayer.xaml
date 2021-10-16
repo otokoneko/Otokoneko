@@ -5,7 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
-    <RichTextBox CaretBrush="White" x:Name="Output" ScrollViewer.VerticalScrollBarVisibility="Visible" Background="Black" FontSize="17" IsReadOnly="True">
+    <RichTextBox AutoWordSelection="False" FontFamily="consolas" CaretBrush="White" x:Name="Output" ScrollViewer.VerticalScrollBarVisibility="Visible" Background="Black" FontSize="17" IsReadOnly="True">
         <RichTextBox.Resources>
             <Style TargetType="{x:Type Paragraph}">
                 <Setter Property="Margin" Value="0" />

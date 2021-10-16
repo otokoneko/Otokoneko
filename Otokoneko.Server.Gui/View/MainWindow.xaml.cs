@@ -29,5 +29,10 @@ namespace Otokoneko.Server.Gui
 
             Close();
         }
+
+        public void ClearOutput()
+        {
+            ConsoleControl.ClearOutput();
+        }
     }
 }

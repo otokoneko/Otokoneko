@@ -53,9 +53,9 @@ namespace Otokoneko.Server.Gui.Utils
             foreach (var parameter in parameters)
             {
                 var byteParameter = byte.Parse(parameter);
-                if(parseForeground || parseBackground)
+                if (parseForeground || parseBackground)
                 {
-                    if(needParseColorParamNum == -1)
+                    if (needParseColorParamNum == -1)
                     {
                         needParseColorParamNum = byteParameter == 5 ? 1 : 3;
                         rgbPtr = 0;
@@ -71,12 +71,12 @@ namespace Otokoneko.Server.Gui.Utils
                         else if (needParseColorParamNum == 3)
                         {
                             rgb[rgbPtr++] = byteParameter;
-                            if(rgbPtr == 3)
+                            if (rgbPtr == 3)
                             {
                                 color = Color.FromRgb(rgb[0], rgb[1], rgb[2]);
                             }
                         }
-                        if(color != null)
+                        if (color != null)
                         {
                             if (parseForeground) result.Foreground = (Color)color;
                             else result.Background = (Color)color;
@@ -98,11 +98,11 @@ namespace Otokoneko.Server.Gui.Utils
                     {
                         parseBackground = true;
                     }
-                    else if (byteParameter >= 30 && byteParameter <= 37)
+                    else if (byteParameter is >= 30 and <= 37)
                     {
                         result.Foreground = ColorsCodeLowerBetween0And7[byteParameter - 30];
                     }
-                    else if (byteParameter >= 40 && byteParameter <= 47)
+                    else if (byteParameter is >= 40 and <= 47)
                     {
                         result.Background = ColorsCodeLowerBetween0And7[byteParameter - 40];
                     }

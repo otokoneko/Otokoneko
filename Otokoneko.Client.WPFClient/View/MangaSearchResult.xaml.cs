@@ -41,9 +41,11 @@ namespace Otokoneko.Client.WPFClient.View
         {
             Loaded -= OnLoaded;
             var scrollViewer = GetScrollViewer(MangaListBox);
-            await ((dynamic)DataContext).OnLoaded();
-            scrollViewer.ScrollToVerticalOffset(((dynamic) DataContext).InitVerticalOffset);
-            ((dynamic) DataContext).ScrollToTop = new Action(() => scrollViewer.ScrollToTop());
+            var dataContext = (dynamic)DataContext;
+            if (dataContext == null) return;
+            await dataContext.OnLoaded();
+            scrollViewer.ScrollToVerticalOffset(dataContext.InitVerticalOffset);
+            dataContext.ScrollToTop = new Action(() => scrollViewer.ScrollToTop());
         }
 
         private void HidePagination()
@@ -96,7 +98,10 @@ namespace Otokoneko.Client.WPFClient.View
                 }
             }
 
-            ((dynamic)DataContext).VerticalOffset = e.VerticalOffset;
+            if(DataContext != null)
+            {
+                ((dynamic)DataContext).VerticalOffset = e.VerticalOffset;
+            }
         }
         
         private void MangaListBox_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)

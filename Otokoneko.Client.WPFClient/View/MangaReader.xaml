@@ -102,7 +102,6 @@
                 <view:ImageListBox
                     Width="{Binding Width, Mode=OneWayToSource}"
                     Height="{Binding Height, Mode=OneWayToSource}"
-                    ItemContainerStyle="{StaticResource NoFocusListBox}"
                     ItemsSource="{Binding Path=Images}"
                     ScrollViewer.IsDeferredScrollingEnabled="True"
                     ScrollViewer.PanningRatio="10"
@@ -117,7 +116,6 @@
                     <ListBox.ItemTemplate>
                         <DataTemplate>
                             <Grid
-                                Margin="-1"
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Center"
                                 Background="#7f7f7f">
@@ -128,10 +126,22 @@
                                     DataContext="{Binding}"
                                     IsVisibleChanged="ImageOnIsVisibleChanged"
                                     LayoutTransform="{Binding Path=DataContext.Transform, ElementName=Root}"
-                                    Source="{Binding Path=Source, IsAsync=True}" />
+                                    Source="{Binding Path=Source}" />
                             </Grid>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="{x:Type ListBoxItem}">
+                            <Setter Property="Focusable" Value="False" />
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="{x:Type ListBoxItem}">
+                                        <ContentPresenter/>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
                 </view:ImageListBox>
             </DataTemplate>
         </ResourceDictionary>

@@ -29,7 +29,14 @@ namespace Otokoneko.Client.WPFClient.ViewModel
             {
                 if (_readable == value) return;
                 _readable = value;
-                OnPropertyChanged(nameof(Source));
+                if(!_readable)
+                {
+                    RealSource = null;
+                }
+                else
+                {
+                    OnPropertyChanged(nameof(Source));
+                }
             }
         }
 
@@ -111,7 +118,8 @@ namespace Otokoneko.Client.WPFClient.ViewModel
         {
             get
             {
-                if (!Readable) return null;
+                if (!Readable) 
+                    return null;
 
                 if (Interlocked.Increment(ref _loaded) == 1)
                 {
@@ -120,22 +128,28 @@ namespace Otokoneko.Client.WPFClient.ViewModel
 
                 if (RealSource == null) return null;
 
+                BitmapSource source;
+
                 if (RealSource.PixelHeight > RealSource.PixelWidth || AutoCropMode == AutoCropMode.None)
                 {
-                    return AutoCropMode == AutoCropMode.LeftToRight
+                    source = AutoCropMode == AutoCropMode.LeftToRight
                         ? (ImageCropMode == ImageCropMode.Left ? RealSource : null)
                         : (ImageCropMode == ImageCropMode.Right ? RealSource : null);
                 }
-
-                var width = (RealSource.PixelWidth + 1) / 2;
-                var source = ImageCropMode switch
+                else
                 {
-                    ImageCropMode.Right => new CroppedBitmap(RealSource, new Int32Rect(RealSource.PixelWidth - width, 0, width, RealSource.PixelHeight)),
-                    ImageCropMode.Left => new CroppedBitmap(RealSource, new Int32Rect(0, 0, width, RealSource.PixelHeight)),
-                    _ => throw new ArgumentOutOfRangeException(),
-                };
+                    var width = (RealSource.PixelWidth + 1) / 2;
+                    source = ImageCropMode switch
+                    {
+                        ImageCropMode.Right => new CroppedBitmap(RealSource, new Int32Rect(RealSource.PixelWidth - width, 0, width, RealSource.PixelHeight)),
+                        ImageCropMode.Left => new CroppedBitmap(RealSource, new Int32Rect(0, 0, width, RealSource.PixelHeight)),
+                        _ => throw new ArgumentOutOfRangeException(),
+                    };
 
-                source.Freeze();
+                    source.Freeze();
+                    return source;
+                }
+
                 return source;
             }
         }

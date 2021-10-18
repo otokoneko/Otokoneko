@@ -15,6 +15,9 @@ namespace Otokoneko.Client.WPFClient.View
 {
     public class ImageListBox : ListBox
     {
+        private double target;
+        private const double EPS = 1;
+
         public ImageListBox()
         {
             IsSynchronizedWithCurrentItem = true;
@@ -31,6 +34,15 @@ namespace Otokoneko.Client.WPFClient.View
         private void SetProgress(object sender, ScrollChangedEventArgs e)
         {
             if (!IsLoaded) return;
+
+            if (Math.Abs(target - e.VerticalOffset) < EPS)
+            {
+                SelectedItem = null;
+            }
+            else if (e.ExtentHeightChange != 0 && SelectedItem != null)
+            {
+                ScrollToSelectedItem();
+            }
 
             var hasSetProgress = false;
             var offset = (sender as ScrollViewer).VerticalOffset;
@@ -68,27 +80,27 @@ namespace Otokoneko.Client.WPFClient.View
         private void ScrollToSelectedItem()
         {
             if (SelectedItem == null) return;
+
             var height = .0;
             for (var i = 0; i < Items.Count; i++)
             {
                 var item = Items[i];
                 var image = item as DisplayImage;
-                if (image == SelectedItem)
-                {
-                    var lbi = ItemContainerGenerator.ContainerFromIndex(i) as ListBoxItem;
-                    break;
-                }
+                if (image == SelectedItem) break;
                 height += image.ActualHeight;
             }
+            height *= ((dynamic)DataContext).ScaleValue;
+            
+            if (height == target) return;
+
             if (SelectedItem != null)
             {
                 Dispatcher.BeginInvoke(new Action(() =>
                 {
                     UpdateLayout();
-                    ScrollIntoView(SelectedItem);
-                    //var sc = this.GetChild<ScrollViewer>();
-                    //target = height;
-                    //sc.ScrollToVerticalOffset(height);
+                    var sc = this.GetChild<ScrollViewer>();
+                    target = height;
+                    sc.ScrollToVerticalOffset(height);
                     SelectedItem = null;
                 }));
             }
@@ -110,15 +122,15 @@ namespace Otokoneko.Client.WPFClient.View
 
         private async void OnClosed(object? sender, EventArgs e)
         {
-            await ((dynamic) DataContext).OnClosed();
+            await ((dynamic)DataContext).OnClosed();
         }
 
         private async void OnLoaded(object sender, RoutedEventArgs e)
         {
-            ((dynamic) DataContext).GetWidth = new Func<double>(() => ActualWidth);
-            ((dynamic) DataContext).GetHeight = new Func<double>(() => ActualHeight);
-            ((dynamic) DataContext).GetTitleBarHeight = new Func<double>(() => TitleBarHeight);
-            await ((dynamic) DataContext).OnLoaded();
+            ((dynamic)DataContext).GetWidth = new Func<double>(() => ActualWidth);
+            ((dynamic)DataContext).GetHeight = new Func<double>(() => ActualHeight);
+            ((dynamic)DataContext).GetTitleBarHeight = new Func<double>(() => TitleBarHeight);
+            await ((dynamic)DataContext).OnLoaded();
         }
 
         private void ZoomImages(object sender, MouseWheelEventArgs e)
@@ -127,7 +139,7 @@ namespace Otokoneko.Client.WPFClient.View
             if (Keyboard.Modifiers != ModifierKeys.Control) return;
             e.Handled = true;
             ((UIElement)sender).RaiseEvent(e);
-            ((dynamic) DataContext).Zoom(e.Delta);
+            ((dynamic)DataContext).Zoom(e.Delta);
         }
 
         private void ImageOnIsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
@@ -169,7 +181,7 @@ namespace Otokoneko.Client.WPFClient.View
                 if (!_hiding)
                     HideExplorerToolBar();
             }
-            else if(e.GetPosition(this).Y >= ActualHeight * 0.8)
+            else if (e.GetPosition(this).Y >= ActualHeight * 0.8)
             {
                 if (_hiding)
                     ShowExplorerToolBar();
@@ -178,12 +190,12 @@ namespace Otokoneko.Client.WPFClient.View
 
         private void PageSliderOnDragCompleted(object sender, DragCompletedEventArgs e)
         {
-            ((dynamic) DataContext).ScrollTo(((int) Slider.Value) - 1);
+            ((dynamic)DataContext).ScrollTo(((int)Slider.Value) - 1);
         }
 
         private void UIElement_OnMouseWheel(object sender, MouseWheelEventArgs e)
         {
-            if(e.Delta < 0)
+            if (e.Delta < 0)
             {
                 ((dynamic)DataContext).NextImageButton.Command.ExecuteAsync();
             }

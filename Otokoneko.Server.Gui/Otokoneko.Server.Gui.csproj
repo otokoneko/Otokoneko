@@ -3,17 +3,15 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net5.0-windows</TargetFramework>
-    <UseWPF>true</UseWPF>
-    <UseWindowsForms>True</UseWindowsForms>
+    <UseWindowsForms>true</UseWindowsForms>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <IncludeAllContentForSelfExtract>false</IncludeAllContentForSelfExtract>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <Optimize>True</Optimize>
+    <DefineConstants>TRACE;SERVER</DefineConstants>
     <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="ConsoleControl.WPF" Version="1.3.0" />
-  </ItemGroup>
 
 </Project>

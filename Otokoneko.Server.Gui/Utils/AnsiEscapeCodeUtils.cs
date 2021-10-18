@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using System.Windows.Media;
+using System.Drawing;
 
 namespace Otokoneko.Server.Gui.Utils
 {
@@ -19,20 +19,20 @@ namespace Otokoneko.Server.Gui.Utils
     {
         public static AnsiFont DefaultFont => new AnsiFont()
         {
-            Foreground = Color.FromRgb(0xC0, 0xC0, 0xC0),
-            Background = Color.FromRgb(0x00, 0x00, 0x00)
+            Foreground = Color.FromArgb(0xC0, 0xC0, 0xC0),
+            Background = Color.FromArgb(0x00, 0x00, 0x00)
         };
 
         private readonly static Color[] ColorsCodeLowerBetween0And7 = new Color[]
         {
-            Color.FromRgb(0, 0, 0),
-            Color.FromRgb(128, 0, 0),
-            Color.FromRgb(0,128,0),
-            Color.FromRgb(128,128,0),
-            Color.FromRgb(0, 0, 128),
-            Color.FromRgb(128,0,128 ),
-            Color.FromRgb(0,128,128),
-            Color.FromRgb(192,192,192),
+            Color.FromArgb(0, 0, 0),
+            Color.FromArgb(128, 0, 0),
+            Color.FromArgb(0,128,0),
+            Color.FromArgb(128,128,0),
+            Color.FromArgb(0, 0, 128),
+            Color.FromArgb(128,0,128 ),
+            Color.FromArgb(0,128,128),
+            Color.FromArgb(192,192,192),
         };
 
         private static AnsiFont GetAnsiFont(string ansi, in AnsiFont currentFont)
@@ -73,7 +73,7 @@ namespace Otokoneko.Server.Gui.Utils
                             rgb[rgbPtr++] = byteParameter;
                             if (rgbPtr == 3)
                             {
-                                color = Color.FromRgb(rgb[0], rgb[1], rgb[2]);
+                                color = Color.FromArgb(rgb[0], rgb[1], rgb[2]);
                             }
                         }
                         if (color != null)

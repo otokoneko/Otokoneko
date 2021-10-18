@@ -9,7 +9,7 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Otokoneko.Base", "..\Otokon
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Otokoneko.Plugins.Interface", "..\Otokoneko.Plugins\Otokoneko.Plugins.Interface\Otokoneko.Plugins.Interface.csproj", "{2F61EBAD-7FC5-4C8E-8C3F-99E92A98DDA8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Otokoneko.Server.Gui", "..\Otokoneko.Server.Gui\Otokoneko.Server.Gui.csproj", "{6514D1E2-E978-405B-B2C3-DB53673A5363}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Otokoneko.Server.Gui", "..\Otokoneko.Server.Gui\Otokoneko.Server.Gui.csproj", "{6514D1E2-E978-405B-B2C3-DB53673A5363}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution

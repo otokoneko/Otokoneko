@@ -19,6 +19,7 @@ namespace Otokoneko.Server.LibraryManage
 
         public Stream OpenWrite(FileTreeRoot library, string path);
         public Stream OpenRead(FileTreeRoot library, string path);
+        public void Delete(FileTreeRoot library, string path);
 
         public bool CreateFileTree(FileTreeNode root, IdGenerator idGenerator);
     }
@@ -28,7 +29,9 @@ namespace Otokoneko.Server.LibraryManage
         public static Dictionary<string, IFileTreeNodeHandler> Handlers { get; } = new Dictionary<string, IFileTreeNodeHandler>();
         public HashSet<string> SupportExtensions { get; }
 
+        public Stream OpenWrite(Stream input, string path);
         public Stream OpenRead(Stream input, string path);
+        public void Delete(string path);
 
         public bool CreateFileTree(Stream input, FileTreeNode root, IdGenerator idGenerator);
     }
@@ -53,6 +56,11 @@ namespace Otokoneko.Server.LibraryManage
         public Stream OpenRead(FileTreeRoot library, string path)
         {
             return File.OpenRead(Path.Combine(library.Path, path));
+        }
+
+        public void Delete(FileTreeRoot library, string path)
+        {
+            File.Delete(Path.Combine(library.Path, path));
         }
 
         private void CreateFileTree(string path, FileTreeNode root, IdGenerator idGenerator)
@@ -172,7 +180,8 @@ namespace Otokoneko.Server.LibraryManage
 
         public override void Close()
         {
-            DisposeAsync();
+            _archive.Dispose();
+            _data.Dispose();
         }
     }
 
@@ -239,7 +248,7 @@ namespace Otokoneko.Server.LibraryManage
 
         public Stream OpenRead(Stream input, string path)
         {
-            var options = new ReaderOptions { LookForHeader = true, LeaveStreamOpen = false };
+            var options = new ReaderOptions { LookForHeader = true, LeaveStreamOpen = true };
             var archive = ArchiveFactory.Open(input, options);
             path = archive.Type != ArchiveType.Rar ? path.Replace('\\', '/') : path.Replace('/', '\\');
             var entry = archive.Entries.Single(e => e.Key == path);
@@ -254,6 +263,16 @@ namespace Otokoneko.Server.LibraryManage
             {
                 IFileTreeNodeHandler.Handlers.Add(extension, instance);
             }
+        }
+
+        public Stream OpenWrite(Stream input, string path)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public void Delete(string path)
+        {
+            throw new System.NotImplementedException();
         }
     }
 }

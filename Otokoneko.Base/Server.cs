@@ -8,6 +8,9 @@ using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using System.Net.NetworkInformation;
+using System.Linq;
+using System.Threading;
 
 namespace Otokoneko.Server
 {
@@ -72,10 +75,21 @@ namespace Otokoneko.Server
                     .Build();
         }
 
-        public async ValueTask Run()
+        public void Run()
         {
             Logger.Info($"开始监听端口: {Port}");
-            await _host.RunAsync();
+            _host.Start();
+        }
+
+        public async Task Close()
+        {
+            await _host.StopAsync();
+            _host.Dispose();
+        }
+
+        public bool PortInUse()
+        {
+            return IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners().Any(it => it.Port == Port);
         }
     }
 }

@@ -267,6 +267,21 @@ namespace Otokoneko.Server.ScheduleTaskManage
         public MessageManager MessageManager { get; set; }
         public FileTreeNodeToMangaConverter FileTreeNodeToMangaConverter { get; set; }
 
+        private async ValueTask CalculateImageSize(List<Image> images)
+        {
+            foreach(var image in images)
+            {
+                if (image.Height != 0 && image.Width != 0) continue;
+                var file = image.Path.OpenRead();
+                var (succ, width, height) = await ImageUtils.GetMetadata(file);
+                file.Close();
+                if (!succ) continue;
+
+                image.Height = height;
+                image.Width = width;
+            }
+        }
+
         public async ValueTask Execute(ScanMangaTask scanMangaTask)
         {
             try
@@ -275,11 +290,12 @@ namespace Otokoneko.Server.ScheduleTaskManage
                 {
                     scanMangaTask.Update(TaskStatus.Executing);
                     var manga = await FileTreeNodeToMangaConverter.CreateManga(scanMangaTask.MangaPath);
+                    
                     FileTreeNode coverPath = null;
+                    
                     if (manga.Cover == null)
                     {
-                        coverPath =
-                            LibraryManager.GenerateThumbnail(manga.Chapters.First().Images.First().Path);
+                        coverPath = LibraryManager.GenerateThumbnail(manga.Chapters.First().Images.First().Path);
                         manga.Cover = FileTreeNodeToMangaConverter.CreateImage(coverPath);
                         manga.CoverId = manga.Cover.ObjectId;
                     }
@@ -295,10 +311,10 @@ namespace Otokoneko.Server.ScheduleTaskManage
                     var success = await MangaManager.Insert(manga);
                     if (!success)
                     {
-                        Logger.Info($"Update {manga.Title} fail");
+                        Logger.Info($"Create {manga.Title} fail");
                         if (coverPath != null)
                         {
-
+                            coverPath.Delete();
                         }
                         scanMangaTask.Update(TaskStatus.Fail);
                     }

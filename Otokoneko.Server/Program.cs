@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Autofac;
 using Autofac.Extras.DynamicProxy;
@@ -37,10 +38,12 @@ namespace Otokoneko.Server
 
         private static ILog Logger { get; set; }
 
-        static async Task Main(string[] args)
+        private static Server _server;
+
+        static async Task<int> Main(string[] args)
         {
             var parseResulr = Parser.Default.ParseArguments<Options>(args);
-            if (parseResulr.Errors.FirstOrDefault() != null) return;
+            if (parseResulr.Errors.FirstOrDefault() != null) return -1;
 
             var options = parseResulr.Value;
 
@@ -227,20 +230,43 @@ namespace Otokoneko.Server
             Directory.CreateDirectory(@"./data/library");
             Directory.CreateDirectory(@"./plugins");
 
-            Console.CancelKeyPress += ConsoleOnCancelKeyPress;
+            Console.CancelKeyPress += (s, e) => Close();
 
-            var server = container.Resolve<Server>();
-            server.GenerateClientConfig();
+            _server = container.Resolve<Server>();
+            _server.GenerateClientConfig();
 
             var userManager = container.Resolve<UserManager>();
             await userManager.CreateRootUser();
 
-            await server.Run();
+            if (_server.PortInUse())
+            {
+                Logger.Fatal($"端口 {_server.Port} 正被其它进程占用");
+                return -1;
+            }
+
+            _server.Run();
+            ProcessInput();
+
+            return 0;
         }
 
-        private static void ConsoleOnCancelKeyPress(object? sender, ConsoleCancelEventArgs e)
+        private static void ProcessInput()
+        {
+            while (true)
+            {
+                var input = Console.ReadLine();
+                if(input == "exit")
+                {
+                    Close();
+                }
+            }
+        }
+
+        private static async Task Close()
         {
             Logger.Info("关闭服务器");
+            await _server.Close();
+            Environment.Exit(0);
         }
     }
 }

@@ -19,7 +19,7 @@ namespace Otokoneko.DataType
         private static readonly RecyclableMemoryStreamManager Manager = new RecyclableMemoryStreamManager();
         [IgnoreMember]
         private string _extension;
-        [IgnoreMember] 
+        [IgnoreMember]
         public string Extension => _extension ??= Path.GetExtension(FullName)?.ToLower();
         [IgnoreMember]
         public FileTreeNode Parent { get; set; }
@@ -70,6 +70,12 @@ namespace Otokoneko.DataType
                 return stream;
             }
 
+            if (path != null && IFileTreeNodeHandler.Handlers.TryGetValue(Extension, out var nodeHandler))
+            {
+                var stream = Parent.OpenWrite(FullName);
+                return nodeHandler.OpenWrite(stream, path);
+            }
+
             path = path == null ? FullName : Path.Combine(FullName, path);
             return Parent.OpenWrite(path);
         }
@@ -77,6 +83,29 @@ namespace Otokoneko.DataType
         public Stream OpenWrite()
         {
             return OpenWrite(null);
+        }
+
+        public void Delete()
+        {
+            Delete(null);
+        }
+
+        private void Delete(string path)
+        {
+            if (ObjectId == 0 && IFileTreeRootHandler.Handlers.TryGetValue(Library.Scheme, out var rootHandler))
+            {
+                rootHandler.Delete(Library, path);
+                return;
+            }
+
+            if (path != null && IFileTreeNodeHandler.Handlers.TryGetValue(Extension, out var nodeHandler))
+            {
+                nodeHandler.Delete(path);
+                return;
+            }
+
+            path = path == null ? FullName : Path.Combine(FullName, path);
+            Parent.Delete(path);
         }
 
         public async ValueTask<byte[]> ReadAllBytes()

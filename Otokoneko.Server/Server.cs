@@ -71,10 +71,10 @@ namespace Otokoneko.Server
         public MangaFtsIndexService MangaFtsIndexService { get; set; }
         public TagFtsIndexService TagFtsIndexService { get; set; }
 
-        private string Id { get; set; }
-        private string Name { get; set; }
-        private ushort Port { get; set; }
-        private string CertificateHash { get; set; }
+        public string Id { get; private set; }
+        public string Name { get; private set; }
+        public ushort Port { get; private set; }
+        public string CertificateHash { get; private set; }
         private X509Certificate _certificate;
         private List<ServerConfig> ServerConfigs { get; set; }
         

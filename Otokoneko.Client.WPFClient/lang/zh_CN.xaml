@@ -49,4 +49,5 @@
     <system:String x:Key="Root">超级管理员</system:String>
     <system:String x:Key="Banned">已封禁</system:String>
     <system:String x:Key="QuicklyCreate">快速创建</system:String>
+    <system:String x:Key="Copy">复制</system:String>
 </ResourceDictionary>

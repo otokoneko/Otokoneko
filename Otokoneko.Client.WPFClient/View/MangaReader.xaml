@@ -109,9 +109,9 @@
                     ScrollViewer.VerticalScrollBarVisibility="Hidden"
                     SelectedItem="{Binding SelectedItem}"
                     Style="{StaticResource MahApps.Styles.ListBox}"
-                    VirtualizingPanel.CacheLength="0"
-                    VirtualizingPanel.IsContainerVirtualizable="True"
-                    VirtualizingPanel.IsVirtualizing="True"
+                    VirtualizingPanel.CacheLength="1"
+                    VirtualizingPanel.IsContainerVirtualizable="False"
+                    VirtualizingPanel.IsVirtualizing="False"
                     VirtualizingPanel.ScrollUnit="Pixel"
                     VirtualizingPanel.VirtualizationMode="Recycling">
                     <ListBox.ItemTemplate>

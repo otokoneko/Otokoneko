@@ -1,8 +1,8 @@
-﻿using System;
+﻿using Otokoneko.Client.WPFClient.Utils;
+using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Media.Animation;
 
 namespace Otokoneko.Client.WPFClient.View
@@ -24,25 +24,13 @@ namespace Otokoneko.Client.WPFClient.View
             Loaded += OnLoaded;
         }
 
-        public static ScrollViewer GetScrollViewer(DependencyObject o)
-        {
-            if (o is ScrollViewer s) return s;
-            for (var i = 0; i < VisualTreeHelper.GetChildrenCount(o); i++)
-            {
-                var child = VisualTreeHelper.GetChild(o, i);
-                var result = GetScrollViewer(child);
-                if (result == null) continue;
-                return result;
-            }
-            return null;
-        }
-
         private async void OnLoaded(object sender, RoutedEventArgs e)
         {
             Loaded -= OnLoaded;
-            var scrollViewer = GetScrollViewer(MangaListBox);
+            var scrollViewer = MangaListBox.GetChild<ScrollViewer>();
             var dataContext = (dynamic)DataContext;
             if (dataContext == null) return;
+
             await dataContext.OnLoaded();
             scrollViewer.ScrollToVerticalOffset(dataContext.InitVerticalOffset);
             dataContext.ScrollToTop = new Action(() => scrollViewer.ScrollToTop());
@@ -98,10 +86,9 @@ namespace Otokoneko.Client.WPFClient.View
                 }
             }
 
-            if(DataContext != null)
-            {
-                ((dynamic)DataContext).VerticalOffset = e.VerticalOffset;
-            }
+            var dataContext = (dynamic)DataContext;
+            if (dataContext == null) return;
+            dataContext.VerticalOffset = e.VerticalOffset;
         }
         
         private void MangaListBox_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)

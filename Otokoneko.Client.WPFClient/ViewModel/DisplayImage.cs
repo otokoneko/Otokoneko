@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Windows;
 using System.Windows.Media.Imaging;
 using Otokoneko.Client.WPFClient.Utils;
@@ -20,7 +21,19 @@ namespace Otokoneko.Client.WPFClient.ViewModel
 
     public class DisplayImage : BaseViewModel
     {
-        private bool _loaded = false;
+        private bool _readable;
+        public bool Readable
+        {
+            get => _readable;
+            set
+            {
+                if (_readable == value) return;
+                _readable = value;
+                OnPropertyChanged(nameof(Source));
+            }
+        }
+
+        private int _loaded = 0;
 
         private BitmapSource _realSource;
 
@@ -46,29 +59,31 @@ namespace Otokoneko.Client.WPFClient.ViewModel
             set
             {
                 _realSource = value;
-                if (value == null) _loaded = false;
+                if (value == null) _loaded = 0;
                 else
                 {
+                    var newHeight = .0;
+                    var newWidth = .0;
                     switch (ImageResizeMode)
                     {
                         case ImageResizeMode.RespectWidth:
-                            ActualWidth = ExpectedWidth;
+                            newWidth = ExpectedWidth;
                             if(RealSource.PixelHeight <= RealSource.PixelWidth && AutoCropMode != AutoCropMode.None)
                             {
                                 var width = (RealSource.PixelWidth + 1) / 2;
-                                ActualHeight = (double)RealSource.PixelHeight / width * ActualWidth;
+                                newHeight = (double)RealSource.PixelHeight / width * newWidth;
                             }
                             else
                             {
-                                ActualHeight = (double)RealSource.PixelHeight / RealSource.PixelWidth * ActualWidth;
-                                ActualHeight = AutoCropMode == AutoCropMode.LeftToRight
-                                ? (ImageCropMode == ImageCropMode.Left ? ActualHeight : 0)
-                                : (ImageCropMode == ImageCropMode.Right ? ActualHeight : 0);
+                                newHeight = (double)RealSource.PixelHeight / RealSource.PixelWidth * newWidth;
+                                newHeight = AutoCropMode == AutoCropMode.LeftToRight
+                                ? (ImageCropMode == ImageCropMode.Left ? newHeight : 0)
+                                : (ImageCropMode == ImageCropMode.Right ? newHeight : 0);
                             }
                             break;
                         case ImageResizeMode.RespectHeight:
-                            ActualHeight = ExpectedHeight;
-                            ActualWidth = (double)RealSource.PixelWidth / RealSource.PixelHeight * ActualHeight;
+                            newHeight = ExpectedHeight;
+                            newWidth = (double)RealSource.PixelWidth / RealSource.PixelHeight * newHeight;
                             break;
                     }
 
@@ -76,8 +91,16 @@ namespace Otokoneko.Client.WPFClient.ViewModel
                         (AutoCropMode == AutoCropMode.LeftToRight && ImageCropMode == ImageCropMode.Left) ||
                         (AutoCropMode != AutoCropMode.LeftToRight && ImageCropMode == ImageCropMode.Right);
 
-                    OnPropertyChanged(nameof(ActualWidth));
-                    OnPropertyChanged(nameof(ActualHeight));
+                    if(ActualHeight != newHeight)
+                    {
+                        ActualHeight = newHeight;
+                        OnPropertyChanged(nameof(ActualHeight));
+                    }
+                    if(ActualWidth != newWidth)
+                    {
+                        ActualWidth = newWidth;
+                        OnPropertyChanged(nameof(ActualWidth));
+                    }
                     OnPropertyChanged(nameof(Visable));
                 }
                 OnPropertyChanged(nameof(Source));
@@ -88,18 +111,16 @@ namespace Otokoneko.Client.WPFClient.ViewModel
         {
             get
             {
-                if (!_loaded)
+                if (!Readable) return null;
+
+                if (Interlocked.Increment(ref _loaded) == 1)
                 {
-                    _loaded = true;
                     LoadImage();
                 }
 
-                if (RealSource == null)
-                {
-                    return null;
-                }
+                if (RealSource == null) return null;
 
-                if(RealSource.PixelHeight > RealSource.PixelWidth || AutoCropMode == AutoCropMode.None)
+                if (RealSource.PixelHeight > RealSource.PixelWidth || AutoCropMode == AutoCropMode.None)
                 {
                     return AutoCropMode == AutoCropMode.LeftToRight
                         ? (ImageCropMode == ImageCropMode.Left ? RealSource : null)

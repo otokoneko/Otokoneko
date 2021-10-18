@@ -19,9 +19,16 @@ namespace Otokoneko.Client.WPFClient.ViewModel
 
     abstract class DisplayImageViewModel : BaseViewModel
     {
-        public Action<int> SetProgress { get; protected set; }
+        public double ScaleValue { get; set; }
+        public Action<int> SetProgress { get; private set; }
         public abstract void ScrollTo(int page);
         public abstract ObservableCollection<DisplayImage> Images { get; set; }
+
+        public DisplayImageViewModel(double scaleValue, Action<int> setProgress)
+        {
+            ScaleValue = scaleValue;
+            SetProgress = setProgress;
+        }
     }
 
     class ImageListBoxViewModel: DisplayImageViewModel
@@ -50,10 +57,7 @@ namespace Otokoneko.Client.WPFClient.ViewModel
             }
         }
 
-        public ImageListBoxViewModel(Action<int> setProgress)
-        {
-            SetProgress = setProgress;
-        }
+        public ImageListBoxViewModel(double scaleValue, Action<int> setProgress) : base(scaleValue, setProgress) { }
     }
 
     class SingleImageViewModel: DisplayImageViewModel
@@ -106,9 +110,8 @@ namespace Otokoneko.Client.WPFClient.ViewModel
             }
         }
 
-        public SingleImageViewModel(Action<int> setProgress, Func<double> getHeight)
+        public SingleImageViewModel(double scaleValue, Action<int> setProgress, Func<double> getHeight) : base(scaleValue, setProgress)
         {
-            SetProgress = setProgress;
             GetHeight = getHeight;
         }
     }
@@ -127,7 +130,17 @@ namespace Otokoneko.Client.WPFClient.ViewModel
 
         public DisplayImageViewModel ImageExplorerViewModel { get; set; }
 
-        public double ScaleValue { get; set; }
+        private double _scaleValue;
+        public double ScaleValue
+        {
+            get => _scaleValue;
+            set
+            {
+                _scaleValue = value;
+                if (ImageExplorerViewModel != null)
+                    ImageExplorerViewModel.ScaleValue = value;
+            }
+        }
         public ObservableCollection<DisplayImage> Images { get; set; }
         public Transform Transform => new ScaleTransform(ScaleValue, ScaleValue);
 
@@ -161,8 +174,8 @@ namespace Otokoneko.Client.WPFClient.ViewModel
         {
             ImageExplorerViewModel = ImageDisplayMode switch
             {
-                ImageDisplayMode.ImageListMode => new ImageListBoxViewModel(SetProgress),
-                ImageDisplayMode.SinglePageMode => new SingleImageViewModel(SetProgress, GetHeight),
+                ImageDisplayMode.ImageListMode => new ImageListBoxViewModel(ScaleValue, SetProgress),
+                ImageDisplayMode.SinglePageMode => new SingleImageViewModel(ScaleValue, SetProgress, GetHeight),
                 _ => ImageExplorerViewModel
             };
             if (Images != null)

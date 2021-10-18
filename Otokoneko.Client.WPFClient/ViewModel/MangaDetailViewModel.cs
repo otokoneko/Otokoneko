@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -17,11 +16,12 @@ namespace Otokoneko.Client.WPFClient.ViewModel
 {
     class MangaDetailState :INavigationState
     {
-        public MangaDetailViewModel ViewModel { get; set; }
+        public NavigationService NavigationService { get; set; }
+        public Manga Manga { get; set; }
 
         public INavigationViewModel GetViewModel()
         {
-            return ViewModel;
+            return new MangaDetailViewModel(NavigationService, Manga);
         }
     }
 
@@ -203,22 +203,17 @@ namespace Otokoneko.Client.WPFClient.ViewModel
             dialog.FileName = $"{Manga.Title}.zip";
             dialog.Filter = "Compress file (.zip)|*.zip";
             var result = dialog.ShowDialog();
-            if (result != true)
-            {
-                return;
-            }
+            if (result != true) return;
 
-            string filename = dialog.FileName;
-            var stream = File.OpenWrite(filename);
-            stream.SetLength(0);
-            await Model.DownloadManga(Manga.ObjectId, stream);
+            await Model.DownloadManga(Manga.ObjectId, dialog.FileName);
         });
 
         public INavigationState GetState()
         {
             return new MangaDetailState()
             {
-                ViewModel = this
+                NavigationService = NavigationService,
+                Manga = Manga
             };
         }
 

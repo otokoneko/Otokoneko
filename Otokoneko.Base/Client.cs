@@ -150,6 +150,7 @@ namespace Otokoneko.Client
         // 当连接关闭时
         private void OnChannelClosed(object sender, EventArgs args)
         {
+            if (!_running) return;
             var client = (EasyClient<Response>)sender;
             if(!_uncheckedRequests.TryGetValue(client, out var uncheckedRequest)) return;
             var requests = uncheckedRequest.GetAndClearAll();
@@ -193,6 +194,7 @@ namespace Otokoneko.Client
                     if (!success) Thread.Sleep(200);
                 }
             }
+            await client.CloseAsync();
         }
 
         private async ValueTask ResponseProcess(EasyClient<Response> client, Response response)

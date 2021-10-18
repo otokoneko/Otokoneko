@@ -1,0 +1,32 @@
+﻿<Window x:Class="Otokoneko.Client.WPFClient.View.CrashReporter"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        WindowStartupLocation="CenterScreen"
+        Title="CrashReporter" Height="300" Width="500">
+    <Grid>
+        <TextBox TextWrapping="Wrap" x:Name="Report" Margin="10,10,10,40" IsReadOnly="True"/>
+        <StackPanel  VerticalAlignment="Bottom"  Margin="0,0,0,5"  HorizontalAlignment="Center"  Orientation="Horizontal">
+            <Button
+                Focusable="False"
+                x:Name="CopyButton"
+                Margin="20,0"
+                Width="60" 
+                FontSize="12"
+                Content="{StaticResource Copy}" 
+                Style="{StaticResource MahApps.Styles.Button.MetroSquare}"
+                Click="CopyButton_Click"/>
+            <Button
+                Focusable="False"
+                x:Name="CloseButton"
+                Margin="20,0"
+                Width="60" 
+                FontSize="12"
+                Content="{StaticResource Ok}" 
+                Style="{StaticResource MahApps.Styles.Button.MetroSquare}"
+                Click="CloseButton_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

@@ -7,7 +7,7 @@ using Otokoneko.DataType;
 
 namespace Otokoneko.Client.WPFClient.ViewModel
 {
-    public class MangaSearchResultState: INavigationState
+    public class MangaSearchResultState : INavigationState
     {
         public double VerticalOffset { get; set; }
         public int InitPage { get; set; }
@@ -136,7 +136,7 @@ namespace Otokoneko.Client.WPFClient.ViewModel
             }
         });
 
-        private async ValueTask LoadCurrentPage(int page)
+        private async Task LoadCurrentPage(int page)
         {
             if (CurrentPage == page) return;
             CurrentPage = page;
@@ -150,10 +150,11 @@ namespace Otokoneko.Client.WPFClient.ViewModel
                 QueryType = Query.QueryType
             });
             if (mangas == null) return;
-            Mangas = new ObservableCollection<DisplayManga>();
-            foreach (var manga in mangas)
+
+            for (int i = 0; i < mangas.Count; i++)
             {
-                Mangas.Add(new DisplayManga()
+                var manga = mangas[i];
+                var displayManga = new DisplayManga()
                 {
                     ObjectId = manga.ObjectId,
                     Title = manga.Title,
@@ -164,16 +165,24 @@ namespace Otokoneko.Client.WPFClient.ViewModel
                     {
                         NavigationService.Navigate(new MangaDetailViewModel(NavigationService, manga));
                     })
-                });
+                };
+                if (i >= Mangas.Count)
+                    Mangas.Add(displayManga);
+                else
+                    Mangas[i] = displayManga;
+            }
+
+            while(mangas.Count < Mangas.Count)
+            {
+                Mangas.RemoveAt(Mangas.Count - 1);
             }
 
             OnPropertyChanged(nameof(CurrentPage));
-            OnPropertyChanged(nameof(Mangas));
 
             ScrollToTop?.Invoke();
         }
 
-        public ObservableCollection<DisplayManga> Mangas { get; set; }
+        public ObservableCollection<DisplayManga> Mangas { get; } = new ObservableCollection<DisplayManga>();
 
         public INavigationState GetState()
         {
@@ -204,7 +213,7 @@ namespace Otokoneko.Client.WPFClient.ViewModel
             };
         }
 
-        public MangaSearchResultViewModel(){}
+        public MangaSearchResultViewModel() { }
 
         private async ValueTask Search()
         {

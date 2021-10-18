@@ -149,8 +149,8 @@
             MouseLeftButtonDown="MangaListBox_OnMouseLeftButtonDown"
             ScrollViewer.ScrollChanged="ScrollViewer_OnScrollChanged"
             VirtualizingPanel.CacheLength="10"
-            VirtualizingPanel.IsContainerVirtualizable="False"
-            VirtualizingPanel.IsVirtualizing="True"
+            VirtualizingPanel.IsContainerVirtualizable="True"
+            VirtualizingPanel.IsVirtualizing="False"
             VirtualizingPanel.ScrollUnit="Pixel"
             VirtualizingPanel.VirtualizationMode="Recycling">
             <ListBox.ItemsPanel>

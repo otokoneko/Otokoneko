@@ -8,7 +8,7 @@ namespace Otokoneko.Client
     public class SearchOption
     {
         public bool Pageable { get; set; } = true;
-        public int PageSize { get; set; } = 50;
+        public int PageSize { get; set; } = 35;
         public OrderType OrderType { get; set; } = OrderType.UpdateTime;
         public bool Asc { get; set; } = false;
     }

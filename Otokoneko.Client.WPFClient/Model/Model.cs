@@ -14,57 +14,54 @@ namespace Otokoneko.Client
     {
         #region Local
 
-        private ConcurrentDictionary<string, DB> Databases { get; }  = new ConcurrentDictionary<string, DB>();
+        private ConcurrentDictionary<string, DB> Databases { get; } = new ConcurrentDictionary<string, DB>();
+
+        private DB GetDb(string databaseName)
+        {
+            if (string.IsNullOrEmpty(databaseName)) return null;
+            if (!Databases.ContainsKey(databaseName))
+            {
+                try
+                {
+                    var db = new DB(new Options() { CreateIfMissing = true }, Path.Combine(DbPath, databaseName));
+                    Databases.TryAdd(databaseName, db);
+                }
+                catch (Exception) { }
+            }
+            return Databases.TryGetValue(databaseName, out var database) ? database : null;
+        }
 
         private T GetObjectFromDb<T>(long key, string databaseName)
         {
-            if (string.IsNullOrEmpty(databaseName)) return default;
-            if (!Databases.ContainsKey(databaseName))
-            {
-                Databases.TryAdd(databaseName,
-                    new DB(new Options() { CreateIfMissing = true }, Path.Combine(DbPath, databaseName)));
-            }
+            var db = GetDb(databaseName);
+            if (db == null) throw new ArgumentException($"invalid database {databaseName}", nameof(databaseName));
 
-            Databases.TryGetValue(databaseName, out var db);
             var bytes = db.Get(BitConverter.GetBytes(key));
             return bytes != null ? MessagePackSerializer.Deserialize<T>(bytes, _lz4Option) : default;
         }
 
         private T GetObjectFromDb<T>(string key, string databaseName)
         {
-            if (string.IsNullOrEmpty(databaseName)) return default;
-            if (!Databases.ContainsKey(databaseName))
-            {
-                Databases.TryAdd(databaseName,
-                    new DB(new Options() { CreateIfMissing = true }, Path.Combine(DbPath, databaseName)));
-            }
+            var db = GetDb(databaseName);
+            if (db == null) throw new ArgumentException($"invalid database {databaseName}", nameof(databaseName));
 
-            Databases.TryGetValue(databaseName, out var db);
             var bytes = db.Get(Encoding.UTF8.GetBytes(key));
             return bytes != null ? MessagePackSerializer.Deserialize<T>(bytes, _lz4Option) : default;
         }
 
         private void PutObjectToDb<T>(long key, T value, string databaseName)
         {
-            if (!Databases.ContainsKey(databaseName))
-            {
-                Databases.TryAdd(databaseName,
-                    new DB(new Options() { CreateIfMissing = true }, Path.Combine(DbPath, databaseName)));
-            }
+            var db = GetDb(databaseName);
+            if (db == null) throw new ArgumentException($"invalid database {databaseName}", nameof(databaseName));
 
-            Databases.TryGetValue(databaseName, out var db);
             db.Put(BitConverter.GetBytes(key), MessagePackSerializer.Serialize(value, _lz4Option));
         }
 
         private void PutObjectToDb<T>(string key, T value, string databaseName)
         {
-            if (!Databases.ContainsKey(databaseName))
-            {
-                Databases.TryAdd(databaseName,
-                    new DB(new Options() { CreateIfMissing = true }, Path.Combine(DbPath, databaseName)));
-            }
+            var db = GetDb(databaseName);
+            if (db == null) throw new ArgumentException($"invalid database {databaseName}", nameof(databaseName));
 
-            Databases.TryGetValue(databaseName, out var db);
             db.Put(Encoding.UTF8.GetBytes(key), MessagePackSerializer.Serialize(value, _lz4Option));
         }
 
@@ -90,6 +87,15 @@ namespace Otokoneko.Client
             {
                 var drawColor = (System.Drawing.Color)new ColorConverter().ConvertFromString(color);
                 return Color.FromArgb(drawColor.A, drawColor.R, drawColor.G, drawColor.B);
+            }
+        }
+
+        private void CheckIfRunnale()
+        {
+            if (GetDb(MetadataDatabaseName) == null)
+            {
+                MessageBox.Show("已有另一客户端正在运行");
+                Environment.Exit(0);
             }
         }
 

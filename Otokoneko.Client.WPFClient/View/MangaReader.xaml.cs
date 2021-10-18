@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Media.Animation;
+using Otokoneko.Client.WPFClient.Utils;
 using Otokoneko.Client.WPFClient.ViewModel;
 using Otokoneko.DataType;
 using Image = System.Windows.Controls.Image;
@@ -17,40 +18,78 @@ namespace Otokoneko.Client.WPFClient.View
         public ImageListBox()
         {
             IsSynchronizedWithCurrentItem = true;
-            SelectionChanged += ScrollToSelectedItem;
+            SelectionChanged += (s, e) => ScrollToSelectedItem();
             Loaded += OnLoaded;
         }
 
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
-            var border = (Border)VisualTreeHelper.GetChild(this, 0);
-            var scrollViewer = (ScrollViewer)VisualTreeHelper.GetChild(border, 0);
+            var scrollViewer = this.GetChild<ScrollViewer>();
             scrollViewer.ScrollChanged += SetProgress;
         }
 
         private void SetProgress(object sender, ScrollChangedEventArgs e)
         {
             if (!IsLoaded) return;
-            var point = new Point(ActualWidth / 2, ActualHeight / 2);
+
+            var hasSetProgress = false;
+            var offset = (sender as ScrollViewer).VerticalOffset;
+            var screenUp = offset / ((dynamic)DataContext).ScaleValue;
+            var screenDown = (offset + ActualHeight) / ((dynamic)DataContext).ScaleValue;
+            var height = .0;
+            int left = int.MaxValue, right = int.MinValue;
             for (var i = 0; i < Items.Count; i++)
             {
-                var lbi = ItemContainerGenerator.ContainerFromIndex(i) as ListBoxItem;
-                if (lbi == null) continue;
-                var bounds = VisualTreeHelper.GetDescendantBounds(lbi);
-                if (!bounds.Contains(point)) continue;
-                ((dynamic)DataContext).SetProgress(i + 1);
-                break;
+                var item = Items[i];
+                var image = item as DisplayImage;
+                var imageUp = height;
+                var imageDown = height + image.ActualHeight;
+                if (imageDown > screenUp && imageUp < screenDown)
+                {
+                    left = Math.Min(left, i);
+                    right = Math.Max(right, i);
+                    if (!hasSetProgress)
+                    {
+                        hasSetProgress = true;
+                        ((dynamic)DataContext).SetProgress(i + 1);
+                    }
+                }
+                height = imageDown;
+            }
+
+            for (var i = 0; i < Items.Count; i++)
+            {
+                var item = Items[i];
+                var image = item as DisplayImage;
+                image.Readable = i >= left - 1 && i <= right + 2;
             }
         }
 
-        private void ScrollToSelectedItem(object sender, SelectionChangedEventArgs e)
+        private void ScrollToSelectedItem()
         {
+            if (SelectedItem == null) return;
+            var height = .0;
+            for (var i = 0; i < Items.Count; i++)
+            {
+                var item = Items[i];
+                var image = item as DisplayImage;
+                if (image == SelectedItem)
+                {
+                    var lbi = ItemContainerGenerator.ContainerFromIndex(i) as ListBoxItem;
+                    break;
+                }
+                height += image.ActualHeight;
+            }
             if (SelectedItem != null)
             {
                 Dispatcher.BeginInvoke(new Action(() =>
                 {
                     UpdateLayout();
                     ScrollIntoView(SelectedItem);
+                    //var sc = this.GetChild<ScrollViewer>();
+                    //target = height;
+                    //sc.ScrollToVerticalOffset(height);
+                    SelectedItem = null;
                 }));
             }
         }

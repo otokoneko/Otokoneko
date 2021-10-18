@@ -14,7 +14,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Nito.AsyncEx;
 using Message = Otokoneko.DataType.Message;
-using System.Diagnostics;
 
 namespace Otokoneko.Client
 {
@@ -123,6 +122,7 @@ namespace Otokoneko.Client
 
         private Model()
         {
+            CheckIfRunnale();
             TagTypes = new ObservableCollection<TagType>();
             Token = string.Empty;
             LoadServerConfigs();
@@ -602,8 +602,11 @@ namespace Otokoneko.Client
             var (result, status) = await SendRequest<Comment, bool>(0, comment);
         }
 
-        public async ValueTask DownloadManga(long mangaId, Stream stream)
+        public async ValueTask DownloadManga(long mangaId, string filename)
         {
+            var tmpFilename = $"{filename}.otokonekotmp";
+            var stream = File.OpenWrite(tmpFilename);
+            stream.SetLength(0);
             await SendRequestWithNewConnection<object, byte[]>(mangaId, null, async (data, status, complete) =>
             {
                 if(status != ResponseStatus.Success)
@@ -612,10 +615,10 @@ namespace Otokoneko.Client
                     return;
                 }
                 await stream.WriteAsync(data);
-                Trace.WriteLine(stream.Position);
                 if (complete)
                 {
                     stream.Close();
+                    File.Move(tmpFilename, filename, true);
                 }
             });
         }

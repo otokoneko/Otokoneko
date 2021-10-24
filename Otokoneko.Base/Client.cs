@@ -17,7 +17,7 @@ using Timer = System.Timers.Timer;
 
 namespace Otokoneko.Client
 {
-    public class RequestPriority: IComparable<RequestPriority>
+    public class RequestPriority : IComparable<RequestPriority>
     {
         private readonly int _priority;
         private readonly long _objectId;
@@ -78,6 +78,8 @@ namespace Otokoneko.Client
         private readonly ConcurrentDictionary<EasyClient<Response>, ThreadSafeList<Tuple<DateTime, RequestWithTimeout>>> _uncheckedRequests;
         private readonly Func<Response, Task> _processServerNotify;
 
+        private Microsoft.Extensions.Logging.ILogger _logger;
+
         public Client(ServerConfig serverConfig, Func<Response, Task> processServerNotify)
         {
             _processServerNotify = processServerNotify;
@@ -116,9 +118,12 @@ namespace Otokoneko.Client
             {
                 Decoder = new ResponseDecoder()
             };
+            var option = new ChannelOptions()
+            {
+                MaxPackageLength = 64 * 1024 * 1024,
+            };
             var client =
-                    new EasyClient<Response, Request>(decoder, new MessageEncoder(),
-                        new ChannelOptions() { MaxPackageLength = 64 * 1024 * 1024 })
+                    new EasyClient<Response, Request>(decoder, new MessageEncoder(), option)
                     {
                         Security = new SecurityOptions()
                         {
@@ -152,7 +157,7 @@ namespace Otokoneko.Client
         {
             if (!_running) return;
             var client = (EasyClient<Response>)sender;
-            if(!_uncheckedRequests.TryGetValue(client, out var uncheckedRequest)) return;
+            if (!_uncheckedRequests.TryGetValue(client, out var uncheckedRequest)) return;
             var requests = uncheckedRequest.GetAndClearAll();
             // 立即重试
             foreach (var (_, request) in requests)
@@ -163,7 +168,7 @@ namespace Otokoneko.Client
 
         private async ValueTask SendAllRequestsInQueue(IEasyClient<Response, Request> client, int index)
         {
-            if(!_uncheckedRequests.TryGetValue((EasyClient<Response>)client, out var uncheckedRequest)) return;
+            if (!_uncheckedRequests.TryGetValue((EasyClient<Response>)client, out var uncheckedRequest)) return;
             var success = false;
             while (!success)
             {
@@ -179,7 +184,7 @@ namespace Otokoneko.Client
                 }
                 var request = await _toBeSendRequests.Dequeue();
                 // 若请求已超时，则放弃
-                if(request.IsTimeout) continue;
+                if (request.IsTimeout) continue;
                 try
                 {
                     await client.SendAsync(request.Request);
@@ -200,7 +205,7 @@ namespace Otokoneko.Client
         private async ValueTask ResponseProcess(EasyClient<Response> client, Response response)
         {
             Trace.WriteLine($"response: {response.Id}");
-            if(!_uncheckedRequests.TryGetValue(client, out var uncheckedRequest)) return;
+            if (!_uncheckedRequests.TryGetValue(client, out var uncheckedRequest)) return;
             if (uncheckedRequest.Any(it => it.Item2.Request.Id == response.Id))
             {
                 uncheckedRequest.Remove(uncheckedRequest.Single(it => it.Item2.Request.Id == response.Id));
@@ -228,9 +233,7 @@ namespace Otokoneko.Client
             try
             {
                 var hostAndPort = _serverConfig.Hosts[index];
-                var task = client
-                    .ConnectAsync(new IPEndPoint(IPAddress.Parse(hostAndPort.Host), hostAndPort.Port));
-                var success = await task;
+                var success = await client.ConnectAsync(new IPEndPoint(IPAddress.Parse(hostAndPort.Host), hostAndPort.Port));
                 if (success)
                 {
                     client.StartReceive();
@@ -257,7 +260,7 @@ namespace Otokoneko.Client
             await _toBeSendRequests.Enqueue(new RequestWithTimeout(request, millisecondsTimeout),
                 new RequestPriority(priority, request.Id));
         }
-    
+
         public async Task SendWithNewConnection(Request request, Func<Response, ValueTask> processResponse)
         {
             var client = CreateConnection();

@@ -170,9 +170,9 @@ namespace Otokoneko.Client
 
         private void LoadServerData()
         {
-            _mangaSearchHistory = (GetObjectFromDb<ObservableCollection<string>>(nameof(_mangaSearchHistory),
+            _mangaSearchHistory = GetObjectFromDb<ObservableCollection<string>>(nameof(_mangaSearchHistory),
                                        CurrentSession?.ServerConfig?.ServerId) ??
-                                   new ObservableCollection<string>());
+                                   new ObservableCollection<string>();
         }
 
         #endregion
@@ -319,7 +319,7 @@ namespace Otokoneko.Client
                     SessionKeepTime = SessionKeepTime.OneMonth
                 },
                 millisecondsTimeout);
-            var result = !(string.IsNullOrEmpty(token));
+            var result = !string.IsNullOrEmpty(token);
             if (!result) return new Tuple<bool, string>(false, message ?? Constant.LoginFail);
             Token = token;
 

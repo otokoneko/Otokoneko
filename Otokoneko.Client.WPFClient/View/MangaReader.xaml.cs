@@ -1,6 +1,7 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Collections.Specialized;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -15,34 +16,59 @@ namespace Otokoneko.Client.WPFClient.View
 {
     public class ImageListBox : ListBox
     {
-        private double target;
+        private double target = -1;
         private const double EPS = 1;
+        private object last = null;
 
         public ImageListBox()
         {
             IsSynchronizedWithCurrentItem = true;
-            SelectionChanged += (s, e) => ScrollToSelectedItem();
+            SelectionChanged += OnSelectionChanged;
             Loaded += OnLoaded;
+        }
+
+        protected override void OnItemsSourceChanged(IEnumerable oldValue, IEnumerable newValue)
+        {
+            last = SelectedItem = null;
+            var scrollViewer = this.GetChild<ScrollViewer>();
+            scrollViewer.ScrollToTop();
+            base.OnItemsSourceChanged(oldValue, newValue);
+        }
+
+        private void OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            ScrollTo(SelectedItem);
         }
 
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
             var scrollViewer = this.GetChild<ScrollViewer>();
-            scrollViewer.ScrollChanged += SetProgress;
+            scrollViewer.ScrollChanged += OnScrollChanged;
+            ((dynamic)DataContext).IsEnd = new Func<bool>(() => scrollViewer.VerticalOffset >= scrollViewer.ExtentHeight);
         }
 
-        private void SetProgress(object sender, ScrollChangedEventArgs e)
+        private void OnScrollChanged(object sender, ScrollChangedEventArgs e)
         {
             if (!IsLoaded) return;
 
-            if (Math.Abs(target - e.VerticalOffset) < EPS)
+            if(e.VerticalChange != 0 && e.ExtentHeightChange == 0)
             {
+                last = null;
+            }
+
+            if (Math.Abs(target - e.VerticalOffset) < EPS && SelectedItem != null)
+            {
+                last = SelectedItem;
                 SelectedItem = null;
+                target = -1;
             }
-            else if (e.ExtentHeightChange != 0 && SelectedItem != null)
+
+            if (e.ExtentHeightChange != 0 && (SelectedItem != null || last != null))
             {
-                ScrollToSelectedItem();
+                ScrollTo(SelectedItem ?? last);
             }
+
+            if (SelectedItem != null) return;
 
             var hasSetProgress = false;
             var offset = (sender as ScrollViewer).VerticalOffset;
@@ -77,31 +103,30 @@ namespace Otokoneko.Client.WPFClient.View
             }
         }
 
-        private void ScrollToSelectedItem()
+        private void ScrollTo(object selectedItem)
         {
-            if (SelectedItem == null) return;
+            if (selectedItem == null) return;
 
             var height = .0;
             for (var i = 0; i < Items.Count; i++)
             {
                 var item = Items[i];
                 var image = item as DisplayImage;
-                if (image == SelectedItem) break;
+                if (image == selectedItem) break;
                 height += image.ActualHeight;
             }
             height *= ((dynamic)DataContext).ScaleValue;
-            
-            if (height == target) return;
 
-            if (SelectedItem != null)
+            if (height == target) return;
+            target = height;
+
+            if (selectedItem != null)
             {
                 Dispatcher.BeginInvoke(new Action(() =>
                 {
                     UpdateLayout();
                     var sc = this.GetChild<ScrollViewer>();
-                    target = height;
-                    sc.ScrollToVerticalOffset(height);
-                    SelectedItem = null;
+                    sc.ScrollToVerticalOffset(target);
                 }));
             }
         }

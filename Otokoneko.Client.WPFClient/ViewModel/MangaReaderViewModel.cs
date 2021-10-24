@@ -19,6 +19,7 @@ namespace Otokoneko.Client.WPFClient.ViewModel
 
     abstract class DisplayImageViewModel : BaseViewModel
     {
+        public Func<bool> IsEnd { get; set; }
         public double ScaleValue { get; set; }
         public Action<int> SetProgress { get; private set; }
         public abstract void ScrollTo(int page);
@@ -36,6 +37,8 @@ namespace Otokoneko.Client.WPFClient.ViewModel
         public override void ScrollTo(int page)
         {
             page = MathUtils.LimitValue(page, 0, Images.Count - 1);
+            SelectedItem = null;
+            OnPropertyChanged(nameof(SelectedItem));
             SelectedItem = Images[page];
             OnPropertyChanged(nameof(SelectedItem));
         }
@@ -48,6 +51,8 @@ namespace Otokoneko.Client.WPFClient.ViewModel
             get => _images;
             set
             {
+                _images = null;
+                OnPropertyChanged(nameof(Images));
                 _images = value;
                 foreach (var image in Images)
                 {
@@ -241,7 +246,7 @@ namespace Otokoneko.Client.WPFClient.ViewModel
                 {
                     next++;
                 }
-                if (Images != null && next < Images.Count)
+                if (Images != null && next < Images.Count && (ImageExplorerViewModel.IsEnd == null || !ImageExplorerViewModel.IsEnd()))
                 {
                     ScrollTo(next);
                 }

@@ -38,12 +38,12 @@ namespace Otokoneko.Client.WPFClient.ViewModel
 
         public object SelectedViewModel { get; set; }
 
-        private object[] ViewModels { get; } = 
+        private object[] ViewModels { get; } =
         {
             new MangaExplorerViewModel(),
-            new LibraryManagerViewModel(), 
-            new TagManagerViewModel(), 
-            new PlanManagerViewModel(), 
+            new LibraryManagerViewModel(),
+            new TagManagerViewModel(),
+            new PlanManagerViewModel(),
             new TaskSchedulerViewModel(),
         };
 

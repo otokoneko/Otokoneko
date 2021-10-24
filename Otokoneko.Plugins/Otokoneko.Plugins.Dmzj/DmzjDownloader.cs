@@ -48,8 +48,9 @@ namespace Otokoneko.Plugins.Dmzj
     {
         public string Name => nameof(Dmzj);
         public string Author => "Otokoneko";
-        public Version Version => new Version(1, 0, 2);
-        private static string MangaApiBase { get; } = "https://nnv4api.muwai.com/comic/detail/{0}?uid=1";
+        public Version Version => new Version(1, 0, 3);
+        private static string MangaV1ApiBase { get; } = "https://api.dmzj.com/dynamic/comicinfo/{0}.json";
+        private static string MangaV4ApiBase { get; } = "https://nnv4api.muwai.com/comic/detail/{0}?uid=1";
         private static string ChapterApiBase { get; } = "https://m.dmzj.com/chapinfo/{0}/{1}.html";
         private static Regex MangaIdRe { get; } = new Regex("(?:(?:obj_id)|(?:g_current_id)) = \"([0-9]+)\"");
         private static Regex ImageListRe { get; } = new Regex("\"page_url\":(.+?]),");
@@ -87,6 +88,59 @@ namespace Otokoneko.Plugins.Dmzj
         public class Chapter
         {
             public List<string> page_url { get; set; }
+        }
+
+        public class Info
+        {
+            public string id { get; set; }
+            public string title { get; set; }
+            public string subtitle { get; set; }
+            public string types { get; set; }
+            public string zone { get; set; }
+            public string status { get; set; }
+            public string last_update_chapter_name { get; set; }
+            public string last_updatetime { get; set; }
+            public string cover { get; set; }
+            public string authors { get; set; }
+            public string description { get; set; }
+            public string first_letter { get; set; }
+            public string direction { get; set; }
+            public string islong { get; set; }
+            public string copyright { get; set; }
+        }
+
+        public class List
+        {
+            public string id { get; set; }
+            public string comic_id { get; set; }
+            public string chapter_name { get; set; }
+            public string chapter_order { get; set; }
+            public string filesize { get; set; }
+            public string createtime { get; set; }
+            public string updatetime { get; set; }
+        }
+
+        public class Similar
+        {
+            public string id { get; set; }
+            public string title { get; set; }
+            public string last_update_chapter_name { get; set; }
+            public string cover { get; set; }
+        }
+
+        public class Data
+        {
+            public Info info { get; set; }
+            public List<List> list { get; set; }
+            public List<object> alone { get; set; }
+            public List<Similar> similar { get; set; }
+        }
+
+        public class V1ApiResponse
+        {
+            public int result { get; set; }
+            public string msg { get; set; }
+            public Data data { get; set; }
         }
 
         #endregion
@@ -130,26 +184,16 @@ namespace Otokoneko.Plugins.Dmzj
             return RsaDecrypt(bytes, rsa);
         }
 
-        public async ValueTask<MangaDetail> GetManga(string url)
+        private async ValueTask<MangaDetail> GetMangaByV4Api(string mangaId)
         {
-            var page = await Client.GetStringAsync(url);
-            var idMatch = MangaIdRe.Match(page);
-            if (!idMatch.Success) return null;
-            var mangaId = idMatch.Groups[1].Value;
-
-            List<string> aliases = null;
-            var htmlDoc = new HtmlDocument();
-            htmlDoc.LoadHtml(page);
-            var aliasesNode = htmlDoc.DocumentNode.SelectSingleNode(
-                "/html/body/div[4]/div[3]/div/div[1]/div[2]/div/div[4]/table/tbody/tr[1]/td");
-            if (!string.IsNullOrEmpty(aliasesNode?.InnerText?.Trim()))
-            {
-                aliases = aliasesNode.InnerText.Trim().Split(',').ToList();
-            }
-
-            var apiUrl = string.Format(MangaApiBase, mangaId);
+            var apiUrl = string.Format(MangaV4ApiBase, mangaId);
             var apiResponse = await Client.GetStringAsync(apiUrl);
             var mangaDetailResponse = MangaDetailResponse.Parser.ParseFrom(Decrypt(apiResponse, PrivateKey));
+
+            if(mangaDetailResponse.Errno != 0 || mangaDetailResponse.Manga.Volume.Count == 0)
+            {
+                return null;
+            }
 
             var mangaDetail = mangaDetailResponse.Manga;
             var result = new MangaDetail()
@@ -159,8 +203,6 @@ namespace Otokoneko.Plugins.Dmzj
                 Name = mangaDetail.Title,
                 Description = mangaDetail.Descrition,
                 Tags = new List<TagDetail>(),
-                Aliases = aliases,
-                Url = url,
                 Chapters = mangaDetail.Volume.SelectMany(volume => volume.Chapter.OrderBy(chapter => chapter.Order)
                     .Select(chapter =>
                         new ChapterDetail()
@@ -178,6 +220,77 @@ namespace Otokoneko.Plugins.Dmzj
             result.Tags.AddRange(mangaDetail.Status.Select(status => new TagDetail()
             { Name = status.Name, Type = TagTypeStatusName }));
             return result;
+        }
+
+        private async ValueTask<MangaDetail> GetMangaByV1Api(string mangaId)
+        {
+            var apiUrl = string.Format(MangaV1ApiBase, mangaId);
+            var apiResponse = await Client.GetStringAsync(apiUrl);
+            var response = JsonConvert.DeserializeObject<V1ApiResponse>(apiResponse);
+
+            if(response.result != 1)
+            {
+                return null;
+            }
+
+            var data = response.data;
+            var info = data.info;
+            var list = data.list;
+
+            var result = new MangaDetail()
+            {
+                Cover = info.cover,
+                Id = mangaId,
+                Name = info.title,
+                Description = info.description,
+                Tags = new List<TagDetail>(),
+                Chapters = list.OrderBy(chapter => int.Parse(chapter.chapter_order)).Select(chapter => new ChapterDetail()
+                {
+                    Id = chapter.id,
+                    Name = chapter.chapter_name,
+                    Type = "连载",
+                    Url = string.Format(ChapterApiBase, mangaId, chapter.id)
+                }).ToList()
+            };
+
+            result.Tags.AddRange(info.authors.Split('/').Select(author => new TagDetail()
+            { Name = author, Type = TagTypeAuthorName }));
+            result.Tags.AddRange(info.types.Split('/').Select(type => new TagDetail()
+            { Name = type, Type = TagTypeContentName }));
+            result.Tags.AddRange(info.status.Split('/').Select(status => new TagDetail()
+            { Name = status, Type = TagTypeStatusName }));
+
+            return result;
+        }
+
+        public async ValueTask<MangaDetail> GetManga(string url)
+        {
+            var page = await Client.GetStringAsync(url);
+            var idMatch = MangaIdRe.Match(page);
+            if (!idMatch.Success) return null;
+            var mangaId = idMatch.Groups[1].Value;
+
+            List<string> aliases = null;
+            var htmlDoc = new HtmlDocument();
+            htmlDoc.LoadHtml(page);
+            var aliasesNode = htmlDoc.DocumentNode.SelectSingleNode(
+                "/html/body/div[4]/div[3]/div/div[1]/div[2]/div/div[4]/table/tbody/tr[1]/td");
+            if (!string.IsNullOrEmpty(aliasesNode?.InnerText?.Trim()))
+            {
+                aliases = aliasesNode.InnerText.Trim().Split(',').ToList();
+            }
+
+            var manga = await GetMangaByV4Api(mangaId) ?? await GetMangaByV1Api(mangaId);
+
+            if(manga == null)
+            {
+                throw new ArgumentException("漫画不存在", nameof(url));
+            }
+
+            manga.Aliases = aliases;
+            manga.Url = url;
+
+            return manga;
         }
 
         public async ValueTask<List<string>> GetChapter(string url)

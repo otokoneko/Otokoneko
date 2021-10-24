@@ -134,6 +134,9 @@ namespace Otokoneko.Server.ScheduleTaskManage
             if (Status == TaskStatus.Success || Status == TaskStatus.Fail)
             {
                 Children.Clear();
+                Children = new Otokoneko.Utils.ThreadSafeList<ScheduleTask>();
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
                 GC.Collect();
             }
             base.OnUpdated();

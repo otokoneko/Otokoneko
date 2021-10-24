@@ -78,7 +78,7 @@ namespace Otokoneko.Server.Gui
                         Output.AppendText(text.Text);
                     }
 
-                    if(Output.Text.Length > 1.5 * MaxOutputLength)
+                    if(Output.Text.Length > 1.05 * MaxOutputLength)
                     {
                         var size = Output.Text.Length - MaxOutputLength;
                         for(; size < Output.Text.Length; size++)

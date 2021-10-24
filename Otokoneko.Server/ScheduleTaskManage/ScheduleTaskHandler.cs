@@ -143,8 +143,22 @@ namespace Otokoneko.Server.ScheduleTaskManage
 
     public class DownloadImageTaskHandler : ITaskHandler<DownloadImageScheduleTask>
     {
+        private System.Timers.Timer ReleaseMemoryTimer;
         public PluginManager PluginManager { get; set; }
         public ILog Logger { get; set; }
+
+        public DownloadImageTaskHandler()
+        {
+            ReleaseMemoryTimer = new System.Timers.Timer
+            {
+                AutoReset = false,
+                Enabled = true
+            };
+            ReleaseMemoryTimer.Elapsed += (s, e) =>
+            {
+                ImageUtils.ReleaseMemory();
+            };
+        }
 
         public async ValueTask Execute(DownloadImageScheduleTask downloadImageTask)
         {
@@ -173,14 +187,14 @@ namespace Otokoneko.Server.ScheduleTaskManage
                 await using var stream = new MemoryStream(buffer);
                 using var source = new CancellationTokenSource();
                 var token = source.Token;
-                var timeout = 5 * 60 * 1000;
+                var timeout = TimeSpan.FromMinutes(5);
                 var copyToAsync = content.CopyToAsync(stream, token);
                 if (await Task.WhenAny(copyToAsync, Task.Delay(timeout, token)) != copyToAsync || stream.Position < length)
                 {
                     throw new TimeoutException();
                 }
                 length = stream.Position;
-                stream.Seek(0, SeekOrigin.Begin);
+                ReleaseMemoryTimer.Interval = 10 * 60 * 1000;
                 if (!ImageUtils.ImageCheck(stream, length, out var format))
                 {
                     throw new BadImageFormatException();

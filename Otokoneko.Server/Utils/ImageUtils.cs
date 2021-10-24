@@ -121,6 +121,7 @@ namespace Otokoneko.Server.Utils
         {
             try
             {
+                imageStream.Seek(0, SeekOrigin.Begin);
                 using var image = Image.Load(imageStream, out format);
                 return true;
             }
@@ -144,6 +145,11 @@ namespace Otokoneko.Server.Utils
             {
             }
             return false;
+        }
+
+        public static void ReleaseMemory()
+        {
+            Configuration.Default.MemoryAllocator.ReleaseRetainedResources();
         }
     }
 }

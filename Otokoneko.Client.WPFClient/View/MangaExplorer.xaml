@@ -75,16 +75,15 @@
                 </StackPanel>
                 <Border
                     Name="SearchBox"
-                    Margin="0,9"
-                    HorizontalAlignment="Center"
+                    Margin="350,9"
                     Background="#3f3f3f"
                     CornerRadius="18">
                     <Grid>
                         <TextBox
                             Name="SearchTextBox"
-                            Width="500"
+                            MinWidth="400"
                             Margin="10,3,35,3"
-                            HorizontalAlignment="Left"
+                            HorizontalAlignment="Stretch"
                             Background="#3f3f3f"
                             BorderThickness="0"
                             FontSize="16"
@@ -118,7 +117,7 @@
             PlacementTarget="{Binding ElementName=SearchBox}"
             StaysOpen="{Binding ElementName=SearchTextBox, Path=IsKeyboardFocused}">
             <Grid
-                Width="505"
+                Width="{Binding ElementName=SearchTextBox, Path=ActualWidth}"
                 Height="300"
                 HorizontalAlignment="Center"
                 Background="#333333"

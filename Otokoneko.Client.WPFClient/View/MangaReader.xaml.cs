@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -18,7 +17,7 @@ namespace Otokoneko.Client.WPFClient.View
     {
         private double target = -1;
         private const double EPS = 1;
-        private object last = null;
+        private bool ScrollCompleted = true;
 
         public ImageListBox()
         {
@@ -29,9 +28,8 @@ namespace Otokoneko.Client.WPFClient.View
 
         protected override void OnItemsSourceChanged(IEnumerable oldValue, IEnumerable newValue)
         {
-            last = SelectedItem = null;
-            var scrollViewer = this.GetChild<ScrollViewer>();
-            scrollViewer.ScrollToTop();
+            SelectedItem = null;
+            ScrollCompleted = true;
             base.OnItemsSourceChanged(oldValue, newValue);
         }
 
@@ -44,31 +42,26 @@ namespace Otokoneko.Client.WPFClient.View
         {
             var scrollViewer = this.GetChild<ScrollViewer>();
             scrollViewer.ScrollChanged += OnScrollChanged;
-            ((dynamic)DataContext).IsEnd = new Func<bool>(() => scrollViewer.VerticalOffset >= scrollViewer.ExtentHeight);
+            ((dynamic)DataContext).IsEnd = new Func<bool>(() => scrollViewer.VerticalOffset + scrollViewer.ActualHeight >= scrollViewer.ExtentHeight);
         }
 
         private void OnScrollChanged(object sender, ScrollChangedEventArgs e)
         {
             if (!IsLoaded) return;
 
-            if(e.VerticalChange != 0 && e.ExtentHeightChange == 0)
+            if (MathUtils.AlmostEqual(target, e.VerticalOffset, EPS) && !ScrollCompleted)
             {
-                last = null;
-            }
-
-            if (Math.Abs(target - e.VerticalOffset) < EPS && SelectedItem != null)
-            {
-                last = SelectedItem;
                 SelectedItem = null;
+                ScrollCompleted = true;
                 target = -1;
             }
 
-            if (e.ExtentHeightChange != 0 && (SelectedItem != null || last != null))
+            if (e.ExtentHeightChange != 0 && !ScrollCompleted)
             {
-                ScrollTo(SelectedItem ?? last);
+                ScrollTo(SelectedItem);
             }
 
-            if (SelectedItem != null) return;
+            if (!ScrollCompleted) return;
 
             var hasSetProgress = false;
             var offset = (sender as ScrollViewer).VerticalOffset;
@@ -120,15 +113,19 @@ namespace Otokoneko.Client.WPFClient.View
             if (height == target) return;
             target = height;
 
-            if (selectedItem != null)
-            {
-                Dispatcher.BeginInvoke(new Action(() =>
+            Dispatcher.BeginInvoke(new Action(() =>
+            {;
+                var sc = this.GetChild<ScrollViewer>();
+                if (MathUtils.AlmostEqual(target, sc.VerticalOffset, EPS))
                 {
-                    UpdateLayout();
-                    var sc = this.GetChild<ScrollViewer>();
+                    ScrollCompleted = true;
+                }
+                else
+                {
+                    ScrollCompleted = false;
                     sc.ScrollToVerticalOffset(target);
-                }));
-            }
+                }
+            }));
         }
     }
 

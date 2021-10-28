@@ -441,6 +441,8 @@ namespace Otokoneko.Client.WPFClient.ViewModel
                 }
             }
 
+            await Task.Delay(100);
+
             ScrollTo(index);
         }
 

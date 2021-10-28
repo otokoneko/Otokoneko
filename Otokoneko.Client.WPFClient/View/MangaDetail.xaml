@@ -21,81 +21,86 @@
         </ResourceDictionary>
     </mah:MetroContentControl.Resources>
     <Grid Name="MangaExplorer" Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="2*"/>
+            <RowDefinition Height="1*"/>
+        </Grid.RowDefinitions>
         <Grid
-            Height="480"
-            HorizontalAlignment="Stretch"
-            VerticalAlignment="Top">
-            <StackPanel
+            Grid.Row="0">
+            <Viewbox
+                Margin="100, 0, 0, 0"
                 Width="360"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Center">
-                <Border
-                    Width="210"
-                    Height="280"
-                    Margin="0,0,0,0"
-                    Padding="5"
-                    HorizontalAlignment="Center"
-                    BorderBrush="DimGray"
-                    CornerRadius="5">
-                    <Border.Effect>
-                        <DropShadowEffect BlurRadius="20" Color="Black" />
-                    </Border.Effect>
-                    <Border.Background>
-                        <ImageBrush ImageSource="{Binding Path=Cover}" Stretch="UniformToFill" />
-                    </Border.Background>
-                </Border>
-                <client:ScoreControl
-                    Height="20"
-                    Margin="0,15,0,0"
-                    HorizontalAlignment="Center"
-                    Background="{DynamicResource MahApps.Brushes.Control.Background}"
-                    Cursor="Hand"
-                    Score="{Binding Path=Score}"
-                    StarSize="20"
-                    ToolTip="{Binding Path=ScoreText}">
-                    <client:ScoreControl.InputBindings>
-                        <MouseBinding Command="{Binding ElementName=MangaExplorer, Path=DataContext.CommentCommand}" MouseAction="LeftClick" />
-                    </client:ScoreControl.InputBindings>
-                </client:ScoreControl>
-                <TextBox
-                    Margin="0,5,0,0"
-                    HorizontalAlignment="Center"
-                    HorizontalContentAlignment="Center"
-                    BorderThickness="0"
-                    FontWeight="Bold"
-                    Foreground="{DynamicResource MahApps.Brushes.ThemeForeground}"
-                    IsReadOnly="True"
-                    Text="{Binding Path=CreateTime}" />
-                <TextBox
-                    HorizontalAlignment="Center"
-                    HorizontalContentAlignment="Center"
-                    BorderThickness="0"
-                    FontWeight="Bold"
-                    Foreground="{DynamicResource MahApps.Brushes.ThemeForeground}"
-                    IsReadOnly="True"
-                    Text="{Binding Path=UpdateTime}" />
-                <TextBox
-                    HorizontalAlignment="Center"
-                    HorizontalContentAlignment="Center"
-                    BorderThickness="0"
-                    FontWeight="Bold"
-                    Foreground="{DynamicResource MahApps.Brushes.ThemeForeground}"
-                    IsReadOnly="True"
-                    Text="{Binding Path=RecentReadTime}" />
-                <Button
-                    Margin="0,10,0,5"
-                    Padding="25,5"
-                    HorizontalAlignment="Center"
-                    BorderThickness="1"
-                    Command="{Binding Path=StartReadingCommand}"
-                    Content="{Binding Path=StartReadingString}"
-                    Cursor="Hand"
-                    Focusable="False"
-                    FontSize="14"
-                    Style="{StaticResource MahApps.Styles.Button.MetroSquare}" />
-            </StackPanel>
+                <StackPanel>
+                    <Border
+                        Width="210"
+                        Height="280"
+                        Margin="0,0,0,0"
+                        Padding="5"
+                        HorizontalAlignment="Center"
+                        BorderBrush="DimGray"
+                        CornerRadius="5">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="20" Color="Black" />
+                        </Border.Effect>
+                        <Border.Background>
+                            <ImageBrush ImageSource="{Binding Path=Cover}" Stretch="UniformToFill" />
+                        </Border.Background>
+                    </Border>
+                    <client:ScoreControl
+                        Height="20"
+                        Margin="0,15,0,0"
+                        HorizontalAlignment="Center"
+                        Background="{DynamicResource MahApps.Brushes.Control.Background}"
+                        Cursor="Hand"
+                        Score="{Binding Path=Score}"
+                        StarSize="20"
+                        ToolTip="{Binding Path=ScoreText}">
+                        <client:ScoreControl.InputBindings>
+                            <MouseBinding Command="{Binding ElementName=MangaExplorer, Path=DataContext.CommentCommand}" MouseAction="LeftClick" />
+                        </client:ScoreControl.InputBindings>
+                    </client:ScoreControl>
+                    <TextBox
+                        Margin="0,5,0,0"
+                        HorizontalAlignment="Center"
+                        HorizontalContentAlignment="Center"
+                        BorderThickness="0"
+                        FontWeight="Bold"
+                        Foreground="{DynamicResource MahApps.Brushes.ThemeForeground}"
+                        IsReadOnly="True"
+                        Text="{Binding Path=CreateTime}" />
+                    <TextBox
+                        HorizontalAlignment="Center"
+                        HorizontalContentAlignment="Center"
+                        BorderThickness="0"
+                        FontWeight="Bold"
+                        Foreground="{DynamicResource MahApps.Brushes.ThemeForeground}"
+                        IsReadOnly="True"
+                        Text="{Binding Path=UpdateTime}" />
+                    <TextBox
+                        HorizontalAlignment="Center"
+                        HorizontalContentAlignment="Center"
+                        BorderThickness="0"
+                        FontWeight="Bold"
+                        Foreground="{DynamicResource MahApps.Brushes.ThemeForeground}"
+                        IsReadOnly="True"
+                        Text="{Binding Path=RecentReadTime}" />
+                    <Button
+                        Margin="0,10,0,5"
+                        Padding="25,5"
+                        HorizontalAlignment="Center"
+                        BorderThickness="1"
+                        Command="{Binding Path=StartReadingCommand}"
+                        Content="{Binding Path=StartReadingString}"
+                        Cursor="Hand"
+                        Focusable="False"
+                        FontSize="14"
+                        Style="{StaticResource MahApps.Styles.Button.MetroSquare}" />
+                </StackPanel>
+            </Viewbox>
             <ListBox
-                Margin="360,40,10,40"
+                Margin="360,40,10,0"
                 ItemContainerStyle="{StaticResource NoFocusListBox}"
                 ScrollViewer.CanContentScroll="False"
                 ScrollViewer.HorizontalScrollBarVisibility="Disabled">
@@ -216,10 +221,123 @@
                         Text="{StaticResource Tag}" />
                 </Grid>
             </ListBox>
+            <Button
+                Width="30"
+                Height="30"
+                Margin="0,0,220,0"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                BorderThickness="0"
+                Command="{Binding Path=SetFavoriteMangaCommand}"
+                Cursor="Hand"
+                Focusable="False"
+                Style="{DynamicResource MahApps.Styles.Button.Circle}"
+                Visibility="{Binding Path=Editable, Converter={StaticResource InverseBoolToVisibilityConverter}}">
+                <Rectangle Width="20" Height="20">
+                    <Rectangle.OpacityMask>
+                        <ImageBrush ImageSource="/icon/favorite.png" />
+                    </Rectangle.OpacityMask>
+                    <Rectangle.Fill>
+                        <SolidColorBrush Color="{Binding Path=IsFavoriteColor}" />
+                    </Rectangle.Fill>
+                </Rectangle>
+            </Button>
+            <Button
+                Width="30"
+                Height="30"
+                Margin="0,0,100,0"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                BorderThickness="0"
+                Command="{Binding Path=EditMangaCommand}"
+                Cursor="Hand"
+                Focusable="False"
+                Style="{DynamicResource MahApps.Styles.Button.Circle}"
+                Visibility="{Binding Path=Editable, Converter={StaticResource InverseBoolToVisibilityConverter}}">
+                <Rectangle Width="20" Height="20">
+                    <Rectangle.OpacityMask>
+                        <ImageBrush ImageSource="/icon/edit.png" />
+                    </Rectangle.OpacityMask>
+                    <Rectangle.Fill>
+                        <SolidColorBrush Color="#FFA5A5A5" />
+                    </Rectangle.Fill>
+                </Rectangle>
+            </Button>
+            <Button
+                Width="30"
+                Height="30"
+                Margin="0,0,160,0"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                BorderThickness="0"
+                Command="{Binding Path=DownloadMangaCommand}"
+                Cursor="Hand"
+                Focusable="False"
+                Style="{DynamicResource MahApps.Styles.Button.Circle}"
+                Visibility="{Binding Path=Editable, Converter={StaticResource InverseBoolToVisibilityConverter}}">
+                <Rectangle Width="20" Height="20">
+                    <Rectangle.OpacityMask>
+                        <ImageBrush ImageSource="/icon/direct-download.png" />
+                    </Rectangle.OpacityMask>
+                    <Rectangle.Fill>
+                        <SolidColorBrush Color="#FFA5A5A5" />
+                    </Rectangle.Fill>
+                </Rectangle>
+            </Button>
+            <Button
+                Width="30"
+                Height="30"
+                Margin="0,0,40,0"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                BorderThickness="0"
+                Command="{Binding Path=DeleteMangaCommand}"
+                Cursor="Hand"
+                Focusable="False"
+                Style="{DynamicResource MahApps.Styles.Button.Circle}"
+                Visibility="{Binding Path=Editable, Converter={StaticResource InverseBoolToVisibilityConverter}}">
+                <Rectangle Width="20" Height="20">
+                    <Rectangle.OpacityMask>
+                        <ImageBrush ImageSource="/icon/trash.png" />
+                    </Rectangle.OpacityMask>
+                    <Rectangle.Fill>
+                        <SolidColorBrush Color="#FFA5A5A5" />
+                    </Rectangle.Fill>
+                </Rectangle>
+            </Button>
+            <Button
+                Margin="0,0,100,0"
+                Padding="7,3"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                Background="{x:Null}"
+                BorderThickness="1"
+                Command="{Binding Path=ConfirmEditCommand}"
+                Content="{StaticResource Save}"
+                Cursor="Hand"
+                Focusable="False"
+                FontSize="12"
+                Style="{StaticResource MahApps.Styles.Button.MetroSquare}"
+                Visibility="{Binding Path=Editable, Converter={StaticResource BooleanToVisibilityConverter}}" />
+            <Button
+                Margin="0,0,40,0"
+                Padding="7,3"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                Background="{x:Null}"
+                BorderThickness="1"
+                Command="{Binding Path=CancelEditCommand}"
+                Content="{StaticResource Cancel}"
+                Cursor="Hand"
+                Focusable="False"
+                FontSize="12"
+                Style="{StaticResource MahApps.Styles.Button.MetroSquare}"
+                Visibility="{Binding Path=Editable, Converter={StaticResource BooleanToVisibilityConverter}}" />
         </Grid>
         <mah:MetroTabControl
+            Grid.Row="1"
             x:Name="ChapterClassControl"
-            Margin="70,480,30,20"
+            Margin="70,0,30,20"
             HorizontalAlignment="Stretch"
             mah:TabControlHelper.Underlined="SelectedTabItem"
             BorderBrush="#FFA5A5A5"
@@ -285,117 +403,5 @@
                 </ControlTemplate>
             </mah:MetroTabControl.Template>
         </mah:MetroTabControl>
-        <Button
-            Width="30"
-            Height="30"
-            Margin="0,0,220,0"
-            HorizontalAlignment="Right"
-            VerticalAlignment="Top"
-            BorderThickness="0"
-            Command="{Binding Path=SetFavoriteMangaCommand}"
-            Cursor="Hand"
-            Focusable="False"
-            Style="{DynamicResource MahApps.Styles.Button.Circle}"
-            Visibility="{Binding Path=Editable, Converter={StaticResource InverseBoolToVisibilityConverter}}">
-            <Rectangle Width="20" Height="20">
-                <Rectangle.OpacityMask>
-                    <ImageBrush ImageSource="/icon/favorite.png" />
-                </Rectangle.OpacityMask>
-                <Rectangle.Fill>
-                    <SolidColorBrush Color="{Binding Path=IsFavoriteColor}" />
-                </Rectangle.Fill>
-            </Rectangle>
-        </Button>
-        <Button
-            Width="30"
-            Height="30"
-            Margin="0,0,100,0"
-            HorizontalAlignment="Right"
-            VerticalAlignment="Top"
-            BorderThickness="0"
-            Command="{Binding Path=EditMangaCommand}"
-            Cursor="Hand"
-            Focusable="False"
-            Style="{DynamicResource MahApps.Styles.Button.Circle}"
-            Visibility="{Binding Path=Editable, Converter={StaticResource InverseBoolToVisibilityConverter}}">
-            <Rectangle Width="20" Height="20">
-                <Rectangle.OpacityMask>
-                    <ImageBrush ImageSource="/icon/edit.png" />
-                </Rectangle.OpacityMask>
-                <Rectangle.Fill>
-                    <SolidColorBrush Color="#FFA5A5A5" />
-                </Rectangle.Fill>
-            </Rectangle>
-        </Button>
-        <Button
-            Width="30"
-            Height="30"
-            Margin="0,0,160,0"
-            HorizontalAlignment="Right"
-            VerticalAlignment="Top"
-            BorderThickness="0"
-            Command="{Binding Path=DownloadMangaCommand}"
-            Cursor="Hand"
-            Focusable="False"
-            Style="{DynamicResource MahApps.Styles.Button.Circle}"
-            Visibility="{Binding Path=Editable, Converter={StaticResource InverseBoolToVisibilityConverter}}">
-            <Rectangle Width="20" Height="20">
-                <Rectangle.OpacityMask>
-                    <ImageBrush ImageSource="/icon/direct-download.png" />
-                </Rectangle.OpacityMask>
-                <Rectangle.Fill>
-                    <SolidColorBrush Color="#FFA5A5A5" />
-                </Rectangle.Fill>
-            </Rectangle>
-        </Button>
-        <Button
-            Width="30"
-            Height="30"
-            Margin="0,0,40,0"
-            HorizontalAlignment="Right"
-            VerticalAlignment="Top"
-            BorderThickness="0"
-            Command="{Binding Path=DeleteMangaCommand}"
-            Cursor="Hand"
-            Focusable="False"
-            Style="{DynamicResource MahApps.Styles.Button.Circle}"
-            Visibility="{Binding Path=Editable, Converter={StaticResource InverseBoolToVisibilityConverter}}">
-            <Rectangle Width="20" Height="20">
-                <Rectangle.OpacityMask>
-                    <ImageBrush ImageSource="/icon/trash.png" />
-                </Rectangle.OpacityMask>
-                <Rectangle.Fill>
-                    <SolidColorBrush Color="#FFA5A5A5" />
-                </Rectangle.Fill>
-            </Rectangle>
-        </Button>
-        <Button
-            Margin="0,0,100,0"
-            Padding="7,3"
-            HorizontalAlignment="Right"
-            VerticalAlignment="Top"
-            Background="{x:Null}"
-            BorderThickness="1"
-            Command="{Binding Path=ConfirmEditCommand}"
-            Content="{StaticResource Save}"
-            Cursor="Hand"
-            Focusable="False"
-            FontSize="12"
-            Style="{StaticResource MahApps.Styles.Button.MetroSquare}"
-            Visibility="{Binding Path=Editable, Converter={StaticResource BooleanToVisibilityConverter}}" />
-        <Button
-            Margin="0,0,40,0"
-            Padding="7,3"
-            HorizontalAlignment="Right"
-            VerticalAlignment="Top"
-            Background="{x:Null}"
-            BorderThickness="1"
-            Command="{Binding Path=CancelEditCommand}"
-            Content="{StaticResource Cancel}"
-            Cursor="Hand"
-            Focusable="False"
-            FontSize="12"
-            Style="{StaticResource MahApps.Styles.Button.MetroSquare}"
-            Visibility="{Binding Path=Editable, Converter={StaticResource BooleanToVisibilityConverter}}" />
     </Grid>
 </mah:MetroContentControl>

@@ -18,5 +18,10 @@ namespace Otokoneko.Client.WPFClient.Utils
         {
             return Max(Min(origin, max), min);
         }
+
+        public static bool AlmostEqual(double x, double y, double EPS)
+        {
+            return Math.Abs(x - y) <= EPS;
+        }
     }
 }

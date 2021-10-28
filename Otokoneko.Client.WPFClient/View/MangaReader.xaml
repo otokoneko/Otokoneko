@@ -371,12 +371,11 @@
                             <RowDefinition />
                         </Grid.RowDefinitions>
                         <StackPanel
-                            VerticalAlignment="Bottom"
+                            VerticalAlignment="Center"
                             Grid.Row="0"
                             Grid.Column="3">
                             <TextBlock
                                 HorizontalAlignment="Center"
-                                VerticalAlignment="Bottom"
                                 FontSize="16"
                                 Text="{Binding Path=DataContext.SliderText, ElementName=Slider}" />
                             <Slider
@@ -390,6 +389,10 @@
                                 Thumb.DragCompleted="PageSliderOnDragCompleted"
                                 TickFrequency="1"
                                 Value="{Binding Path=CurrentSliderValue}" />
+                            <TextBlock
+                                HorizontalAlignment="Center"
+                                FontSize="16"
+                                Text="{Binding Path=DataContext.Title, ElementName=Slider}" />
                         </StackPanel>
                         <ContentPresenter
                             Margin="10,0"

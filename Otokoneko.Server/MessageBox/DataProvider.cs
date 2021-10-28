@@ -54,12 +54,12 @@ namespace Otokoneko.Server.MessageBox
                 .CountAsync();
         }
 
-        public async ValueTask<bool> Check(long messageId, long userId)
+        public async ValueTask<bool> CheckMessages(List<long> messageIds, long userId)
         {
             return await Context.Updateable<MessageUserMapping>()
-                .Where(it => it.ReceiverId == userId && it.MessageId == messageId)
+                .Where(it => it.ReceiverId == userId && messageIds.Contains(it.MessageId))
                 .SetColumns(it => it.Checked == true)
-                .ExecuteCommandAsync() == 1;
+                .ExecuteCommandAsync() == messageIds.Count;
         }
 
         public async ValueTask<bool> AddMessage(Message message)

@@ -75,18 +75,39 @@ namespace Otokoneko.Server.MessageBox
             return await messageBox.GetMessages(userId);
         }
 
-        public async ValueTask<bool> Check(long messageId, long userId)
+        public async ValueTask<bool> CheckMessages(List<long> messageIds, long userId)
         {
             using var context = Context;
-            var messageBox = new MessageBox(context);
-            return await messageBox.Check(messageId, userId);
+            context.BeginTran();
+            try
+            {
+                var messageBox = new MessageBox(context);
+                var succ = await messageBox.CheckMessages(messageIds, userId);
+                context.CommitTran();
+                return succ;
+            }
+            catch
+            {
+                context.RollbackTran();
+                throw;
+            }
         }
 
         public async ValueTask ClearCheckedMessage(long userId)
         {
             using var context = Context;
-            var messageBox = new MessageBox(context);
-            await messageBox.ClearCheckedMessage(userId);
+            context.BeginTran();
+            try
+            {
+                var messageBox = new MessageBox(context);
+                await messageBox.ClearCheckedMessage(userId);
+                context.CommitTran();
+            }
+            catch
+            {
+                context.RollbackTran();
+                throw;
+            }
         }
     }
 

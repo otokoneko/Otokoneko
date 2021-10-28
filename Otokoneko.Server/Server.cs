@@ -860,11 +860,7 @@ namespace Otokoneko.Server
         [RequestProcessMethod(UserAuthority.User, requestUserId: true)]
         public virtual async ValueTask<Tuple<ResponseStatus, object>> Check(List<long> messageIds, long userId)
         {
-            var success = true;
-            foreach (var messageId in messageIds)
-            {
-                success &= await MessageManager.Check(messageId, userId);
-            }
+            var success = await MessageManager.CheckMessages(messageIds, userId);
             return new Tuple<ResponseStatus, object>(
                 success ? ResponseStatus.Success : ResponseStatus.BadRequest,
                 success);

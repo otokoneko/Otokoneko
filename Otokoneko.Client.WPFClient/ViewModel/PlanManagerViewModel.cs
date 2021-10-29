@@ -68,7 +68,7 @@ namespace Otokoneko.Client.WPFClient.ViewModel
 
         public ICommand DeleteCommand => new AsyncCommand<Plan>(async (plan) =>
         {
-            var result = MessageBox.Show(string.Format(Constant.DeletePlanTemplate, plan.Name), Constant.OperateNotice, MessageBoxButton.YesNoCancel);
+            var result = MessageBox.Show(string.Format(Constant.DeletePlanTemplate, plan.Name), Constant.OperateNotice, MessageBoxButton.YesNo);
             if (result != MessageBoxResult.Yes) return;
             await Model.RemovePlan(plan.ObjectId);
             await Load();

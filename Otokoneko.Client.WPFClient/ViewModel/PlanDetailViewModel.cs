@@ -50,7 +50,7 @@ namespace Otokoneko.DataType
         [IgnoreMember]
         public FileTreeRoot SelectedLibrary
         {
-            get => Libraries.FirstOrDefault(it => it.ObjectId == LibraryId);
+            get => Libraries?.FirstOrDefault(it => it.ObjectId == LibraryId);
             set
             {
                 if (value == null) return;
@@ -128,7 +128,7 @@ namespace Otokoneko.DataType
         [IgnoreMember]
         public Plan SelectedPlan
         {
-            get => Plans.FirstOrDefault(it => it.ObjectId == PlanId);
+            get => Plans?.FirstOrDefault(it => it.ObjectId == PlanId);
             set => PlanId = value?.ObjectId ?? 0;
         }
 
@@ -306,12 +306,14 @@ namespace Otokoneko.Client.WPFClient.ViewModel
             Plan.ObjectId = ObjectId;
             if (ObjectId <= 0)
             {
-                await Model.AddPlan(Plan);
+                ObjectId = await Model.AddPlan(Plan);
             }
             else
             {
                 await Model.UpdatePlan(Plan);
             }
+            ExplorerHeader.Header = Name;
+            OnPropertyChanged(nameof(ExplorerHeader));
         });
 
         public PlanDetailViewModel()

@@ -19,10 +19,10 @@
                 SelectionMode="Single">
                 <DataGrid.Columns>
                     <DataGridTextColumn
-                        Width="390"
+                        Width="380"
                         Binding="{Binding Name}"
                         Header="任务名称"
-                        IsReadOnly="True" />
+                        IsReadOnly="True"/>
                     <DataGridTextColumn
                         Binding="{Binding Path=CreateTime, Converter={StaticResource UtcLocalConverter}, StringFormat={}{0:yyyy-MM-dd HH:mm}}"
                         Header="创建时间"

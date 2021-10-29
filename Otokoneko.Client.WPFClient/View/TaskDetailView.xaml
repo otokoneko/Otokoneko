@@ -26,7 +26,6 @@
                         </Grid.ColumnDefinitions>
                         <TextBlock
                             Grid.Column="0"
-                            Width="300"
                             Margin="0,0,10,0"
                             Background="Transparent"
                             Text="{Binding Name}"

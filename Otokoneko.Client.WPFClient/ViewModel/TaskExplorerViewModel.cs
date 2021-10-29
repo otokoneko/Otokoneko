@@ -29,6 +29,8 @@ namespace Otokoneko.Client.WPFClient.ViewModel
                 }
                 var detail = new TaskDetailViewModel(task);
                 Explorer.Insert(Explorer.Count - 1, detail);
+                SelectedIndex = Explorer.Count - 2;
+                OnPropertyChanged(nameof(SelectedIndex));
             }
         }
 

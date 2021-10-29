@@ -21,7 +21,7 @@ using Message = Otokoneko.DataType.Message;
 using ServerConfig = Otokoneko.Server.Config.ServerConfig;
 using Otokoneko.Server.Utils;
 using System.Buffers;
-using System.Threading;
+using System.Diagnostics;
 
 namespace Otokoneko.Server
 {
@@ -103,6 +103,9 @@ namespace Otokoneko.Server
             {
                 try
                 {
+                    var sw = new Stopwatch();
+                    sw.Start();
+
                     if (!UserManager.CheckAuthority(request.Token, attribute.RequiredAuthority))
                     {
                         Logger.Debug($"[{session.SessionID}] [{UserManager.GetUserByToken(request.Token)?.Name}] {request.Method} {ResponseStatus.Forbidden}");
@@ -136,7 +139,9 @@ namespace Otokoneko.Server
                     if (returnValue is ValueTask<Tuple<ResponseStatus, object>> resp)
                     {
                         var (status, result) = await resp;
-                        Logger.Debug($"[{session.SessionID}] [{UserManager.GetUserByToken(request.Token)?.Name}] {request.Method} {status}");
+                        sw.Stop();
+
+                        Logger.Debug($"[{session.SessionID}] [{UserManager.GetUserByToken(request.Token)?.Name}] [{sw.ElapsedMilliseconds}ms] {request.Method} {status}");
                         
                         if(result is IAsyncEnumerable<object> streamResult)
                         {
@@ -802,10 +807,10 @@ namespace Otokoneko.Server
         [RequestProcessMethod(UserAuthority.Admin)]
         public virtual async ValueTask<Tuple<ResponseStatus, object>> AddPlan(Plan plan)
         {
-            PlanManager.InsertPlan(plan);
+            var planId = PlanManager.InsertPlan(plan);
             return new Tuple<ResponseStatus, object>(
-                ResponseStatus.Success,
-                null);
+                planId > 0 ? ResponseStatus.Success : ResponseStatus.BadRequest,
+                planId);
         }
 
         [RequestProcessMethod(UserAuthority.Admin)]

@@ -15,6 +15,7 @@ namespace Otokoneko.Server.ScheduleTaskManage
 {
     public class PlanManager
     {
+        public ILog Logger { get; set; }
         private DB PlanLibrary { get; }
 
         private static readonly IdGenerator IdGenerator = new IdGenerator(4);
@@ -116,11 +117,20 @@ namespace Otokoneko.Server.ScheduleTaskManage
             return _idToPlan.Values.ToList();
         }
 
-        public void InsertPlan(Plan plan)
+        public long InsertPlan(Plan plan)
         {
             plan.ObjectId = IdGenerator.CreateId();
-            Insert(plan);
-            StartTrigger(plan);
+            try
+            {
+                Insert(plan);
+                StartTrigger(plan);
+                return plan.ObjectId;
+            }
+            catch (Exception e)
+            {
+                Logger.Error(e);
+                return -1;
+            }
         }
 
         public void UpdatePlan(Plan plan)

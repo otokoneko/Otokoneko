@@ -74,7 +74,7 @@ namespace Otokoneko.Server.ScheduleTaskManage
             while (true)
             {
                 var task = await _waitingScheduleTask.Dequeue();
-                if (task.Status != TaskStatus.Waiting) continue;
+                if (task.Status != TaskStatus.Waiting || task.Parent.Status == TaskStatus.Canceled) continue;
                 await Execute(task);
                 await Task.Yield();
             }

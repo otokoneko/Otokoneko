@@ -646,9 +646,10 @@ namespace Otokoneko.Client
             return result;
         }
 
-        public async ValueTask AddPlan(Plan plan)
+        public async ValueTask<long> AddPlan(Plan plan)
         {
-            var (result, status) = await SendRequest<Plan, bool>(0, plan);
+            var (result, status) = await SendRequest<Plan, long>(0, plan);
+            return result;
         }
 
         public async ValueTask UpdatePlan(Plan plan)

@@ -20,7 +20,7 @@ namespace Otokoneko.Server.ScheduleTaskManage
                 .Urls
                 .Split('\n')
                 .Where(it => !string.IsNullOrEmpty(it.Trim()))
-                .Select(url => (ScheduleTask)new DownloadMangaScheduleTask(url.Trim(), downloadPlan.LibraryPath, url))
+                .Select(url => (ScheduleTask)new DownloadMangaScheduleTask(url.Trim(), downloadPlan.LibraryPath, url.Trim()))
                 .Where(task => Scheduler.ScheduleAndStart(task))
                 .ToList();
         }

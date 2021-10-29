@@ -73,6 +73,8 @@ namespace Otokoneko.Server.Gui
                     {
                         if (string.IsNullOrEmpty(text.Text)) continue;
 
+                        Output.SelectionStart = Output.Text.Length;
+                        Output.SelectionLength = 0;
                         Output.SelectionColor = foreground ?? text.Font.Foreground;
                         Output.SelectionBackColor = background ?? text.Font.Background;
                         Output.AppendText(text.Text);

@@ -94,7 +94,7 @@ namespace Otokoneko.Client
 
         #endregion
 
-        private LruCache ImageCache { get; }
+        private Cache<byte[]> ImageCache { get; }
 
         public long CacheSize => ImageCache.Size;
         
@@ -128,7 +128,7 @@ namespace Otokoneko.Client
             LoadServerConfigs();
             LoadSetting();
             ChangeTheme();
-            ImageCache = new LruCache(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Otokoneko"), 10 * 1024 * 1024, 20 * 1024 * 1024);
+            ImageCache = new Cache<byte[]>(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Otokoneko"), 10 * 1024 * 1024, 20 * 1024 * 1024);
         }
 
         public static Model Instance => Lazy.Value;
@@ -542,15 +542,16 @@ namespace Otokoneko.Client
 
         public async ValueTask<byte[]> GetImage(long imageId)
         {
-            if (await ImageCache.Contain(imageId))
+            var key = $"{CurrentSession.ServerConfig.ServerId}-{imageId}";
+            if (await ImageCache.Contain(key))
             {
-                return await ImageCache.Get(imageId);
+                return await ImageCache.Get(key);
             }
 
             var (result, status) = await SendRequest<object, byte[]>(imageId, null);
             if (result != null)
             {
-                await ImageCache.Add(imageId, result);
+                await ImageCache.Add(key, result);
             }
 
             return result;

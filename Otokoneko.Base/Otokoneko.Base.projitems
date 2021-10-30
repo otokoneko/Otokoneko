@@ -21,6 +21,9 @@
     <Compile Include="$(MSBuildThisFileDirectory)Model.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Network.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Server.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Utils.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utils\ThreadSafeList.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utils\AsyncQueue.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utils\Cache.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utils\PasswordHashProvider.cs" />
   </ItemGroup>
 </Project>

@@ -25,12 +25,6 @@ namespace Otokoneko.Server.Gui
 
             FormClosing += OnClosing;
             Load += OnLoad;
-            Shown += OnShown;
-        }
-
-        private void OnShown(object sender, EventArgs e)
-        {
-            Output.ScrollToEnd();
         }
 
         private void OnLoad(object sender, EventArgs e)
@@ -68,6 +62,8 @@ namespace Otokoneko.Server.Gui
         {
             Show();
             Activate();
+            Output.ScrollToEnd();
+            Output.Refresh();
         }
 
         private void CreateNotifyIcon()

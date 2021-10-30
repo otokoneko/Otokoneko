@@ -27,6 +27,7 @@
                         Margin="20"
                         ItemContainerStyle="{StaticResource NoFocusListBox}"
                         ItemsSource="{Binding Item2}"
+                        ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                         VirtualizingPanel.IsVirtualizing="True"
                         VirtualizingPanel.ScrollUnit="Pixel">
                         <ListBox.ItemTemplate>
@@ -51,6 +52,7 @@
                                             BorderThickness="0"
                                             FontSize="18"
                                             FontWeight="Black"
+                                            TextWrapping="Wrap"
                                             IsReadOnly="True"
                                             Text="{Binding Data}" />
                                     </StackPanel>

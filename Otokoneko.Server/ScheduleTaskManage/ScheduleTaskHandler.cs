@@ -165,6 +165,7 @@ namespace Otokoneko.Server.ScheduleTaskManage
             var downloader = PluginManager.MangaDownloaders.FirstOrDefault(it => it.IsLegalUrl(downloadImageTask.ImageUrl, DownloadTaskType.Image));
             var samePool = ArrayPool<byte>.Shared;
             byte[] buffer = null;
+            MemoryStream stream = null;
             try
             {
                 if (downloader == null)
@@ -183,8 +184,17 @@ namespace Otokoneko.Server.ScheduleTaskManage
 
                 using var content = await downloader.GetImage(downloadImageTask.ImageUrl);
                 long length = content.Headers.ContentLength ?? 0;
-                buffer = samePool.Rent((int)(length > 0 ? length : 128 * 1024));
-                await using var stream = new MemoryStream(buffer);
+                
+                if(length > 0)
+                {
+                    buffer = samePool.Rent((int)length);
+                    stream = new MemoryStream(buffer);
+                }
+                else
+                {
+                    stream = new MemoryStream(128 * 1024);
+                }
+
                 using var source = new CancellationTokenSource();
                 var token = source.Token;
                 var timeout = TimeSpan.FromMinutes(5);
@@ -201,7 +211,7 @@ namespace Otokoneko.Server.ScheduleTaskManage
                 }
                 await using var fs = File.OpenWrite(existsFile ?? $"{downloadImageTask.ImagePath}.{format.FileExtensions.First()}");
                 fs.SetLength(0);
-                await fs.WriteAsync(buffer.AsMemory(0, (int)length));
+                await fs.WriteAsync((buffer ?? stream.GetBuffer()).AsMemory(0, (int)length));
                 downloadImageTask.Update(TaskStatus.Success);
             }
             catch (Exception e)
@@ -211,6 +221,7 @@ namespace Otokoneko.Server.ScheduleTaskManage
             }
             finally
             {
+                stream?.Close();
                 if (buffer != null) samePool.Return(buffer);
             }
         }

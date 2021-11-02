@@ -11,6 +11,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Otokoneko.Plugins.CopyManga
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Otokoneko.Plugins.NHentai", "Otokoneko.Plugins.NHentai\Otokoneko.Plugins.NHentai.csproj", "{877A2952-80F1-47AE-B229-E76652EB1A24}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Otokoneko.Plugins.Manhuagui", "Otokoneko.Plugins.Manhuagui\Otokoneko.Plugins.Manhuagui.csproj", "{20F3799D-650D-457B-B573-911E3D2E84BE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{877A2952-80F1-47AE-B229-E76652EB1A24}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{877A2952-80F1-47AE-B229-E76652EB1A24}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{877A2952-80F1-47AE-B229-E76652EB1A24}.Release|Any CPU.Build.0 = Release|Any CPU
+		{20F3799D-650D-457B-B573-911E3D2E84BE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{20F3799D-650D-457B-B573-911E3D2E84BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{20F3799D-650D-457B-B573-911E3D2E84BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{20F3799D-650D-457B-B573-911E3D2E84BE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

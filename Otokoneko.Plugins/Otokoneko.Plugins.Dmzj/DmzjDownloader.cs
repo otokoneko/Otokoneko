@@ -11,8 +11,6 @@ using System.Threading.Tasks;
 using HtmlAgilityPack;
 using Newtonsoft.Json;
 using Dmzj;
-using System.Net;
-using System.Web;
 
 namespace Otokoneko.Plugins.Dmzj
 {
@@ -42,7 +40,6 @@ namespace Otokoneko.Plugins.Dmzj
             return null;
         }
     }
-
 
     public class DmzjDownloader : IMangaDownloader
     {

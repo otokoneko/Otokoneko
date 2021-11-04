@@ -45,7 +45,7 @@ namespace Otokoneko.Plugins.Dmzj
     {
         public string Name => nameof(Dmzj);
         public string Author => "Otokoneko";
-        public Version Version => new Version(1, 0, 3);
+        public Version Version => new Version(1, 0, 4);
         private static string MangaV1ApiBase { get; } = "https://api.dmzj.com/dynamic/comicinfo/{0}.json";
         private static string MangaV4ApiBase { get; } = "https://nnv4api.muwai.com/comic/detail/{0}?uid=1";
         private static string ChapterApiBase { get; } = "https://m.dmzj.com/chapinfo/{0}/{1}.html";
@@ -309,7 +309,14 @@ namespace Otokoneko.Plugins.Dmzj
         {
             var urlWithoutScheme = url.Replace("http://", string.Empty).Replace("https://", string.Empty);
             urlWithoutScheme = urlWithoutScheme.Replace("//", "/");
-            urlWithoutScheme = urlWithoutScheme.Replace("+", "%2B");
+            if (urlWithoutScheme.Count(it=>it=='/') <= 1)
+            {
+                urlWithoutScheme = urlWithoutScheme.Replace("%2F", "/");
+            }
+            else
+            {
+                urlWithoutScheme = urlWithoutScheme.Replace("+", "%2B");
+            }
             return $"http://{urlWithoutScheme}";
         }
 

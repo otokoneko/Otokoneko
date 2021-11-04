@@ -65,7 +65,7 @@ namespace Otokoneko.Client
             db.Put(Encoding.UTF8.GetBytes(key), MessagePackSerializer.Serialize(value, _lz4Option));
         }
 
-        public void ChangeTheme()
+        private void ChangeTheme()
         {
             ControlzEx.Theming.ThemeManager.Current.ChangeTheme(Application.Current,
                 (Setting.ThemeOption.DarkMode ? "Dark." : "Light.") + Setting.ThemeOption.Color);

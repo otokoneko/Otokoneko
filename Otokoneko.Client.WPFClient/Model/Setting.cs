@@ -75,12 +75,19 @@ namespace Otokoneko.Client
     }
 
     [MessagePackObject(true)]
+    public class CacheOption
+    {
+        public long MaxFileCacheSize { get; set; } = 50 * 1024 * 1024;
+    }
+
+    [MessagePackObject(true)]
     public class Setting
     {
         public SearchOption SearchOption { get; set; } = new SearchOption();
         public MangaReadOption MangaReadOption { get; set; } = new MangaReadOption();
         public TagDisplayOption TagDisplayOption { get; set; } = new TagDisplayOption();
         public ThemeOption ThemeOption { get; set; } = new ThemeOption();
+        public CacheOption CacheOption { get; set; } = new CacheOption();
 
         public Setting Copy()
         {

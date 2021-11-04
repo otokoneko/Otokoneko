@@ -6,6 +6,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using AsyncAwaitBestPractices.MVVM;
 using ControlzEx.Theming;
+using Otokoneko.Client.WPFClient.Utils;
 using Otokoneko.DataType;
 
 namespace Otokoneko.Client.WPFClient.ViewModel
@@ -28,7 +29,6 @@ namespace Otokoneko.Client.WPFClient.ViewModel
             {
                 Setting.ThemeOption.Color = value;
                 Model.Setting.ThemeOption.Color = value;
-                Model.ChangeTheme();
                 Model.Setting = Setting;
             }
         }
@@ -120,12 +120,28 @@ namespace Otokoneko.Client.WPFClient.ViewModel
             }
         }
 
+        public string MaxFileCacheSize
+        {
+            get
+            {
+                var size = (double)Model.MaxFileCacheSize / 1024 / 1024;
+                return size.ToString();
+            }
+            set
+            {
+                var val = long.Parse(value);
+                Model.MaxFileCacheSize = val * 1024 * 1024;
+                Setting.CacheOption.MaxFileCacheSize = Model.MaxFileCacheSize;
+                Model.Setting = Setting;
+            }
+        }
+
         public string CacheUsage
         {
             get
             {
                 var size = (double)Model.CacheSize;
-                return Utils.FormatUtils.FormatSizeOfBytes(size);
+                return FormatUtils.FormatSizeOfBytes(size);
             }
         }
 
@@ -134,13 +150,18 @@ namespace Otokoneko.Client.WPFClient.ViewModel
             var result = MessageBox.Show(Constant.ResetSettingNotice, Constant.OperateNotice, MessageBoxButton.YesNo);
             if (result != MessageBoxResult.Yes) return;
             Model.Setting = new Setting();
-            Model.ChangeTheme();
+            OnPropertyChanged(nameof(MaxFileCacheSize));
         });
 
         public ICommand ClearCacheCommand => new AsyncCommand(async () =>
         {
             Model.ClearCache();
             OnPropertyChanged(nameof(CacheUsage));
+        });
+
+        public ICommand OpenCacheFolderCommand => new AsyncCommand(async () =>
+        {
+            FileUtils.OpenFolder(Model.CachePath);
         });
 
         public ICommand ResetFtsIndexCommand => new AsyncCommand(async () =>

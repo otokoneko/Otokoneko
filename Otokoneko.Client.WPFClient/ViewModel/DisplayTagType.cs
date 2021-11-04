@@ -35,7 +35,7 @@ namespace Otokoneko.Client.WPFClient.ViewModel
             get => _name;
             set
             {
-                _name = value;
+                _name = value?.Trim();
                 ChangeButtonEnable();
             }
         }
@@ -73,6 +73,7 @@ namespace Otokoneko.Client.WPFClient.ViewModel
             }
             else
             {
+                if (string.IsNullOrEmpty(Name)) return;
                 var objectId = await Model.AddTagType(Name);
                 if (objectId > 0)
                 {

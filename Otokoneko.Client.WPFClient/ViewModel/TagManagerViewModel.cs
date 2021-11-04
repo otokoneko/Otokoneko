@@ -41,7 +41,7 @@ namespace Otokoneko.Client.WPFClient.ViewModel
             {
                 _selectedTagTypeIndex = value;
                 if (_selectedTagTypeIndex != TagTypes.Count - 1) return;
-                var tagTypeManager = new TagTypeManager();
+                var tagTypeManager = new TagTypeManagerWindow();
                 tagTypeManager.ShowDialog();
             }
         }

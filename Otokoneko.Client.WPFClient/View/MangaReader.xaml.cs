@@ -30,6 +30,8 @@ namespace Otokoneko.Client.WPFClient.View
         {
             SelectedItem = null;
             ScrollCompleted = true;
+            var scrollViewer = this.GetChild<ScrollViewer>();
+            scrollViewer.ScrollToTop();
             base.OnItemsSourceChanged(oldValue, newValue);
         }
 

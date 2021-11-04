@@ -94,10 +94,26 @@ namespace Otokoneko.Client
 
         #endregion
 
+        #region Cache
+
         private Cache<byte[]> ImageCache { get; }
 
         public long CacheSize => ImageCache.Size;
-        
+        public long MaxFileCacheSize
+        {
+            get => ImageCache.MaxFileCacheSize;
+            set => ImageCache.MaxFileCacheSize = value;
+        }
+
+        public void ClearCache()
+        {
+            ImageCache.Clear();
+        }
+
+        public string CachePath => ImageCache.CachePath;
+
+        #endregion
+
         private readonly MessagePackSerializerOptions _lz4Option =
         MessagePackSerializerOptions.Standard.WithCompression(MessagePackCompression.Lz4Block);
 
@@ -109,6 +125,8 @@ namespace Otokoneko.Client
             {
                 _setting = value;
                 SaveSetting();
+                ChangeTheme();
+                ImageCache.MaxFileCacheSize = value.CacheOption.MaxFileCacheSize;
             }
         }
 
@@ -127,16 +145,10 @@ namespace Otokoneko.Client
             Token = string.Empty;
             LoadServerConfigs();
             LoadSetting();
-            ChangeTheme();
-            ImageCache = new Cache<byte[]>(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Otokoneko"), 10 * 1024 * 1024, 20 * 1024 * 1024);
+            ImageCache = new Cache<byte[]>(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Otokoneko"), 20 * 1024 * 1024, Setting.CacheOption.MaxFileCacheSize, TimeSpan.FromDays(3));
         }
 
         public static Model Instance => Lazy.Value;
-
-        public void ClearCache()
-        {
-            ImageCache.Clear();
-        }
 
         #region ClientConfig
 
@@ -161,6 +173,8 @@ namespace Otokoneko.Client
         private void LoadSetting()
         {
             _setting = GetObjectFromDb<Setting>(nameof(Setting), MetadataDatabaseName) ?? new Setting();
+            _setting.CacheOption ??= new CacheOption();
+            ChangeTheme();
         }
 
         private void SaveSetting()

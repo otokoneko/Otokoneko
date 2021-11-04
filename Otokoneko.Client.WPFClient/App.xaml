@@ -154,6 +154,9 @@
                 </Setter>
             </Style>
             <Style x:Key="NoFocusListBox" TargetType="{x:Type ListBoxItem}">
+                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                <Setter Property="VerticalContentAlignment" Value="Center" />
+                <Setter Property="VerticalAlignment" Value="Center" />
                 <Setter Property="Focusable" Value="False" />
                 <Setter Property="Template">
                     <Setter.Value>

@@ -1,6 +1,8 @@
 ﻿#if CLIENT
 
 using System;
+using System.Collections.Specialized;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.Caching;
 using System.Threading;
@@ -10,16 +12,27 @@ namespace Otokoneko.Utils
 {
     public class Cache<TValue>
     {
-        private readonly ObjectCache _memoryCache;
-        private readonly FileCache _fileCache;
+        public TimeSpan TTL { get; set; }
+        private MemoryCache _memoryCache;
+        private FileCache _fileCache;
+        public string CachePath { get; set; }
         private readonly SemaphoreSlim _mutex = new SemaphoreSlim(1);
+        private readonly NameValueCollection _memoryCacheConfig;
 
-        public long Size => _fileCache.CurrentCacheSize;
+        public long Size => _fileCache.GetCacheSize();
 
-        public Cache(string storePath, int maxMemorySize, int maxFileSize)
+        private long _maxFileCacheSize;
+        public long MaxFileCacheSize
         {
-            Directory.CreateDirectory(storePath);
-            foreach (var file in Directory.GetFiles(storePath))
+            get => _maxFileCacheSize;
+            set => _fileCache.MaxCacheSize = _maxFileCacheSize = value;
+        }
+
+        public Cache(string cachePath, long maxMemorySize, long maxFileSize, TimeSpan ttl)
+        {
+            CachePath = cachePath;
+            Directory.CreateDirectory(CachePath);
+            foreach (var file in Directory.GetFiles(CachePath))
             {
                 if (long.TryParse(Path.GetFileName(file), out _))
                 {
@@ -27,17 +40,19 @@ namespace Otokoneko.Utils
                 }
             }
 
-            var config = new System.Collections.Specialized.NameValueCollection
+            _memoryCacheConfig = new NameValueCollection
             {
                 { "cacheMemoryLimitMegabytes", $"{maxMemorySize / 1024 / 1024}" }
             };
+            _memoryCache = new MemoryCache(nameof(_memoryCache), _memoryCacheConfig);
 
-            _memoryCache = new MemoryCache(nameof(_memoryCache), config);
-
-            _fileCache = new FileCache(storePath, true)
+            _maxFileCacheSize = maxFileSize;
+            _fileCache = new FileCache(CachePath, true)
             {
-                MaxCacheSize = maxFileSize,
+                MaxCacheSize = _maxFileCacheSize,
             };
+
+            TTL = ttl;
         }
 
         public async ValueTask<TValue> Get(string key)
@@ -45,7 +60,15 @@ namespace Otokoneko.Utils
             await _mutex.WaitAsync();
             try
             {
-                var value = _memoryCache.Get(key) ?? _fileCache.Get(key);
+                var value = _memoryCache.Get(key);
+                if(value == null)
+                {
+                    value = _fileCache.Get(key);
+                    if(value != null)
+                    {
+                        _memoryCache.Add(key, value, DateTimeOffset.Now.Add(TTL));
+                    }
+                }
                 return (TValue)value;
             }
             finally
@@ -72,8 +95,8 @@ namespace Otokoneko.Utils
             await _mutex.WaitAsync();
             try
             {
-                _memoryCache.Add(key, value, DateTimeOffset.MaxValue);
-                _fileCache.Add(key, value, DateTimeOffset.MaxValue);
+                _memoryCache.Add(key, value, DateTimeOffset.Now.Add(TTL));
+                _fileCache.Add(key, value, DateTimeOffset.Now.Add(TTL));
             }
             finally
             {
@@ -83,7 +106,25 @@ namespace Otokoneko.Utils
 
         public void Clear()
         {
-            _fileCache.Clear();
+            _mutex.Wait();
+            try
+            {
+                _fileCache.Clear();
+                _fileCache = new FileCache(CachePath, true)
+                {
+                    MaxCacheSize = _maxFileCacheSize,
+                };
+                _memoryCache.Dispose();
+                _memoryCache = new MemoryCache(nameof(_memoryCache), _memoryCacheConfig);
+            }
+            catch(Exception ex)
+            {
+                Trace.WriteLine(ex);
+            }
+            finally
+            {
+                _mutex.Release();
+            }
         }
     }
 

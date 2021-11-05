@@ -729,10 +729,7 @@ namespace Otokoneko.Server
 
             var mangaPathIds = library.Repository.GetAllNodeObjectId();
             var mangaIds = await MangaManager.GetMangaIdByFileTreeNodeId(mangaPathIds);
-            foreach (var mangaId in mangaIds)
-            {
-                await MangaManager.DeleteManga(mangaId);
-            }
+            await MangaManager.DeleteMangas(mangaIds);
 
             LibraryManager.Delete(library);
             return new Tuple<ResponseStatus, object>(

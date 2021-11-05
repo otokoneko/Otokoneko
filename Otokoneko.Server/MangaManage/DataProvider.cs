@@ -106,6 +106,14 @@ namespace Otokoneko.Server.MangaManage
                 .ExecuteCommandAsync();
             return result;
         }
+
+        public async ValueTask<List<long>> GetIdList(Expression<Func<Chapter, bool>> whereExpression)
+        {
+            return await Context.Queryable<Chapter>()
+                .Where(whereExpression)
+                .Select(it => it.ObjectId)
+                .ToListAsync();
+        }
     }
 
     public class ImageService : SimpleClient<Image>

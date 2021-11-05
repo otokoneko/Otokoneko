@@ -538,8 +538,7 @@ namespace Otokoneko.Server.MangaManage
             context.BeginTran();
             try
             {
-                var chapters = await chapterService.GetListAsync(it => it.MangaId == mangaId);
-                var chapterIds = chapters.Select(it => it.ObjectId).ToList();
+                var chapterIds = await chapterService.GetIdList(it => it.MangaId == mangaId);
                 await mangaService.DeleteAsync(it => it.ObjectId == mangaId);
                 await mangaTagMappingService.DeleteAsync(it => it.MangaId == mangaId);
                 await chapterService.DeleteAsync(it => it.MangaId == mangaId);
@@ -547,7 +546,37 @@ namespace Otokoneko.Server.MangaManage
                 await favoriteService.DeleteAsync(it => it.EntityId == mangaId);
                 await readProgressService.DeleteAsync(it => it.MangaId == mangaId);
                 context.CommitTran();
-                MangaFtsIndexService.Delete(mangaId);
+                MangaFtsIndexService.Delete(new List<long> { mangaId });
+                return true;
+            }
+            catch (Exception e)
+            {
+                context.RollbackTran();
+                throw;
+            }
+        }
+
+        public async ValueTask<bool> DeleteMangas(List<long> mangaIds)
+        {
+            using var context = Context;
+            var mangaService = new MangaService(context);
+            var chapterService = new ChapterService(context);
+            var imageService = new ImageService(context);
+            var mangaTagMappingService = new MangaTagMappingService(context);
+            var favoriteService = new FavoriteService(context);
+            var readProgressService = new ReadProgressService(context);
+            context.BeginTran();
+            try
+            {
+                var chapterIds = await chapterService.GetIdList(it => mangaIds.Contains(it.MangaId));
+                await mangaService.DeleteAsync(it => mangaIds.Contains(it.ObjectId));
+                await mangaTagMappingService.DeleteAsync(it => mangaIds.Contains(it.MangaId));
+                await chapterService.DeleteAsync(it => mangaIds.Contains(it.MangaId));
+                await imageService.DeleteAsync(it => chapterIds.Contains(it.ChapterId));
+                await favoriteService.DeleteAsync(it => mangaIds.Contains(it.EntityId));
+                await readProgressService.DeleteAsync(it => mangaIds.Contains(it.MangaId));
+                context.CommitTran();
+                MangaFtsIndexService.Delete(mangaIds);
                 return true;
             }
             catch (Exception e)

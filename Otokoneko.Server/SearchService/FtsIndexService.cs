@@ -51,6 +51,17 @@ namespace Otokoneko.Server.SearchService
             ftsIndexWriter.DeleteDocuments(term);
             ftsIndexWriter.Commit();
         }
+        public void Delete(List<Term> terms)
+        {
+            using var ftsDirectory = FSDirectory.Open(IndexPath);
+            var indexConfig = new IndexWriterConfig(AppLuceneVersion, Analyzer);
+            using var ftsIndexWriter = new IndexWriter(ftsDirectory, indexConfig);
+            foreach (var term in terms)
+            {
+                ftsIndexWriter.DeleteDocuments(term);
+            }
+            ftsIndexWriter.Commit();
+        }
         public void Clear()
         {
             using var ftsDirectory = FSDirectory.Open(IndexPath);
@@ -108,10 +119,10 @@ namespace Otokoneko.Server.SearchService
             Update(term, doc);
         }
 
-        public void Delete(long mangaId)
+        public void Delete(List<long> mangaIds)
         {
-            var term = new Term("Id", mangaId.ToString());
-            Delete(term);
+            var terms = mangaIds.Select(mangaId => new Term("Id", mangaId.ToString())).ToList();
+            Delete(terms);
         }
 
         public List<long> Search(string queryString)
@@ -175,6 +186,7 @@ namespace Otokoneko.Server.SearchService
             var detailParser = new QueryParser(AppLuceneVersion, "Detail", Analyzer);
             var query = new BooleanQuery
             {
+                {nameParser.Parse(queryString), Occur.SHOULD},
                 {nameParser.Parse(queryString + "*"), Occur.SHOULD},
                 {detailParser.Parse(queryString), Occur.SHOULD},
             };

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -187,12 +188,12 @@ namespace Otokoneko.Server.LibraryManage
 
     public class ArchiveFileHandler : IFileTreeNodeHandler
     {
-        public HashSet<string> SupportExtensions => new HashSet<string>()
+        public HashSet<string> SupportExtensions => new()
         {
             ".zip",
             ".rar",
             ".7z",
-            "tar",
+            ".tar",
             ".gz"
         };
 
@@ -203,28 +204,43 @@ namespace Otokoneko.Server.LibraryManage
 
             root.Children = new List<FileTreeNode>();
 
-            var pathToItem = new Dictionary<string, FileTreeNode>();
+            var pathToItem = new Queue<Tuple<string, FileTreeNode>>();
             var nameToItem = new Dictionary<string, FileTreeNode> { { "", root } };
             foreach (var entry in archive.Entries)
             {
-                var path = entry.Key;
+                var path = entry.Key.TrimEnd('\\').TrimEnd('/');
                 var item = new FileTreeNode
                 {
                     ObjectId = idGenerator.CreateId(),
                     IsNewItem = true,
-                    FullName = Path.GetFileName(path.Last() == '/' ? path.Substring(0, path.Length - 1) : path),
+                    FullName = Path.GetFileName(path),
                     IsDirectory = entry.IsDirectory,
                     Library = root.Library
                 };
-                pathToItem.Add(path, item);
+                pathToItem.Enqueue(new Tuple<string, FileTreeNode>(path, item));
                 if (!entry.IsDirectory) continue;
                 item.Children = new List<FileTreeNode>();
-                nameToItem.Add(Path.GetDirectoryName(path + (archive.Type == ArchiveType.Rar ? "/" : "")), item);
+                nameToItem.Add(path, item);
             }
 
-            foreach (var (path, child) in pathToItem)
+            while (pathToItem.Count != 0)
             {
-                var parent = nameToItem[Path.GetDirectoryName(path.TrimEnd('\\').TrimEnd('/'))];
+                var (path, child) = pathToItem.Dequeue();
+                var parentPath = Path.GetDirectoryName(path);
+                if(!nameToItem.TryGetValue(parentPath, out var parent))
+                {
+                    parent = new FileTreeNode
+                    {
+                        ObjectId = idGenerator.CreateId(),
+                        IsNewItem = true,
+                        FullName = Path.GetFileName(parentPath),
+                        IsDirectory = true,
+                        Library = root.Library,
+                        Children = new List<FileTreeNode>()
+                    };
+                    nameToItem[parentPath] = parent;
+                    pathToItem.Enqueue(new Tuple<string, FileTreeNode>(parentPath, parent));
+                }
                 child.ParentId = parent.ObjectId;
                 child.Parent = parent;
                 parent.Children.Add(child);
@@ -267,12 +283,77 @@ namespace Otokoneko.Server.LibraryManage
 
         public Stream OpenWrite(Stream input, string path)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public void Delete(string path)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
+        }
+    }
+
+    public class EpubFileHandler : IFileTreeNodeHandler
+    {
+        public HashSet<string> SupportExtensions => new()
+        {
+            ".epub",
+        };
+
+        public bool CreateFileTree(Stream input, FileTreeNode root, IdGenerator idGenerator)
+        {
+            var options = new ReaderOptions { LookForHeader = true, LeaveStreamOpen = false };
+            using var archive = ArchiveFactory.Open(input, options);
+
+            root.Children = new List<FileTreeNode>();
+
+            foreach (var entry in archive.Entries)
+            {
+                if (entry.IsDirectory) continue;
+                var path = entry.Key.TrimEnd('\\').TrimEnd('/');
+                var item = new FileTreeNode
+                {
+                    ObjectId = idGenerator.CreateId(),
+                    IsNewItem = true,
+                    FullName = path,
+                    IsDirectory = entry.IsDirectory,
+                    Library = root.Library,
+                    ParentId = root.ObjectId,
+                    Parent = root,
+                };
+
+                root.Children.Add(item);
+            }
+
+            return true;
+        }
+
+        public Stream OpenRead(Stream input, string path)
+        {
+            var options = new ReaderOptions { LookForHeader = true, LeaveStreamOpen = true };
+            var archive = ArchiveFactory.Open(input, options);
+            path = archive.Type != ArchiveType.Rar ? path.Replace('\\', '/') : path.Replace('/', '\\');
+            var entry = archive.Entries.Single(e => e.Key == path);
+            var stream = entry.OpenEntryStream();
+            return new ArchiveStream(stream, archive);
+        }
+
+        public static void Register()
+        {
+            var instance = new EpubFileHandler();
+            foreach (var extension in instance.SupportExtensions)
+            {
+                IFileTreeNodeHandler.Handlers.Add(extension, instance);
+            }
+        }
+
+        public Stream OpenWrite(Stream input, string path)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Delete(string path)
+        {
+            throw new NotImplementedException();
         }
     }
 }

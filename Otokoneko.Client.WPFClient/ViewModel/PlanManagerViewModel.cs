@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
@@ -81,13 +82,9 @@ namespace Otokoneko.Client.WPFClient.ViewModel
 
         private async ValueTask Load()
         {
-            Plans = new ObservableCollection<DisplayPlan>();
             var plans = await Model.GetPlans();
             if (plans == null) return;
-            foreach (var plan in plans)
-            {
-                Plans.Add(new DisplayPlan(plan));
-            }
+            Plans = new ObservableCollection<DisplayPlan>(plans.OrderBy(it => it.Name).Select(it => new DisplayPlan(it)));
             OnPropertyChanged(nameof(Plans));
         }
 

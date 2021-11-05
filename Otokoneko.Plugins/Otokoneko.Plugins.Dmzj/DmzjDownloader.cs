@@ -41,11 +41,11 @@ namespace Otokoneko.Plugins.Dmzj
         }
     }
 
-    public class DmzjDownloader : IMangaDownloader
+    public partial class DmzjDownloader : IMangaDownloader
     {
         public string Name => nameof(Dmzj);
         public string Author => "Otokoneko";
-        public Version Version => new Version(1, 0, 4);
+        public Version Version => new Version(1, 0, 5);
         private static string MangaV1ApiBase { get; } = "https://api.dmzj.com/dynamic/comicinfo/{0}.json";
         private static string MangaV4ApiBase { get; } = "https://nnv4api.muwai.com/comic/detail/{0}?uid=1";
         private static string ChapterApiBase { get; } = "https://m.dmzj.com/chapinfo/{0}/{1}.html";
@@ -260,31 +260,45 @@ namespace Otokoneko.Plugins.Dmzj
             return result;
         }
 
+        private List<string> ExtractAliases(string page)
+        {
+            page = page.Replace("{m_comic_alias_display}", "").Replace("{m_comic_real_display}", "");
+
+            List<string> aliases = new List<string>();
+            var htmlDoc = new HtmlDocument();
+            htmlDoc.LoadHtml(page);
+
+            var table = htmlDoc.DocumentNode.SelectSingleNode("//div[@class='anim-main_list']/table").Descendants("td").ToArray();
+            var aliasesNode = table[0];
+            if (!string.IsNullOrEmpty(aliasesNode?.InnerText?.Trim()))
+            {
+                aliases.AddRange(aliasesNode.InnerText.Trim().Split(','));
+            }
+
+            var originNode = table[1];
+            if (!string.IsNullOrEmpty(originNode?.InnerText?.Trim()))
+            {
+                aliases.AddRange(originNode.InnerText.Trim().Split(','));
+            }
+
+            return aliases;
+        }
+
         public async ValueTask<MangaDetail> GetManga(string url)
         {
             var page = await Client.GetStringAsync(url);
             var idMatch = MangaIdRe.Match(page);
             if (!idMatch.Success) return null;
+
             var mangaId = idMatch.Groups[1].Value;
 
-            List<string> aliases = null;
-            var htmlDoc = new HtmlDocument();
-            htmlDoc.LoadHtml(page);
-            var aliasesNode = htmlDoc.DocumentNode.SelectSingleNode(
-                "/html/body/div[4]/div[3]/div/div[1]/div[2]/div/div[4]/table/tbody/tr[1]/td");
-            if (!string.IsNullOrEmpty(aliasesNode?.InnerText?.Trim()))
-            {
-                aliases = aliasesNode.InnerText.Trim().Split(',').ToList();
-            }
-
             var manga = await GetMangaByV4Api(mangaId) ?? await GetMangaByV1Api(mangaId);
-
             if(manga == null)
             {
                 throw new ArgumentException("漫画不存在", nameof(url));
             }
 
-            manga.Aliases = aliases;
+            manga.Aliases = ExtractAliases(page);
             manga.Url = url;
 
             return manga;

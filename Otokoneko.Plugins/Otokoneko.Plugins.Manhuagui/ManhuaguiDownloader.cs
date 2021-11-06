@@ -12,13 +12,13 @@ using System.Threading.Tasks;
 
 namespace Otokoneko.Plugins.Manhuagui
 {
-    public class ManhuaguiDownloader : IMangaDownloader
+    public partial class ManhuaguiDownloader : IMangaDownloader
     {
         public string Name => nameof(Manhuagui);
 
         public string Author => "Otokoneko";
 
-        public Version Version => new Version(1, 0, 0);
+        public Version Version => new Version(1, 0, 1);
 
         private static HttpClient Client { get; } = new HttpClient();
 
@@ -151,12 +151,70 @@ namespace Otokoneko.Plugins.Manhuagui
             return response.Content;
         }
 
+        private MangaDetail ExtractMetadata(string page)
+        {
+            var htmlDoc = new HtmlDocument();
+            htmlDoc.LoadHtml(page);
+
+            var coverNode = htmlDoc.DocumentNode.SelectSingleNode("/html/body/div[5]/div[1]/div[1]/div[1]/p/img");
+            var titleNode = htmlDoc.DocumentNode.SelectSingleNode("/html/body/div[5]/div[1]/div[1]/div[2]/div[2]/h1");
+            var descNode = htmlDoc.DocumentNode.SelectSingleNode("/html/body/div[5]/div[1]/div[1]/div[2]/div[3]/div[2]");
+            var tagNode = htmlDoc.DocumentNode.SelectSingleNode("/html/body/div[5]/div[1]/div[1]/div[2]/ul/li[2]/span[1]");
+            var authorNode = htmlDoc.DocumentNode.SelectSingleNode("/html/body/div[5]/div[1]/div[1]/div[2]/ul/li[2]/span[2]");
+            var statusNode = htmlDoc.DocumentNode.SelectSingleNode("/html/body/div[5]/div[1]/div[1]/div[2]/ul/li[4]/span/span[1]");
+
+            var result = new MangaDetail()
+            {
+                Cover = coverNode.GetAttributeValue("src", ""),
+                Name = titleNode.InnerText,
+                Description = string.Join('\n', descNode.ChildNodes.Select(it => HtmlEntity.DeEntitize(it.InnerText))),
+                Tags = new List<TagDetail>(),
+                Chapters = new List<ChapterDetail>(),
+                Aliases = new List<string>()
+            };
+
+            var aliase = titleNode.NextSibling.InnerText;
+            if (!string.IsNullOrEmpty(aliase))
+            {
+                result.Aliases.Add(aliase);
+            }
+
+            result.Tags.AddRange(tagNode.Descendants("a").Select(it =>
+            new TagDetail
+            {
+                Type = TagTypeContentName,
+                Name = it.GetAttributeValue("title", "")
+            }));
+
+            result.Tags.AddRange(authorNode.Descendants("a").Select(it =>
+            new TagDetail
+            {
+                Type = TagTypeAuthorName,
+                Name = it.GetAttributeValue("title", "")
+            }));
+
+            result.Tags.Add(
+            new TagDetail
+            {
+                Type = TagTypeStatusName,
+                Name = statusNode.InnerText.Trim()
+            });
+
+            var aliasNode = htmlDoc.DocumentNode.SelectSingleNode("/html/body/div[5]/div[1]/div[1]/div[2]/ul/li[3]/span");
+            result.Aliases.AddRange(aliasNode.Descendants("a").Select(it => it.InnerText));
+
+            return result;
+        }
+
         public async ValueTask<MangaDetail> GetManga(string url)
         {
             var page = await Client.GetStringAsync(url);
 
             url = url.Trim('/');
             var mangaId = url.Split('/').Last();
+
+            var result = ExtractMetadata(page);
+            result.Id = mangaId;
 
             var htmlDoc = new HtmlDocument();
             htmlDoc.LoadHtml(page);
@@ -179,29 +237,6 @@ namespace Otokoneko.Plugins.Manhuagui
             while (firstNode.Name != "h4")
             {
                 firstNode = firstNode.NextSibling;
-            }
-
-            Console.WriteLine(firstNode == null);
-
-            var coverNode = htmlDoc.DocumentNode.SelectSingleNode("/html/body/div[5]/div[1]/div[1]/div[1]/p/img");
-            var titleNode = htmlDoc.DocumentNode.SelectSingleNode("/html/body/div[5]/div[1]/div[1]/div[2]/div[2]/h1");
-            var descNode = htmlDoc.DocumentNode.SelectSingleNode("/html/body/div[5]/div[1]/div[1]/div[2]/div[3]/div[2]");
-
-            var result = new MangaDetail()
-            {
-                Cover = coverNode.GetAttributeValue("src", ""),
-                Id = mangaId,
-                Name = titleNode.InnerText,
-                Description = HtmlEntity.DeEntitize(descNode.InnerText),
-                Tags = new List<TagDetail>(),
-                Chapters = new List<ChapterDetail>(),
-                Aliases = new List<string>()
-            };
-
-            var aliase = titleNode.NextSibling.InnerText;
-            if (!string.IsNullOrEmpty(aliase))
-            {
-                result.Aliases.Add(aliase);
             }
 
             for (var node = firstNode; node != null; )
@@ -237,34 +272,6 @@ namespace Otokoneko.Plugins.Manhuagui
                     node = node.NextSibling;
                 }
             }
-
-            var tagNode = htmlDoc.DocumentNode.SelectSingleNode("/html/body/div[5]/div[1]/div[1]/div[2]/ul/li[2]/span[1]");
-            var authorNode = htmlDoc.DocumentNode.SelectSingleNode("/html/body/div[5]/div[1]/div[1]/div[2]/ul/li[2]/span[2]");
-            var statusNode = htmlDoc.DocumentNode.SelectSingleNode("/html/body/div[5]/div[1]/div[1]/div[2]/ul/li[4]/span/span[1]");
-
-            result.Tags.AddRange(tagNode.Descendants("a").Select(it =>
-            new TagDetail
-            {
-                Type = TagTypeContentName,
-                Name = it.GetAttributeValue("title", "")
-            }));
-
-            result.Tags.AddRange(authorNode.Descendants("a").Select(it =>
-            new TagDetail
-            {
-                Type = TagTypeAuthorName,
-                Name = it.GetAttributeValue("title", "")
-            }));
-
-            result.Tags.Add(
-            new TagDetail
-            {
-                Type = TagTypeStatusName,
-                Name = statusNode.InnerText.Trim()
-            });
-
-            var aliasNode = htmlDoc.DocumentNode.SelectSingleNode("/html/body/div[5]/div[1]/div[1]/div[2]/ul/li[3]/span");
-            result.Aliases.AddRange(aliasNode.Descendants("a").Select(it => it.InnerText));
 
             return result;
         }

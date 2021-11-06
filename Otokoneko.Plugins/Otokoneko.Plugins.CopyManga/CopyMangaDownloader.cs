@@ -13,11 +13,11 @@ using Otokoneko.Plugins.Interface;
 
 namespace Otokoneko.Plugins.CopyManga
 {
-    public class CopyMangaDownloader : IMangaDownloader
+    public partial class CopyMangaDownloader : IMangaDownloader
     {
         public string Name => nameof(CopyManga);
         public string Author => "Otokoneko";
-        public Version Version => new Version(1, 1, 3);
+        public Version Version => new Version(1, 1, 4);
 
         private string ChapterApiBase { get; } = "https://www.copymanga.com/comic/{0}/chapter/{1}";
 
@@ -172,15 +172,14 @@ namespace Otokoneko.Plugins.CopyManga
             }
             catch(Exception e)
             {
-                throw new Exception("漫画内容解密失败", e);
+                throw new Exception("解密漫画详情页面失败，建议打开对应界面，在html源代码中搜索并替换插件原有的解密密钥", e);
             }
         }
 
-        public async ValueTask<MangaDetail> GetManga(string url)
+        private MangaDetail ExtractMetadata(string page)
         {
-            var html = await Client.GetStringAsync(url);
             var htmlDoc = new HtmlDocument();
-            htmlDoc.LoadHtml(html);
+            htmlDoc.LoadHtml(page);
             var titleNode = htmlDoc.DocumentNode.SelectSingleNode("/html/body/main/div[1]/div/div[2]/ul/li[1]/h6");
             var aliasesNode = htmlDoc.DocumentNode.SelectSingleNode("/html/body/main/div[1]/div/div[2]/ul/li[2]/p");
             var authorsNode = htmlDoc.DocumentNode.SelectSingleNode("/html/body/main/div[1]/div/div[2]/ul/li[3]/span[2]");
@@ -190,8 +189,6 @@ namespace Otokoneko.Plugins.CopyManga
             var descriptionNode = htmlDoc.DocumentNode.SelectSingleNode("/html/body/main/div[2]/div[2]/p");
             var subscribeNode = htmlDoc.DocumentNode.SelectSingleNode("/html/body/main/div[1]/div/div[2]/ul/li[8]/a[2]");
 
-            var mangaDetail = await GetComicDetail(url);
-
             var tags = authorsNode.ChildNodes.Where(it => it.Name == "a").Select(authorsNodeChildNode => new TagDetail()
             {
                 Type = TagTypeAuthorName,
@@ -199,7 +196,7 @@ namespace Otokoneko.Plugins.CopyManga
             }).ToList();
             tags.AddRange(contentNode.ChildNodes.Where(it => it.Name == "a").Select(authorsNodeChildNode => new TagDetail()
             {
-                Type = TagTypeContentName, 
+                Type = TagTypeContentName,
                 Name = authorsNodeChildNode.InnerText.Trim()[1..]
             }));
             tags.Add(new TagDetail()
@@ -208,9 +205,6 @@ namespace Otokoneko.Plugins.CopyManga
                 Name = statusNode.InnerText.Trim()
             });
 
-            var path_word = mangaDetail.build.path_word;
-            var types = mangaDetail.build.type;
-
             return new MangaDetail
             {
                 Id = subscribeNode.GetAttributeValue("onclick", "").Replace("collect('", "").Replace("')", ""),
@@ -218,16 +212,30 @@ namespace Otokoneko.Plugins.CopyManga
                 Aliases = aliasesNode.InnerText.Trim().Split(',').ToList(),
                 Cover = coverNode.GetAttributeValue("data-src", null),
                 Description = descriptionNode.InnerText,
-                Url = url,
                 Tags = tags,
-                Chapters = mangaDetail.groups.@default.chapters.Select(it => new ChapterDetail
-                {
-                    Id = it.id,
-                    Name = it.name,
-                    Url = string.Format(ChapterApiBase, path_word, it.id),
-                    Type = types.Single(t => t.id == it.type).name,
-                }).ToList()
             };
+        }
+
+        public async ValueTask<MangaDetail> GetManga(string url)
+        {
+            var html = await Client.GetStringAsync(url);
+
+            var result = ExtractMetadata(html);
+
+            var mangaDetail = await GetComicDetail(url);
+
+            var path_word = mangaDetail.build.path_word;
+            var types = mangaDetail.build.type;
+
+            result.Chapters = mangaDetail.groups.@default.chapters.Select(it => new ChapterDetail
+            {
+                Id = it.id,
+                Name = it.name,
+                Url = string.Format(ChapterApiBase, path_word, it.id),
+                Type = types.Single(t => t.id == it.type).name,
+            }).ToList();
+
+            return result;
         }
 
         public async ValueTask<List<string>> GetChapter(string url)
@@ -248,7 +256,7 @@ namespace Otokoneko.Plugins.CopyManga
             }
             catch (Exception e)
             {
-                throw new Exception("章节内容解密失败", e);
+                throw new Exception("解密章节内容失败，建议打开对应界面，在html源代码中搜索并替换插件原有的解密密钥", e);
             }
         }
 

@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System;
+using System.Windows;
 
 namespace Otokoneko.Client.WPFClient
 {
@@ -17,6 +18,7 @@ namespace Otokoneko.Client.WPFClient
         {
             var crashReporter = new View.CrashReporter("出现未捕获的异常", e.Exception);
             crashReporter.ShowDialog();
+            Environment.Exit(-1);
         }
     }
 }

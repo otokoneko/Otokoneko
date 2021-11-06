@@ -5,9 +5,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using IdGen;
 using Otokoneko.DataType;
+using PDFiumSharp;
 using SharpCompress.Archives;
 using SharpCompress.Common;
 using SharpCompress.Readers;
+using SixLabors.ImageSharp.Processing;
 
 namespace Otokoneko.Server.LibraryManage
 {
@@ -348,12 +350,82 @@ namespace Otokoneko.Server.LibraryManage
 
         public Stream OpenWrite(Stream input, string path)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
 
         public void Delete(string path)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
+        }
+    }
+
+    public class PdfFileHandler : IFileTreeNodeHandler
+    {
+        private readonly SixLabors.ImageSharp.Formats.Png.PngEncoder Encoder = new();
+
+        public HashSet<string> SupportExtensions => new()
+        {
+            ".pdf",
+        };
+
+        public bool CreateFileTree(Stream input, FileTreeNode root, IdGenerator idGenerator)
+        {
+            using var pdfDocument = new PdfDocument(input);
+
+            root.Children = pdfDocument.Pages.Select(page => new FileTreeNode
+            {
+                ObjectId = idGenerator.CreateId(),
+                IsNewItem = true,
+                FullName = $"{page.Index}.png",
+                IsDirectory = false,
+                Library = root.Library,
+                ParentId = root.ObjectId,
+                Parent = root,
+            }).ToList();
+
+            return true;
+        }
+
+        public Stream OpenRead(Stream input, string path)
+        {
+            using var pdfDocument = new PdfDocument(input);
+            var page = pdfDocument.Pages[int.Parse(path[0..^4])];
+
+            int width = (int)(page.Width * 4 / 3);
+            int height = (int)(page.Height * 4 / 3);
+
+            using var pageBitmap = new PDFiumBitmap(width, height, true);
+
+            page.Render(pageBitmap);
+
+            using var image = SixLabors.ImageSharp.Image.Load(pageBitmap.AsBmpStream());
+
+            image.Mutate(x => x.BackgroundColor(SixLabors.ImageSharp.Color.White));
+
+            var ms = new MemoryStream();
+            image.Save(ms, Encoder);
+            ms.Seek(0, SeekOrigin.Begin);
+
+            return ms;
+        }
+
+        public static void Register()
+        {
+            var instance = new PdfFileHandler();
+            foreach (var extension in instance.SupportExtensions)
+            {
+                IFileTreeNodeHandler.Handlers.Add(extension, instance);
+            }
+        }
+
+        public Stream OpenWrite(Stream input, string path)
+        {
+            throw new NotSupportedException();
+        }
+
+        public void Delete(string path)
+        {
+            throw new NotSupportedException();
         }
     }
 }

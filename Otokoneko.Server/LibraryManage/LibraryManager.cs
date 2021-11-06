@@ -33,6 +33,7 @@ namespace Otokoneko.Server
             FileSystemHandler.Register();
             ArchiveFileHandler.Register();
             EpubFileHandler.Register();
+            PdfFileHandler.Register();
         }
 
         public LibraryManager(ILog logger)

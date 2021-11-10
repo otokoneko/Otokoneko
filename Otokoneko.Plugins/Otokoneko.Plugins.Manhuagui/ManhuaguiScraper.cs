@@ -1,4 +1,5 @@
-﻿using F23.StringSimilarity;
+﻿using Bert.RateLimiters;
+using F23.StringSimilarity;
 using HtmlAgilityPack;
 using Otokoneko.Plugins.Interface;
 using System;
@@ -12,29 +13,62 @@ namespace Otokoneko.Plugins.Manhuagui
 {
     public partial class ManhuaguiDownloader : IMetadataScraper
     {
-        private const string QueryBase = "https://www.mhgui.com/s/{0}.html";
+        private const string QueryBase = BaseUrl + "/s/{0}.html";
 
-        private Regex OtherInfoRe = new Regex(@"(\[[^\]]*\])|(【[^】]*】)");
+        private readonly Regex OtherInfoRe = new Regex(@"(\[[^\]]*\])|(【[^】]*】)|(（[^）]*）)|(\([^\)]*\))");
 
-        public async ValueTask ScrapeMetadata(MangaDetail context)
+        private FixedTokenBucket ScrapeLimiters { get; set; }
+
+        #region
+
+        private int _scrapeIntervalMS;
+        [RequiredParameter(typeof(int), 10000, alias: "限速设置，每两次获取元数据间需要间隔的时间（ms），设置为0则不做限速")]
+        public int ScrapeIntervalMS
         {
-            var title = context.Name;
+            get => _scrapeIntervalMS;
+            set
+            {
+                if (_scrapeIntervalMS == value) return;
+                _scrapeIntervalMS = Math.Max(0, value);
+                ScrapeLimiters = _scrapeIntervalMS == 0 ? null : new FixedTokenBucket(1, 1, _scrapeIntervalMS);
+            }
+        }
 
+        #endregion
+
+        private async ValueTask<HtmlDocument> Search(string title)
+        {
             var queryUrl = string.Format(QueryBase, title);
+
+            while (ScrapeLimiters != null && ScrapeLimiters.ShouldThrottle(1, out var delayTime)) await Task.Delay(delayTime);
+
             var resp = await Client.GetStringAsync(queryUrl);
 
             var htmlDoc = new HtmlDocument();
             htmlDoc.LoadHtml(resp);
 
-            if(htmlDoc.GetElementbyId("PanelNoResult") != null)
+            return htmlDoc.GetElementbyId("PanelNoResult") != null ? null : htmlDoc;
+        }
+
+        public async ValueTask ScrapeMetadata(MangaDetail context)
+        {
+            var title = context.Name.Replace("_", "");
+
+            var htmlDoc = await Search(title);
+
+            if (htmlDoc == null)
             {
                 title = OtherInfoRe.Replace(title, "").Trim();
-                if (string.IsNullOrEmpty(title)) return;
-                queryUrl = string.Format(QueryBase, title);
-                resp = await Client.GetStringAsync(queryUrl);
-                htmlDoc.LoadHtml(resp);
-                if (htmlDoc.GetElementbyId("PanelNoResult") != null) return;
+                htmlDoc = await Search(title);
             }
+
+            if (htmlDoc == null)
+            {
+                title = Chinese.ChineseConverter.ToSimplified(title);
+                htmlDoc = await Search(title);
+            }
+
+            if (htmlDoc == null) return;
 
             var searchResults = htmlDoc.DocumentNode.SelectNodes("//div[@class='book-detail']/dl/dt/a");
 
@@ -46,7 +80,9 @@ namespace Otokoneko.Plugins.Manhuagui
 
             if (string.IsNullOrEmpty(mangaDetailUrl)) return;
 
-            var mangaDetailUri = new Uri(new Uri(QueryBase), mangaDetailUrl);
+            var mangaDetailUri = BaseUrl + mangaDetailUrl;
+
+            while (ScrapeLimiters != null && ScrapeLimiters.ShouldThrottle(1, out var delayTime)) await Task.Delay(delayTime);
 
             var page = await Client.GetStringAsync(mangaDetailUri);
             var detail = ExtractMetadata(page);

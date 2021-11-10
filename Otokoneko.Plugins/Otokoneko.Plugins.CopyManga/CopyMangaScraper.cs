@@ -3,6 +3,7 @@ using Otokoneko.Plugins.Interface;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Otokoneko.Plugins.CopyManga
@@ -12,6 +13,8 @@ namespace Otokoneko.Plugins.CopyManga
         private const string QueryBase = "https://www.copymanga.com/api/kb/web/searchs/comics?offset=0&platform=2&limit=12&q={0}&q_type=";
 
         private const string MangaDetailBase = "https://www.copymanga.com/comic/{0}";
+
+        private readonly Regex OtherInfoRe = new Regex(@"(\[[^\]]*\])|(【[^】]*】)|(（[^）]*）)|(\([^\)]*\))");
 
         #region JsonObject
 
@@ -62,7 +65,16 @@ namespace Otokoneko.Plugins.CopyManga
             var searchResp = JsonConvert.DeserializeObject<SearchResponse>(resp);
             var manga = searchResp.results.list.FirstOrDefault();
 
-            if (manga == null) return;
+            if (manga == null)
+            {
+                url = string.Format(QueryBase, OtherInfoRe.Replace(context.Name, ""));
+                resp = await Client.GetStringAsync(url);
+
+                searchResp = JsonConvert.DeserializeObject<SearchResponse>(resp);
+                manga = searchResp.results.list.FirstOrDefault();
+                
+                if (manga == null) return;
+            }
 
             var mangaUrl = string.Format(MangaDetailBase, manga.path_word);
             var page = await Client.GetStringAsync(mangaUrl);

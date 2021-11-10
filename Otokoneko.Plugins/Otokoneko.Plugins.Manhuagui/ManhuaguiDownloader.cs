@@ -22,7 +22,7 @@ namespace Otokoneko.Plugins.Manhuagui
 
         private static HttpClient Client { get; } = new HttpClient();
 
-        private FixedTokenBucket Limiters { get; set; }
+        private FixedTokenBucket DownloadImageLimiters { get; set; }
 
         #region RequiredParameters
 
@@ -48,7 +48,7 @@ namespace Otokoneko.Plugins.Manhuagui
         public string ImageServer { get; set; }
 
         private int _downloadImageIntervalMS;
-        [RequiredParameter(typeof(int), 10000, alias: "限速设置，每下载两个图片直接需要间隔的时间（ms），设置为0则不做限速")]
+        [RequiredParameter(typeof(int), 10000, alias: "限速设置，每两次下载图片间需要间隔的时间（ms），设置为0则不做限速")]
         public int DownloadImageIntervalMS
         {
             get => _downloadImageIntervalMS;
@@ -56,7 +56,7 @@ namespace Otokoneko.Plugins.Manhuagui
             {
                 if (_downloadImageIntervalMS == value) return;
                 _downloadImageIntervalMS = Math.Max(0, value);
-                Limiters = _downloadImageIntervalMS == 0 ? null : new FixedTokenBucket(1, 1, _downloadImageIntervalMS);
+                DownloadImageLimiters = _downloadImageIntervalMS == 0 ? null : new FixedTokenBucket(1, 1, _downloadImageIntervalMS);
             }
         }
 
@@ -89,6 +89,14 @@ namespace Otokoneko.Plugins.Manhuagui
         private Regex ImgDataJsonRe { get; set; } = new Regex(@"\{.*\}");
 
         private string AlphaBeta { get; set; } = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+        private const string BaseUrl = "http://www.manhuagui.com";
+
+        public ManhuaguiDownloader()
+        {
+            Client.DefaultRequestHeaders.UserAgent.ParseAdd(@"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4688.4 Safari/537.36");
+            Client.DefaultRequestHeaders.Referrer = new Uri(BaseUrl);
+        }
 
         public bool IsLegalUrl(string url, DownloadTaskType downloadTaskType)
         {
@@ -138,7 +146,7 @@ namespace Otokoneko.Plugins.Manhuagui
 
         public async ValueTask<HttpContent> GetImage(string url)
         {
-            while (Limiters != null && Limiters.ShouldThrottle(1, out var delayTime)) await Task.Delay(delayTime);
+            while (DownloadImageLimiters != null && DownloadImageLimiters.ShouldThrottle(1, out var delayTime)) await Task.Delay(delayTime);
 
             var requestMessage = new HttpRequestMessage(HttpMethod.Get, url)
             {

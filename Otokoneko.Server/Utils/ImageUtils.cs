@@ -64,7 +64,23 @@ namespace Otokoneko.Server.Utils
         public static void ZoomImage(Stream inStream, Stream outStream, int maxHeight, int maxWidth)
         {
             using var image = Image.Load(inStream);
-            switch (ChooseMode((double)image.Width / image.Height))
+
+            var mode = ChooseMode((double)image.Width / image.Height);
+
+            if (mode > 0)
+            {
+                var rw = (double)maxWidth / image.Width;
+                var rh = (double)maxHeight / image.Height;
+                var r = Math.Max(rw, rh);
+                if(r <= 1)
+                {
+                    var width = (int)(image.Width * r);
+                    var height = (int)(image.Height * r);
+                    image.Mutate(it => it.Resize(width, height));
+                }
+            }
+
+            switch (mode)
             {
                 case -1:
                     {
@@ -82,19 +98,19 @@ namespace Otokoneko.Server.Utils
                     }
                 case 1:
                     {
-                        var width = (int)Math.Min(image.Width, (double)image.Height * 0.75);
-                        image.Mutate(it => it.Crop(new Rectangle(image.Width - width, 0, (int)width, image.Height)));
+                        var width = (int)Math.Min(image.Width, image.Height * 0.75);
+                        image.Mutate(it => it.Crop(new Rectangle(image.Width - width, 0, width, image.Height)));
                         goto case -1;
                     }
                 case 2:
                     {
-                        var width = (int)Math.Min(image.Width, (double)image.Height * 0.75);
+                        var width = (int)Math.Min(image.Width, image.Height * 0.75);
                         image.Mutate(it => it.Crop(new Rectangle(0, 0, width, image.Height)));
                         goto case -1;
                     }
                 case 3:
                     {
-                        var width = (int)Math.Min(image.Width, (double)image.Height * 0.75);
+                        var width = (int)Math.Min(image.Width, image.Height * 0.75);
                         var x = Math.Max(0, image.Width / 2 - width);
                         image.Mutate(it => it.Crop(new Rectangle(x, 0, width, image.Height)));
                         goto case -1;

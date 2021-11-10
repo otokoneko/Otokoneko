@@ -79,9 +79,11 @@
                         IsReadOnly="True"
                         Text="{Binding Path=UpdateTime}" />
                     <TextBox
+                        MaxWidth="260"
                         HorizontalAlignment="Center"
                         HorizontalContentAlignment="Center"
                         BorderThickness="0"
+                        TextWrapping="Wrap"
                         FontWeight="Bold"
                         Foreground="{DynamicResource MahApps.Brushes.ThemeForeground}"
                         IsReadOnly="True"

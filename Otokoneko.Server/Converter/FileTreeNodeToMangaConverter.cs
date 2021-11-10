@@ -20,7 +20,7 @@ namespace Otokoneko.Server.Converter
             Title = _manga.Title,
             ObjectId = _manga.ObjectId,
             Aliases = _manga.Aliases,
-            Chapters = _manga.Chapters,
+            Chapters = _manga.Chapters.OrderBy(chapter => chapter.ChapterClass, StringComparison.OrdinalIgnoreCase.WithNaturalSort()).ToList(),
             Cover = _manga.Cover,
             CoverId = _manga.CoverId,
             CreateTime = DateTime.Now,

@@ -277,7 +277,7 @@ namespace Otokoneko.Server.ScheduleTaskManage
             }
             catch (Exception e)
             {
-                Logger.Warn(e);
+                Logger.Warn($"Scan library {scanLibraryTask.Name} fail", e);
                 scanLibraryTask.Update(TaskStatus.Fail);
                 await SendExceptionMessage(scanLibraryTask.Name, e.Message);
             }
@@ -286,11 +286,25 @@ namespace Otokoneko.Server.ScheduleTaskManage
 
     public class ScanMangaTaskHandler: ITaskHandler<ScanMangaTask>
     {
+        private System.Timers.Timer ReleaseMemoryTimer;
         public ILog Logger { get; set; }
         public MangaManager MangaManager { get; set; }
         public LibraryManager LibraryManager { get; set; }
         public MessageManager MessageManager { get; set; }
         public FileTreeNodeToMangaConverter FileTreeNodeToMangaConverter { get; set; }
+
+        public ScanMangaTaskHandler()
+        {
+            ReleaseMemoryTimer = new System.Timers.Timer
+            {
+                AutoReset = false,
+                Enabled = true
+            };
+            ReleaseMemoryTimer.Elapsed += (s, e) =>
+            {
+                ImageUtils.ReleaseMemory();
+            };
+        }
 
         private async ValueTask CalculateImageSize(List<Image> images)
         {
@@ -321,6 +335,7 @@ namespace Otokoneko.Server.ScheduleTaskManage
                     if (manga.Cover == null)
                     {
                         coverPath = LibraryManager.GenerateThumbnail(manga.Chapters.First().Images.First().Path);
+                        ReleaseMemoryTimer.Interval = 10 * 60 * 1000;
                         manga.Cover = FileTreeNodeToMangaConverter.CreateImage(coverPath);
                         manga.CoverId = manga.Cover.ObjectId;
                     }
@@ -378,7 +393,7 @@ namespace Otokoneko.Server.ScheduleTaskManage
             }
             catch (Exception e)
             {
-                Logger.Warn(e);
+                Logger.Warn($"Scan manga {scanMangaTask.Name} fail", e);
                 scanMangaTask.Update(TaskStatus.Fail);
             }
         }

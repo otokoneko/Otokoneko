@@ -80,6 +80,7 @@
                     CornerRadius="18">
                     <Grid>
                         <TextBox
+                            DataContext="{Binding NavigationService.SearchService}"
                             Name="SearchTextBox"
                             MinWidth="400"
                             Margin="10,3,35,3"
@@ -140,7 +141,7 @@
                         Height="240"
                         Background="#333333"
                         ItemContainerStyle="{StaticResource NoFocusListBox}"
-                        ItemsSource="{Binding SearchHelper}"
+                        ItemsSource="{Binding NavigationService.SearchService.SearchHelper}"
                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                         ScrollViewer.VerticalScrollBarVisibility="Auto">
                         <ListBox.ItemsPanel>
@@ -187,7 +188,7 @@
                         Height="240"
                         Background="#333333"
                         ItemContainerStyle="{StaticResource NoFocusListBox}"
-                        ItemsSource="{Binding SearchHistory}"
+                        ItemsSource="{Binding NavigationService.SearchService.SearchHistory}"
                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                         ScrollViewer.VerticalScrollBarVisibility="Auto">
                         <ListBox.ItemTemplate>

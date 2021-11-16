@@ -17,7 +17,7 @@ namespace Otokoneko.Client.WPFClient.ViewModel
 
     public abstract class BaseViewModel : INotifyPropertyChanged
     {
-        protected static Otokoneko.Client.Model Model { get; } = Otokoneko.Client.Model.Instance;
+        protected static Model Model { get; } = Otokoneko.Client.Model.Instance;
 
         public event PropertyChangedEventHandler PropertyChanged;
 

@@ -233,6 +233,7 @@ namespace Otokoneko.Client.WPFClient.ViewModel
         {
             if (Loaded) return;
             Loaded = true;
+            NavigationService.SearchService.SetKeyword(Query.QueryString);
             await Search();
         }
     }

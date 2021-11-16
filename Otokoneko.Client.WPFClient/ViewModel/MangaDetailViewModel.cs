@@ -299,10 +299,12 @@ namespace Otokoneko.Client.WPFClient.ViewModel
                         ? ChangeMangaTags
                         : new AsyncCommand(async () =>
                         {
+                            var keywords = $"${tag.Name}$";
+                            NavigationService.SearchService.NewSearch(keywords);
                             NavigationService.Navigate(
                                 new MangaSearchResultViewModel(
                                     NavigationService,
-                                    $"${tag.Name}$",
+                                    keywords,
                                     QueryType.Keyword));
                         })
                 });

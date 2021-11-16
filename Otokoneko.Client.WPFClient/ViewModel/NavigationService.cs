@@ -28,6 +28,13 @@ namespace Otokoneko.Client.WPFClient.ViewModel
         public bool ForwardEnable => _forwardStack.Count != 0;
         public bool BackwardEnable => _backwardStack.Count != 0;
 
+        public SearchServiceViewModel SearchService { get; }
+
+        public NavigationService()
+        {
+            SearchService = new SearchServiceViewModel(this);
+        }
+
         public void Refresh()
         {
             var state = _selectedViewModel.GetState();

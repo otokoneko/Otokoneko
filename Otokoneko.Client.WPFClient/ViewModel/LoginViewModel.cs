@@ -105,7 +105,7 @@ namespace Otokoneko.Client.WPFClient.ViewModel
 
     class LoginViewModel : BaseViewModel
     {
-        private Otokoneko.Client.Model Model { get; } = Otokoneko.Client.Model.Instance;
+        private Model Model { get; } = Otokoneko.Client.Model.Instance;
 
         public Action CloseWindow { get; set; }
 

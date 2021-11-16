@@ -20,12 +20,12 @@ namespace Otokoneko.Client.WPFClient.View
             e.Handled = true;
             if (sender is Border item)
             {
-                ((DisplayTag) item.DataContext).ClickCommand?.Execute(null);
+                ((DisplayTag)item.DataContext).ClickCommand?.Execute(null);
             }
 
             if (sender is Rectangle rectangle)
             {
-                ((dynamic) DataContext).RemoveSearchHistory((string) rectangle.DataContext);
+                ((dynamic)DataContext).RemoveSearchHistory((string)rectangle.DataContext);
             }
 
             if (sender is TextBlock textBox)

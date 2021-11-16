@@ -442,6 +442,13 @@ namespace Otokoneko.Server.MangaManage
             return manga;
         }
 
+        public async ValueTask<List<long>> GetAllMangaPathId()
+        {
+            using var context = Context;
+            var mangaService = new MangaService(context);
+            return await mangaService.GetAllPathIds();
+        }
+
         public async ValueTask<List<long>> GetMangaIdByFileTreeNodeId(List<long> fileTreeNodeId)
         {
             using var context = Context;

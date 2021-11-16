@@ -13,8 +13,8 @@ namespace Otokoneko.Server.LibraryManage
         public bool DeleteTree(FileTreeNode root);
         public bool StoreTree(FileTreeNode root);
         public bool Contains(long objectId);
+        public List<long> Contains(List<long> objectIds);
         public FileTreeNode GetTree(long rootId);
-        public List<long> GetAllNodeObjectId();
         public void Close();
     }
 
@@ -109,6 +109,11 @@ namespace Otokoneko.Server.LibraryManage
             return _items.Contains(objectId);
         }
 
+        public List<long> Contains(List<long> objectIds)
+        {
+            return _items.Intersect(objectIds).ToList();
+        }
+
         public FileTreeNode GetTree(long rootId)
         {
             var deleted = new HashSet<FileTreeNode>();
@@ -139,11 +144,6 @@ namespace Otokoneko.Server.LibraryManage
             Delete(deleted);
 
             return mapper.TryGetValue(rootId, out var tree) ? tree : null;
-        }
-
-        public List<long> GetAllNodeObjectId()
-        {
-            return _items.ToList();
         }
 
         public void Close()

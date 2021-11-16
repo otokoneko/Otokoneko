@@ -727,7 +727,8 @@ namespace Otokoneko.Server
                     false);
             }
 
-            var mangaPathIds = library.Repository.GetAllNodeObjectId();
+            var mangaPathIds = await MangaManager.GetAllMangaPathId();
+            mangaPathIds = library.Repository.Contains(mangaPathIds);
             var mangaIds = await MangaManager.GetMangaIdByFileTreeNodeId(mangaPathIds);
             await MangaManager.DeleteMangas(mangaIds);
 

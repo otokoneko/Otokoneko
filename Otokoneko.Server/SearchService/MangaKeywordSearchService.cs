@@ -98,7 +98,7 @@ namespace Otokoneko.Server.SearchService
         private static readonly Parser<char, char> Exclude = Char('-');
 
         private static readonly Parser<char, string> String =
-            Token(c => c != '$' && c != '(')
+            Token(c => c != '$')
                 .AtLeastOnceString();
 
         private static readonly Parser<char, ISearchToken> Keyword =
@@ -277,6 +277,7 @@ namespace Otokoneko.Server.SearchService
             {
                 if (includeTags.Any(it => it == null)) return new List<long>();
                 var includeTagSearchResult = await mangaTagMappingService.GetMangasWithAllTags(includeTags.Select(it=>it.Key).Distinct().ToList());
+                includeTagSearchResult.Reverse();
                 result = result.Intersect(includeTagSearchResult).ToList();
                 if (result.Count == 0) return result;
             }
@@ -284,16 +285,18 @@ namespace Otokoneko.Server.SearchService
             if (excludeTags.Count != 0)
             {
                 var excludeTagSearchResult = await mangaTagMappingService.GetMangasWithoutAnyTags(excludeTags.Select(it => it.Key).Distinct().ToList());
+                excludeTagSearchResult.Reverse();
                 result = result.Intersect(excludeTagSearchResult).ToList();
                 if (result.Count == 0) return result;
             }
 
             foreach (var orToken in orArray)
             {
-                result = result.Intersect(
-                    await mangaTagMappingService.GetMangasWithAnyTags(orToken.Children.OfType<TagToken>()
-                        .Where(it=>it.Tag!=null)
-                        .Select(it => it.Tag.Key).ToList())).ToList();
+                var orTagSearchResult = await mangaTagMappingService.GetMangasWithAnyTags(orToken.Children.OfType<TagToken>()
+                        .Where(it => it.Tag != null)
+                        .Select(it => it.Tag.Key).ToList());
+                orTagSearchResult.Reverse();
+                result = result.Intersect(orTagSearchResult).ToList();
                 if (result.Count == 0) return result;
             }
 

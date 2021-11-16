@@ -32,6 +32,11 @@ namespace Otokoneko.Server.MangaManage
             return await Context.Queryable<Manga>().Select(it => it.ObjectId).ToListAsync();
         }
 
+        public async ValueTask<List<long>> GetAllPathIds()
+        {
+            return await Context.Queryable<Manga>().Select(it => it.PathId).ToListAsync();
+        }
+
         public async ValueTask<List<Manga>> GetMangas(List<long> objectIds, int offset, int limit, OrderType orderType, bool asc)
         {
             if (orderType == OrderType.Default)
@@ -396,13 +401,13 @@ namespace Otokoneko.Server.MangaManage
 
         public async ValueTask<List<long>> GetMangaIdsByUserId(long userId)
         {
-            return await Context
+            var result = await Context
                 .Queryable<ReadProgress>()
                 .Where(it => it.UserId == userId)
                 .OrderBy(it => it.ReadTime, OrderByType.Desc)
                 .Select(it => it.MangaId)
-                .Distinct()
                 .ToListAsync();
+            return result.Distinct().ToList();
         }
     }
 

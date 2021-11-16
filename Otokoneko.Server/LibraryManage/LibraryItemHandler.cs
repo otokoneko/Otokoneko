@@ -266,11 +266,16 @@ namespace Otokoneko.Server.LibraryManage
 
         public Stream OpenRead(Stream input, string path)
         {
-            var options = new ReaderOptions { LookForHeader = true, LeaveStreamOpen = true };
+            var options = new ReaderOptions { LookForHeader = true, LeaveStreamOpen = false };
             var archive = ArchiveFactory.Open(input, options);
-            path = archive.Type != ArchiveType.Rar ? path.Replace('\\', '/') : path.Replace('/', '\\');
-            var entry = archive.Entries.Single(e => e.Key == path);
+            path = path.Replace('\\', '/');
+            Console.WriteLine(path);
+            var entry = archive.Entries.Single(e => e.Key.Replace('\\', '/') == path);
             var stream = entry.OpenEntryStream();
+            using var fs = File.OpenWrite(@"C:\Users\dzn\Downloads\test.png");
+            stream.CopyTo(fs);
+            stream.Close();
+            stream = entry.OpenEntryStream();
             return new ArchiveStream(stream, archive);
         }
 

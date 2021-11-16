@@ -33,7 +33,7 @@ namespace Otokoneko.Server
             FileSystemHandler.Register();
             ArchiveFileHandler.Register();
             EpubFileHandler.Register();
-            PdfFileHandler.Register();
+            // PdfFileHandler.Register();
         }
 
         public LibraryManager(ILog logger)
@@ -225,7 +225,16 @@ namespace Otokoneko.Server
 
         public FileTreeNode GeFileTreeNode(long objectId)
         {
-            return (from library in _libraries.Values where library.Repository.Contains(objectId) select library.Repository.Get(objectId)).FirstOrDefault();
+            foreach (var library in _libraries.Values.Where(library => library.Repository.Contains(objectId)))
+            {
+                var node = library.Repository.Get(objectId);
+                if (node != null)
+                {
+                    return node;
+                }
+            }
+
+            return null;
         }
 
         public bool StoreFileTree(FileTreeNode node)

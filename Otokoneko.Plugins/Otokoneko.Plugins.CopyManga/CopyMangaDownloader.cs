@@ -6,9 +6,9 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Bert.RateLimiters;
 using HtmlAgilityPack;
 using Newtonsoft.Json;
+using Otokoneko.Plugins.Base.Handler;
 using Otokoneko.Plugins.Interface;
 
 namespace Otokoneko.Plugins.CopyManga
@@ -17,13 +17,16 @@ namespace Otokoneko.Plugins.CopyManga
     {
         public string Name => nameof(CopyManga);
         public string Author => "Otokoneko";
-        public Version Version => new Version(1, 1, 4);
+        public Version Version => new Version(1, 1, 5);
 
         private string ChapterApiBase { get; } = "https://www.copymanga.com/comic/{0}/chapter/{1}";
 
-        private static HttpClient Client { get; } = new HttpClient();
+        private static RateLimitHandler RateLimitHandler = new RateLimitHandler(new TimeoutHandler(new HttpClientHandler()));
 
-        private FixedTokenBucket Limiters { get; set; }
+        private static HttpClient Client { get; } = new HttpClient(RateLimitHandler)
+        {
+            Timeout = TimeSpan.FromMinutes(5)
+        };
 
         #region RequiredParameters
 
@@ -54,17 +57,11 @@ namespace Otokoneko.Plugins.CopyManga
         [RequiredParameter(typeof(string), "status", alias: "标签类别“连载状态”的默认名称")]
         public string TagTypeStatusName { get; set; }
 
-        private int _downloadImageIntervalMS;
-        [RequiredParameter(typeof(int), 250, alias: "限速设置，每下载两个图片直接需要间隔的时间（ms），设置为0则不做限速")]
-        public int DownloadImageIntervalMS
+        [RequiredParameter(typeof(int), 250, alias: "限速设置，两次请求之间需要间隔的时间（ms），设置为0则不做限速")]
+        public int RequestIntervalMS
         {
-            get => _downloadImageIntervalMS;
-            set
-            {
-                if (_downloadImageIntervalMS == value) return;
-                _downloadImageIntervalMS = Math.Max(0, value);
-                Limiters = _downloadImageIntervalMS == 0 ? null : new FixedTokenBucket(1, 1, _downloadImageIntervalMS);
-            }
+            get => RateLimitHandler.RequestIntervalMS;
+            set => RateLimitHandler.RequestIntervalMS = value;
         }
 
         #endregion
@@ -262,7 +259,6 @@ namespace Otokoneko.Plugins.CopyManga
 
         public async ValueTask<HttpContent> GetImage(string url)
         {
-            while (Limiters != null && Limiters.ShouldThrottle(1, out var delayTime)) await Task.Delay(delayTime);
             var response = await Client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
             return response.Content;
         }

@@ -1,5 +1,4 @@
-﻿using Bert.RateLimiters;
-using HtmlAgilityPack;
+﻿using HtmlAgilityPack;
 using LZStringCSharp;
 using Newtonsoft.Json;
 using Otokoneko.Plugins.Interface;
@@ -9,6 +8,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Otokoneko.Plugins.Base.Handler;
 
 namespace Otokoneko.Plugins.Manhuagui
 {
@@ -18,11 +18,15 @@ namespace Otokoneko.Plugins.Manhuagui
 
         public string Author => "Otokoneko";
 
-        public Version Version => new Version(1, 0, 1);
+        public Version Version => new Version(1, 0, 2);
 
-        private static HttpClient Client { get; } = new HttpClient();
 
-        private FixedTokenBucket DownloadImageLimiters { get; set; }
+        private static RateLimitHandler RateLimitHandler = new RateLimitHandler(new TimeoutHandler(new HttpClientHandler()));
+
+        private static HttpClient Client { get; } = new HttpClient(RateLimitHandler)
+        {
+            Timeout = TimeSpan.FromMinutes(5)
+        };
 
         #region RequiredParameters
 
@@ -44,20 +48,14 @@ namespace Otokoneko.Plugins.Manhuagui
         [RequiredParameter(typeof(string), "status", alias: "标签类别“连载状态”的默认名称")]
         public string TagTypeStatusName { get; set; }
 
-        [RequiredParameter(typeof(string), "https://i.hamreus.com", alias: "图片服务器")]
+        [RequiredParameter(typeof(string), "http://i.hamreus.com", alias: "图片服务器")]
         public string ImageServer { get; set; }
 
-        private int _downloadImageIntervalMS;
-        [RequiredParameter(typeof(int), 10000, alias: "限速设置，每两次下载图片间需要间隔的时间（ms），设置为0则不做限速")]
-        public int DownloadImageIntervalMS
+        [RequiredParameter(typeof(int), 10000, alias: "限速设置，两次请求之间需要间隔的时间（ms），设置为0则不做限速")]
+        public int RequestIntervalMS
         {
-            get => _downloadImageIntervalMS;
-            set
-            {
-                if (_downloadImageIntervalMS == value) return;
-                _downloadImageIntervalMS = Math.Max(0, value);
-                DownloadImageLimiters = _downloadImageIntervalMS == 0 ? null : new FixedTokenBucket(1, 1, _downloadImageIntervalMS);
-            }
+            get => RateLimitHandler.RequestIntervalMS;
+            set => RateLimitHandler.RequestIntervalMS = value;
         }
 
         #endregion
@@ -146,8 +144,6 @@ namespace Otokoneko.Plugins.Manhuagui
 
         public async ValueTask<HttpContent> GetImage(string url)
         {
-            while (DownloadImageLimiters != null && DownloadImageLimiters.ShouldThrottle(1, out var delayTime)) await Task.Delay(delayTime);
-
             var requestMessage = new HttpRequestMessage(HttpMethod.Get, url)
             {
                 Headers =

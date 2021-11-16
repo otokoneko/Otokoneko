@@ -11,9 +11,17 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Otokoneko.Plugins.CopyManga
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Otokoneko.Plugins.NHentai", "Otokoneko.Plugins.NHentai\Otokoneko.Plugins.NHentai.csproj", "{877A2952-80F1-47AE-B229-E76652EB1A24}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Otokoneko.Plugins.Manhuagui", "Otokoneko.Plugins.Manhuagui\Otokoneko.Plugins.Manhuagui.csproj", "{20F3799D-650D-457B-B573-911E3D2E84BE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Otokoneko.Plugins.Manhuagui", "Otokoneko.Plugins.Manhuagui\Otokoneko.Plugins.Manhuagui.csproj", "{20F3799D-650D-457B-B573-911E3D2E84BE}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Otokoneko.Plugins.Base", "Otokoneko.Plugins.Base\Otokoneko.Plugins.Base.shproj", "{9FF64158-5822-485A-B82F-606037300004}"
 EndProject
 Global
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		Otokoneko.Plugins.Base\Otokoneko.Plugins.Base.projitems*{20f3799d-650d-457b-b573-911e3d2e84be}*SharedItemsImports = 5
+		Otokoneko.Plugins.Base\Otokoneko.Plugins.Base.projitems*{63a7688c-a3f8-4626-9424-3183bcb37438}*SharedItemsImports = 5
+		Otokoneko.Plugins.Base\Otokoneko.Plugins.Base.projitems*{9ff64158-5822-485a-b82f-606037300004}*SharedItemsImports = 13
+		Otokoneko.Plugins.Base\Otokoneko.Plugins.Base.projitems*{b9962df8-187c-42dc-aef9-f138aa482a4b}*SharedItemsImports = 5
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU

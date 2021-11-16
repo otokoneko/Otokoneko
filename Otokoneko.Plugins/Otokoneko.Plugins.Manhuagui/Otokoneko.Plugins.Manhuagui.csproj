@@ -11,6 +11,11 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <DebugType>none</DebugType>
     <DebugSymbols>false</DebugSymbols>
+    <DefineConstants>$(DefineConstants)TRACE;ENABLE_RATELIMITER</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>$(DefineConstants)TRACE;ENABLE_RATELIMITER</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
@@ -25,5 +30,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Otokoneko.Plugins.Interface\Otokoneko.Plugins.Interface.csproj" />
   </ItemGroup>
+
+  <Import Project="..\Otokoneko.Plugins.Base\Otokoneko.Plugins.Base.projitems" Label="Shared" />
 
 </Project>

@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects Condition="'$(MSBuildVersion)' == '' Or '$(MSBuildVersion)' &lt; '16.0'">$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>9ff64158-5822-485a-b82f-606037300004</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>Otokoneko.Plugins.Base</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Handler\RateLimiterHandler.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Handler\RetryHandler.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Handler\TimeoutHandler.cs" />
+  </ItemGroup>
+</Project>

@@ -1,11 +1,7 @@
-﻿using Bert.RateLimiters;
-using F23.StringSimilarity;
+﻿using F23.StringSimilarity;
 using HtmlAgilityPack;
 using Otokoneko.Plugins.Interface;
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -17,30 +13,9 @@ namespace Otokoneko.Plugins.Manhuagui
 
         private readonly Regex OtherInfoRe = new Regex(@"(\[[^\]]*\])|(【[^】]*】)|(（[^）]*）)|(\([^\)]*\))");
 
-        private FixedTokenBucket ScrapeLimiters { get; set; }
-
-        #region
-
-        private int _scrapeIntervalMS;
-        [RequiredParameter(typeof(int), 10000, alias: "限速设置，每两次获取元数据间需要间隔的时间（ms），设置为0则不做限速")]
-        public int ScrapeIntervalMS
-        {
-            get => _scrapeIntervalMS;
-            set
-            {
-                if (_scrapeIntervalMS == value) return;
-                _scrapeIntervalMS = Math.Max(0, value);
-                ScrapeLimiters = _scrapeIntervalMS == 0 ? null : new FixedTokenBucket(1, 1, _scrapeIntervalMS);
-            }
-        }
-
-        #endregion
-
         private async ValueTask<HtmlDocument> Search(string title)
         {
             var queryUrl = string.Format(QueryBase, title);
-
-            while (ScrapeLimiters != null && ScrapeLimiters.ShouldThrottle(1, out var delayTime)) await Task.Delay(delayTime);
 
             var resp = await Client.GetStringAsync(queryUrl);
 
@@ -58,14 +33,22 @@ namespace Otokoneko.Plugins.Manhuagui
 
             if (htmlDoc == null)
             {
-                title = OtherInfoRe.Replace(title, "").Trim();
-                htmlDoc = await Search(title);
+                var newTitle = OtherInfoRe.Replace(title, "").Trim();
+                if (title != newTitle)
+                {
+                    title = newTitle;
+                    htmlDoc = await Search(title);
+                }
             }
 
             if (htmlDoc == null)
             {
-                title = Chinese.ChineseConverter.ToSimplified(title);
-                htmlDoc = await Search(title);
+                var newTitle = Chinese.ChineseConverter.ToSimplified(title);
+                if (title != newTitle)
+                {
+                    title = newTitle;
+                    htmlDoc = await Search(title);
+                }
             }
 
             if (htmlDoc == null) return;
@@ -81,8 +64,6 @@ namespace Otokoneko.Plugins.Manhuagui
             if (string.IsNullOrEmpty(mangaDetailUrl)) return;
 
             var mangaDetailUri = BaseUrl + mangaDetailUrl;
-
-            while (ScrapeLimiters != null && ScrapeLimiters.ShouldThrottle(1, out var delayTime)) await Task.Delay(delayTime);
 
             var page = await Client.GetStringAsync(mangaDetailUri);
             var detail = ExtractMetadata(page);

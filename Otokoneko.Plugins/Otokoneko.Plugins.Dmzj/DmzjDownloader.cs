@@ -6,46 +6,19 @@ using System.Linq;
 using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
 using HtmlAgilityPack;
 using Newtonsoft.Json;
 using Dmzj;
+using Otokoneko.Plugins.Base.Handler;
 
 namespace Otokoneko.Plugins.Dmzj
 {
-    public class RetryHandler : DelegatingHandler
-    {
-        private const int MaxRetries = 3;
-
-        public RetryHandler(HttpMessageHandler innerHandler)
-            : base(innerHandler)
-        { }
-
-        protected override async Task<HttpResponseMessage> SendAsync(
-            HttpRequestMessage request,
-            CancellationToken cancellationToken)
-        {
-            for (var i = 0; i < MaxRetries; i++)
-            {
-                var response = await base.SendAsync(request, cancellationToken);
-                if (response.IsSuccessStatusCode)
-                {
-                    return response;
-                }
-
-                await Task.Delay(new Random().Next(1000, 10000), cancellationToken);
-            }
-
-            return null;
-        }
-    }
-
     public partial class DmzjDownloader : IMangaDownloader
     {
         public string Name => nameof(Dmzj);
         public string Author => "Otokoneko";
-        public Version Version => new Version(1, 0, 5);
+        public Version Version => new Version(1, 0, 6);
         private static string MangaV1ApiBase { get; } = "https://api.dmzj.com/dynamic/comicinfo/{0}.json";
         private static string MangaV4ApiBase { get; } = "https://nnv4api.muwai.com/comic/detail/{0}?uid=1";
         private static string ChapterApiBase { get; } = "https://m.dmzj.com/chapinfo/{0}/{1}.html";

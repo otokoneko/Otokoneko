@@ -33,9 +33,20 @@ namespace Otokoneko.Server.Utils
             }
         }
 
+        private static System.Timers.Timer ReleaseMemoryTimer;
+
         static ImageUtils()
         {
             Configuration.Default.MemoryAllocator = ArrayPoolMemoryAllocator.CreateWithModeratePooling();
+            ReleaseMemoryTimer = new System.Timers.Timer
+            {
+                AutoReset = false,
+                Enabled = true
+            };
+            ReleaseMemoryTimer.Elapsed += (s, e) =>
+            {
+                ReleaseMemory();
+            };
         }
 
         private static readonly List<double> ZoomModeThreshold = new List<double>()
@@ -124,7 +135,6 @@ namespace Otokoneko.Server.Utils
             try
             {
                 var imageInfo = await Image.IdentifyAsync(imageStream);
-
                 return new Tuple<bool, int, int>(true, imageInfo.Width, imageInfo.Height);
             }
             catch
@@ -151,7 +161,8 @@ namespace Otokoneko.Server.Utils
                 imageStream.Seek(0, SeekOrigin.Begin);
                 imageStream.Read(cache, 0, (int)length);
                 using var webp = new WebPObject(cache);
-                if(webp.GetImage() != null)
+                using var image = webp.GetImage();
+                if (image != null)
                 {
                     format = WebpFormat.Instance;
                     return true;
@@ -159,6 +170,7 @@ namespace Otokoneko.Server.Utils
             }
             catch
             {
+                format = null;
             }
             return false;
         }
@@ -166,6 +178,11 @@ namespace Otokoneko.Server.Utils
         public static void ReleaseMemory()
         {
             Configuration.Default.MemoryAllocator.ReleaseRetainedResources();
+        }
+
+        public static void ReleaseMemory(TimeSpan delayTime)
+        {
+            ReleaseMemoryTimer.Interval = delayTime.TotalMilliseconds;
         }
     }
 }

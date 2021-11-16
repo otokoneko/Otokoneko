@@ -26,10 +26,10 @@ namespace Otokoneko.Server.SearchService
             }
             else
             {
-                var result = TagFtsIndexService.Search(queryString);
-                result = await tagService.GetTagKeys(it => result.Contains(it.ObjectId));
+                var ftsResult = TagFtsIndexService.Search(queryString);
+                var result = await tagService.GetTagKeys(it => ftsResult.Contains(it.ObjectId));
                 if (typeId > 0) result = await tagService.GetTagIds(it => result.Contains(it.ObjectId) && it.TypeId == typeId);
-                return result.OrderBy(it => result.IndexOf(it)).ToList();
+                return result.OrderBy(it => ftsResult.IndexOf(it)).ToList();
             }
         }
     }

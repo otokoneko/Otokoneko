@@ -129,19 +129,6 @@ namespace Otokoneko.Server.ScheduleTaskManage
             Name = name;
         }
 
-        protected override void OnUpdated()
-        {
-            if (Status == TaskStatus.Success || Status == TaskStatus.Fail)
-            {
-                Children.Clear();
-                Children = new Otokoneko.Utils.ThreadSafeList<ScheduleTask>();
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
-                GC.Collect();
-            }
-            base.OnUpdated();
-        }
-
         public override bool Equals(object obj)
         {
             return obj is ScanLibraryTask e && LibraryId == e.LibraryId;

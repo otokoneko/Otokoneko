@@ -21,7 +21,7 @@ namespace Otokoneko.Server.ScheduleTaskManage
     public interface ITaskHandler<in T>
     where T:ScheduleTask
     {
-        public ValueTask Execute(T task);
+        public ValueTask<TaskStatus> Execute(T task);
     }
 
     public class DownloadMangaTaskHandler : ITaskHandler<DownloadMangaScheduleTask>
@@ -39,21 +39,19 @@ namespace Otokoneko.Server.ScheduleTaskManage
             await MessageManager.Send(message, new HashSet<UserAuthority>() {UserAuthority.Admin, UserAuthority.Root});
         }
 
-        public async ValueTask Execute(DownloadMangaScheduleTask downloadMangaTask)
+        public async ValueTask<TaskStatus> Execute(DownloadMangaScheduleTask downloadMangaTask)
         {
             var downloader = PluginManager.MangaDownloaders.FirstOrDefault(it => it.IsLegalUrl(downloadMangaTask.MangaUrl, DownloadTaskType.Manga));
             if (downloader == null)
             {
-                downloadMangaTask.Update(TaskStatus.Fail);
                 await SendExceptionMessage(downloadMangaTask.Name, "不存在匹配该链接的下载器");
-                return;
+                return TaskStatus.Fail;
             }
 
             if (!Directory.Exists(downloadMangaTask.LibraryPath))
             {
-                downloadMangaTask.Update(TaskStatus.Fail);
                 await SendExceptionMessage(downloadMangaTask.Name, $"下载路径{downloadMangaTask.LibraryPath}不存在");
-                return;
+                return TaskStatus.Fail;
             }
             try
             {
@@ -86,13 +84,13 @@ namespace Otokoneko.Server.ScheduleTaskManage
                 }
 
                 downloadMangaTask.Counter = new AtomicCounter(0, downloadMangaTask.Children.Count);
-                downloadMangaTask.Update(TaskStatus.Running);
+                return TaskStatus.Running;
             }
             catch (Exception e)
             {
                 Logger.Warn($"Download {downloadMangaTask.MangaUrl} fail", e);
-                downloadMangaTask.Update(TaskStatus.Fail);
                 await SendExceptionMessage(downloadMangaTask.Name, e.Message);
+                return TaskStatus.Fail;
             }
         }
     }
@@ -102,13 +100,12 @@ namespace Otokoneko.Server.ScheduleTaskManage
         public PluginManager PluginManager { get; set; }
         public ILog Logger { get; set; }
 
-        public async ValueTask Execute(DownloadChapterScheduleTask downloadChapterTask)
+        public async ValueTask<TaskStatus> Execute(DownloadChapterScheduleTask downloadChapterTask)
         {
             var downloader = PluginManager.MangaDownloaders.FirstOrDefault(it => it.IsLegalUrl(downloadChapterTask.ChapterUrl, DownloadTaskType.Chapter));
             if (downloader == null)
             {
-                downloadChapterTask.Update(TaskStatus.Fail);
-                return;
+                return TaskStatus.Fail;
             }
             try
             {
@@ -116,8 +113,7 @@ namespace Otokoneko.Server.ScheduleTaskManage
                 if (Directory.Exists(downloadChapterTask.ChapterPath) && 
                     !File.Exists(Path.Combine(downloadChapterTask.ChapterPath, ".ignore")))
                 {
-                    downloadChapterTask.Update(TaskStatus.Success);
-                    return;
+                    return TaskStatus.Success;
                 }
                 Directory.CreateDirectory(downloadChapterTask.ChapterPath);
                 File.Create(Path.Combine(downloadChapterTask.ChapterPath, ".ignore")).Close();
@@ -131,36 +127,28 @@ namespace Otokoneko.Server.ScheduleTaskManage
                 }
 
                 downloadChapterTask.Counter = new AtomicCounter(0, downloadChapterTask.Children.Count);
-                downloadChapterTask.Update(TaskStatus.Running);
+                return TaskStatus.Running;
             }
             catch (Exception e)
             {
                 Logger.Warn($"Download {downloadChapterTask.ChapterUrl} fail", e);
-                downloadChapterTask.Update(TaskStatus.Fail);
+                return TaskStatus.Fail;
             }
         }
     }
 
     public class DownloadImageTaskHandler : ITaskHandler<DownloadImageScheduleTask>
     {
-        private System.Timers.Timer ReleaseMemoryTimer;
         public PluginManager PluginManager { get; set; }
         public ILog Logger { get; set; }
 
-        public DownloadImageTaskHandler()
+        private long GetFileSize(string filename)
         {
-            ReleaseMemoryTimer = new System.Timers.Timer
-            {
-                AutoReset = false,
-                Enabled = true
-            };
-            ReleaseMemoryTimer.Elapsed += (s, e) =>
-            {
-                ImageUtils.ReleaseMemory();
-            };
+            var info = new FileInfo(filename);
+            return info.Length;
         }
 
-        public async ValueTask Execute(DownloadImageScheduleTask downloadImageTask)
+        public async ValueTask<TaskStatus> Execute(DownloadImageScheduleTask downloadImageTask)
         {
             var downloader = PluginManager.MangaDownloaders.FirstOrDefault(it => it.IsLegalUrl(downloadImageTask.ImageUrl, DownloadTaskType.Image));
             var samePool = ArrayPool<byte>.Shared;
@@ -178,14 +166,13 @@ namespace Otokoneko.Server.ScheduleTaskManage
                 var existsFile = Directory.GetFiles(parent, fileName + ".*").FirstOrDefault();
                 if (!downloadImageTask.CouldCover && existsFile != null)
                 {
-                    downloadImageTask.Update(TaskStatus.Success);
-                    return;
+                    return TaskStatus.Success;
                 }
 
                 using var content = await downloader.GetImage(downloadImageTask.ImageUrl);
                 long length = content.Headers.ContentLength ?? 0;
                 
-                if(length > 0)
+                if (length > 0)
                 {
                     buffer = samePool.Rent((int)length);
                     stream = new MemoryStream(buffer);
@@ -204,7 +191,13 @@ namespace Otokoneko.Server.ScheduleTaskManage
                     throw new TimeoutException();
                 }
                 length = stream.Position;
-                ReleaseMemoryTimer.Interval = 10 * 60 * 1000;
+
+                if (existsFile != null && GetFileSize(existsFile) == length)
+                {
+                    return TaskStatus.Success;
+                }
+
+                ImageUtils.ReleaseMemory(TimeSpan.FromMinutes(10));
                 if (!ImageUtils.ImageCheck(stream, length, out var format))
                 {
                     throw new BadImageFormatException();
@@ -212,12 +205,12 @@ namespace Otokoneko.Server.ScheduleTaskManage
                 await using var fs = File.OpenWrite(existsFile ?? $"{downloadImageTask.ImagePath}.{format.FileExtensions.First()}");
                 fs.SetLength(0);
                 await fs.WriteAsync((buffer ?? stream.GetBuffer()).AsMemory(0, (int)length));
-                downloadImageTask.Update(TaskStatus.Success);
+                return TaskStatus.Success;
             }
             catch (Exception e)
             {
                 Logger.Warn($"Download {downloadImageTask.ImageUrl} fail", e);
-                downloadImageTask.Update(TaskStatus.Fail);
+                return TaskStatus.Fail;
             }
             finally
             {
@@ -252,7 +245,7 @@ namespace Otokoneko.Server.ScheduleTaskManage
             await MessageManager.Send(message, new HashSet<UserAuthority>() {UserAuthority.Admin, UserAuthority.Root});
         }
 
-        public async ValueTask Execute(ScanLibraryTask scanLibraryTask)
+        public async ValueTask<TaskStatus> Execute(ScanLibraryTask scanLibraryTask)
         {
             try
             {
@@ -261,7 +254,7 @@ namespace Otokoneko.Server.ScheduleTaskManage
                 if (library == null)
                 {
                     await SendExceptionMessage(scanLibraryTask.Name, "该库不存在");
-                    return;
+                    return TaskStatus.Fail;
                 }
                 var mangaPaths = LibraryManager.CheckUpdates(scanLibraryTask.LibraryId);
                 var scraper = PluginManager.MetadataScrapers.FirstOrDefault(it => it.Name == library.ScraperName);
@@ -273,55 +266,26 @@ namespace Otokoneko.Server.ScheduleTaskManage
                 scanLibraryTask.Counter = new AtomicCounter(0, scanLibraryTask.Children.Count);
                 await SendSuccessMessage(scanLibraryTask.Name, mangaPaths.Count(it => it.IsNewItem),
                     mangaPaths.Count(it => !it.IsNewItem));
-                scanLibraryTask.Update(TaskStatus.Running);
+                return TaskStatus.Running;
             }
             catch (Exception e)
             {
                 Logger.Warn($"Scan library {scanLibraryTask.Name} fail", e);
-                scanLibraryTask.Update(TaskStatus.Fail);
                 await SendExceptionMessage(scanLibraryTask.Name, e.Message);
+                return TaskStatus.Fail;
             }
         }
     }
 
     public class ScanMangaTaskHandler: ITaskHandler<ScanMangaTask>
     {
-        private System.Timers.Timer ReleaseMemoryTimer;
         public ILog Logger { get; set; }
         public MangaManager MangaManager { get; set; }
         public LibraryManager LibraryManager { get; set; }
         public MessageManager MessageManager { get; set; }
         public FileTreeNodeToMangaConverter FileTreeNodeToMangaConverter { get; set; }
 
-        public ScanMangaTaskHandler()
-        {
-            ReleaseMemoryTimer = new System.Timers.Timer
-            {
-                AutoReset = false,
-                Enabled = true
-            };
-            ReleaseMemoryTimer.Elapsed += (s, e) =>
-            {
-                ImageUtils.ReleaseMemory();
-            };
-        }
-
-        private async ValueTask CalculateImageSize(List<Image> images)
-        {
-            foreach(var image in images)
-            {
-                if (image.Height != 0 && image.Width != 0) continue;
-                var file = image.Path.OpenRead();
-                var (succ, width, height) = await ImageUtils.GetMetadata(file);
-                file.Close();
-                if (!succ) continue;
-
-                image.Height = height;
-                image.Width = width;
-            }
-        }
-
-        public async ValueTask Execute(ScanMangaTask scanMangaTask)
+        public async ValueTask<TaskStatus> Execute(ScanMangaTask scanMangaTask)
         {
             try
             {
@@ -335,7 +299,7 @@ namespace Otokoneko.Server.ScheduleTaskManage
                     if (manga.Cover == null)
                     {
                         coverPath = LibraryManager.GenerateThumbnail(manga.Chapters.First().Images.First().Path);
-                        ReleaseMemoryTimer.Interval = 10 * 60 * 1000;
+                        ImageUtils.ReleaseMemory(TimeSpan.FromMinutes(10));
                         manga.Cover = FileTreeNodeToMangaConverter.CreateImage(coverPath);
                         manga.CoverId = manga.Cover.ObjectId;
                     }
@@ -356,13 +320,13 @@ namespace Otokoneko.Server.ScheduleTaskManage
                         {
                             coverPath.Delete();
                         }
-                        scanMangaTask.Update(TaskStatus.Fail);
+                        return TaskStatus.Fail;
                     }
                     else
                     {
                         LibraryManager.StoreFileTree(scanMangaTask.MangaPath);
                         if (coverPath != null) LibraryManager.StoreFileTree(coverPath);
-                        scanMangaTask.Update(TaskStatus.Success);
+                        return TaskStatus.Success;
                     }
                 }
                 else
@@ -373,12 +337,11 @@ namespace Otokoneko.Server.ScheduleTaskManage
                     if (!success)
                     {
                         Logger.Info($"Update {manga.Title} fail");
-                        scanMangaTask.Update(TaskStatus.Fail);
+                        return TaskStatus.Fail;
                     }
                     else
                     {
                         LibraryManager.StoreFileTree(scanMangaTask.MangaPath);
-                        scanMangaTask.Update(TaskStatus.Success);
 
                         var subscribers = await MangaManager.GetSubscribers(manga.ObjectId);
                         var message = new Message()
@@ -388,13 +351,14 @@ namespace Otokoneko.Server.ScheduleTaskManage
                                 string.Join(", ", chapters.Select(it => it.Title)))
                         };
                         await MessageManager.Send(message, subscribers.ToHashSet());
+                        return TaskStatus.Success;
                     }
                 }
             }
             catch (Exception e)
             {
                 Logger.Warn($"Scan manga {scanMangaTask.Name} fail", e);
-                scanMangaTask.Update(TaskStatus.Fail);
+                return TaskStatus.Fail;
             }
         }
     }

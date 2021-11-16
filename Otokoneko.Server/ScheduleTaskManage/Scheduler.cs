@@ -75,38 +75,30 @@ namespace Otokoneko.Server.ScheduleTaskManage
             {
                 var task = await _waitingScheduleTask.Dequeue();
                 if (task.Status != TaskStatus.Waiting || task.Parent.Status == TaskStatus.Canceled) continue;
-                await Execute(task);
+                var status = await Execute(task);
+                task.Update(status);
                 await Task.Yield();
             }
         }
 
-        private async ValueTask Execute(ScheduleTask task)
+        private async ValueTask<TaskStatus> Execute(ScheduleTask task)
         {
             try
             {
-                switch (task)
+                return task switch
                 {
-                    case DownloadMangaScheduleTask downloadMangaScheduleTask:
-                        await DownloadMangaScheduleTaskHandler.Execute(downloadMangaScheduleTask);
-                        break;
-                    case DownloadChapterScheduleTask downloadChapterScheduleTask:
-                        await DownloadChapterScheduleTaskHandler.Execute(downloadChapterScheduleTask);
-                        break;
-                    case DownloadImageScheduleTask downloadImageScheduleTask:
-                        await DownloadImageScheduleTaskHandler.Execute(downloadImageScheduleTask);
-                        break;
-                    case ScanLibraryTask scanLibraryTask:
-                        await ScanLibraryTaskHandler.Execute(scanLibraryTask);
-                        break;
-                    case ScanMangaTask scanMangaTask:
-                        await ScanMangaTaskHandler.Execute(scanMangaTask);
-                        break;
-                }
+                    DownloadMangaScheduleTask downloadMangaScheduleTask => await DownloadMangaScheduleTaskHandler.Execute(downloadMangaScheduleTask),
+                    DownloadChapterScheduleTask downloadChapterScheduleTask => await DownloadChapterScheduleTaskHandler.Execute(downloadChapterScheduleTask),
+                    DownloadImageScheduleTask downloadImageScheduleTask => await DownloadImageScheduleTaskHandler.Execute(downloadImageScheduleTask),
+                    ScanLibraryTask scanLibraryTask => await ScanLibraryTaskHandler.Execute(scanLibraryTask),
+                    ScanMangaTask scanMangaTask => await ScanMangaTaskHandler.Execute(scanMangaTask),
+                    _ => throw new NotSupportedException(),
+                };
             }
             catch (Exception ex)
             {
                 Logger.Error($"Not catched exception: {ex}");
-                task.Update(TaskStatus.Fail);
+                return TaskStatus.Fail;
             }
         }
 

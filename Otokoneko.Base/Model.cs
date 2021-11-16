@@ -565,7 +565,7 @@ namespace Otokoneko.Client
             var (result, status) = await SendRequest<object, byte[]>(imageId, null);
             if (result != null)
             {
-                await ImageCache.Add(key, result);
+                ImageCache.Add(key, result);
             }
 
             return result;

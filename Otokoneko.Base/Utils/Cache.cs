@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Specialized;
-using System.Diagnostics;
 using System.IO;
 using System.Runtime.Caching;
 using System.Threading;
@@ -24,7 +23,7 @@ namespace Otokoneko.Utils
         private long _maxFileCacheSize;
         public long MaxFileCacheSize
         {
-            get => _maxFileCacheSize;
+            get => _fileCache.MaxCacheSize;
             set => _fileCache.MaxCacheSize = _maxFileCacheSize = value;
         }
 
@@ -61,10 +60,10 @@ namespace Otokoneko.Utils
             try
             {
                 var value = _memoryCache.Get(key);
-                if(value == null)
+                if (value == null)
                 {
                     value = _fileCache.Get(key);
-                    if(value != null)
+                    if (value != null)
                     {
                         _memoryCache.Add(key, value, DateTimeOffset.Now.Add(TTL));
                     }
@@ -116,10 +115,6 @@ namespace Otokoneko.Utils
                 };
                 _memoryCache.Dispose();
                 _memoryCache = new MemoryCache(nameof(_memoryCache), _memoryCacheConfig);
-            }
-            catch(Exception ex)
-            {
-                Trace.WriteLine(ex);
             }
             finally
             {

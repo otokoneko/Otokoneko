@@ -27,7 +27,7 @@ namespace Otokoneko.Utils
                 _lock.EnterUpgradeableReadLock();
                 try
                 {
-                    return ((System.Collections.Generic.IList<T>)_data)[index];
+                    return ((IList<T>)_data)[index];
                 }
                 finally
                 {
@@ -39,7 +39,7 @@ namespace Otokoneko.Utils
                 _lock.EnterWriteLock();
                 try
                 {
-                    ((System.Collections.Generic.IList<T>)_data)[index] = value;
+                    ((IList<T>)_data)[index] = value;
                 }
                 finally
                 {
@@ -55,7 +55,7 @@ namespace Otokoneko.Utils
                 _lock.EnterUpgradeableReadLock();
                 try
                 {
-                    return ((System.Collections.Generic.ICollection<T>)_data).Count;
+                    return ((ICollection<T>)_data).Count;
                 }
                 finally
                 {
@@ -64,14 +64,14 @@ namespace Otokoneko.Utils
             }
         }
 
-        public bool IsReadOnly => ((System.Collections.Generic.ICollection<T>)_data).IsReadOnly;
+        public bool IsReadOnly => ((ICollection<T>)_data).IsReadOnly;
 
         public void Add(T item)
         {
             _lock.EnterWriteLock();
             try
             {
-                ((System.Collections.Generic.ICollection<T>)_data).Add(item);
+                ((ICollection<T>)_data).Add(item);
             }
             finally
             {
@@ -84,7 +84,7 @@ namespace Otokoneko.Utils
             _lock.EnterWriteLock();
             try
             {
-                ((System.Collections.Generic.ICollection<T>)_data).Clear();
+                ((ICollection<T>)_data).Clear();
             }
             finally
             {
@@ -97,7 +97,7 @@ namespace Otokoneko.Utils
             _lock.EnterUpgradeableReadLock();
             try
             {
-                return ((System.Collections.Generic.ICollection<T>)_data).Contains(item);
+                return ((ICollection<T>)_data).Contains(item);
             }
             finally
             {
@@ -110,7 +110,7 @@ namespace Otokoneko.Utils
             _lock.EnterWriteLock();
             try
             {
-                ((System.Collections.Generic.ICollection<T>)_data).CopyTo(array, arrayIndex);
+                ((ICollection<T>)_data).CopyTo(array, arrayIndex);
             }
             finally
             {
@@ -140,7 +140,7 @@ namespace Otokoneko.Utils
             _lock.EnterUpgradeableReadLock();
             try
             {
-                return ((System.Collections.Generic.IList<T>)_data).IndexOf(item);
+                return ((IList<T>)_data).IndexOf(item);
             }
             finally
             {
@@ -153,7 +153,7 @@ namespace Otokoneko.Utils
             _lock.EnterWriteLock();
             try
             {
-                ((System.Collections.Generic.IList<T>)_data).Insert(index, item);
+                ((IList<T>)_data).Insert(index, item);
             }
             finally
             {
@@ -166,7 +166,7 @@ namespace Otokoneko.Utils
             _lock.EnterWriteLock();
             try
             {
-                return ((System.Collections.Generic.ICollection<T>)_data).Remove(item);
+                return ((ICollection<T>)_data).Remove(item);
             }
             finally
             {
@@ -179,7 +179,7 @@ namespace Otokoneko.Utils
             _lock.EnterWriteLock();
             try
             {
-                ((System.Collections.Generic.IList<T>)_data).RemoveAt(index);
+                ((IList<T>)_data).RemoveAt(index);
             }
             finally
             {

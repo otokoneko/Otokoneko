@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 
 namespace Otokoneko.Server.Gui.Utils
 {
@@ -7,6 +8,16 @@ namespace Otokoneko.Server.Gui.Utils
     {
         public Color Foreground { get; set; }
         public Color Background { get; set; }
+
+        public static bool operator ==(AnsiFont c1, AnsiFont c2)
+        {
+            return c1.Foreground == c2.Foreground && c1.Background == c2.Background;
+        }
+
+        public static bool operator !=(AnsiFont c1, AnsiFont c2)
+        {
+            return c1.Foreground != c2.Foreground || c1.Background != c2.Background;
+        }
     }
 
     public class TextWithColor
@@ -114,10 +125,12 @@ namespace Otokoneko.Server.Gui.Utils
 
         public static List<TextWithColor> ParseAnsiEscapeColor(string ansitext, AnsiFont currentFont)
         {
+            TextWithColor last = null;
             var result = new List<TextWithColor>();
             if (!ansitext.Contains('\u001b'))
             {
-                result.Add(new TextWithColor { Text = ansitext, Font = currentFont });
+                last = new TextWithColor { Text = ansitext, Font = currentFont };
+                result.Add(last);
                 return result;
             }
 
@@ -130,7 +143,15 @@ namespace Otokoneko.Server.Gui.Utils
 
                 if (i == 0 && (ansitext.Length == 0 || ansitext[0] != '\u001b'))
                 {
-                    result.Add(new TextWithColor { Text = item, Font = currentFont });
+                    if (last != null && last.Font == currentFont)
+                    {
+                        last.Text += item;
+                    }
+                    else
+                    {
+                        last = new TextWithColor { Text = item, Font = currentFont };
+                        result.Add(last);
+                    }
                     continue;
                 }
 
@@ -138,7 +159,16 @@ namespace Otokoneko.Server.Gui.Utils
 
                 currentFont = GetAnsiFont(splitted[0].Trim('['), currentFont);
 
-                result.Add(new TextWithColor { Text = splitted.Length == 2 ? splitted[1] : null, Font = currentFont });
+                var currentText = splitted.Length == 2 ? splitted[1] : null;
+                if (last != null && last.Font == currentFont)
+                {
+                    last.Text += currentText;
+                }
+                else
+                {
+                    last = new TextWithColor { Text = currentText, Font = currentFont };
+                    result.Add(last);
+                }
             }
 
             return result;

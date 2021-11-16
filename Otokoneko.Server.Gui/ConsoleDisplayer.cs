@@ -17,7 +17,7 @@ namespace Otokoneko.Server.Gui
 
         public event EventHandler<bool> OnProcessChanged;
 
-        private BlockingCollection<Tuple<string, Color?, Color?>> outputQueue = new();
+        private readonly BlockingCollection<Tuple<string, Color?, Color?>> OutputQueue = new();
         private AnsiFont CurrentFont { get; set; } = AnsiEscapeCodeUtils.DefaultFont;
 
         private readonly ProcessInterface processInterface = new ProcessInterface();
@@ -37,12 +37,12 @@ namespace Otokoneko.Server.Gui
         
         private void ProcessInterface_OnProcessError(object sender, ProcessEventArgs args)
         {
-            outputQueue.Add(new Tuple<string, Color?, Color?>(args.Content, Color.Red, Color.Black));
+            OutputQueue.Add(new Tuple<string, Color?, Color?>(args.Content, Color.Red, Color.Black));
         }
 
         private void ProcessInterface_OnProcessOutput(object sender, ProcessEventArgs args)
         {
-            outputQueue.Add(new Tuple<string, Color?, Color?>(args.Content, null, null));
+            OutputQueue.Add(new Tuple<string, Color?, Color?>(args.Content, null, null));
         }
 
         private void ProcessInterface_OnProcessExit(object sender, ProcessEventArgs args)
@@ -54,46 +54,70 @@ namespace Otokoneko.Server.Gui
             IsProcessRunning = false;
             OnProcessChanged?.Invoke(this, IsProcessRunning);
             Thread.Sleep(100);
-            outputQueue.Add(new Tuple<string, Color?, Color?>($"\n服务进程退出，退出代码为 {args.Code}\n", Color.White, Color.Black));
+            OutputQueue.Add(new Tuple<string, Color?, Color?>($"\n服务进程退出，退出代码为 {args.Code}\n", Color.White, Color.Black));
         }
 
         public void WriteOutput()
         {
+            Tuple<string, Color?, Color?> args = null;
             while (true)
             {
-                var args = outputQueue.Take();
-                string output = args.Item1;
-                Color? foreground = args.Item2;
-                Color? background = args.Item3;
-                var texts = AnsiEscapeCodeUtils.ParseAnsiEscapeColor(output, CurrentFont);
-                CurrentFont = texts.Last().Font;
-                Invoke((Action)delegate
+                do
                 {
-                    foreach (var text in texts)
+                    var top = OutputQueue.Take();
+                    if (args == null) args = top;
+                    else
                     {
-                        if (string.IsNullOrEmpty(text.Text)) continue;
-
-                        Output.SelectionStart = Output.Text.Length;
-                        Output.SelectionLength = 0;
-                        Output.SelectionColor = foreground ?? text.Font.Foreground;
-                        Output.SelectionBackColor = background ?? text.Font.Background;
-                        Output.AppendText(text.Text);
-                    }
-
-                    if(Output.Text.Length > 1.05 * MaxOutputLength)
-                    {
-                        var size = Output.Text.Length - MaxOutputLength;
-                        for(; size < Output.Text.Length; size++)
+                        if (top.Item2 == args.Item2 && top.Item3 == args.Item3)
                         {
-                            if (Output.Text[size - 1] == '\n') break;
+                            args = new Tuple<string, Color?, Color?>(args.Item1 + top.Item1, args.Item2, args.Item3);
                         }
-                        Output.ReadOnly = false;
-                        Output.Select(0, size);
-                        Output.SelectedText = "";
-                        Output.ReadOnly = true;
+                        else
+                        {
+                            Write(args.Item1, args.Item2, args.Item3);
+                            args = top;
+                        }
                     }
-                });
+                } while (OutputQueue.Count != 0);
+
+                if (args != null)
+                {
+                    Write(args.Item1, args.Item2, args.Item3);
+                    args = null;
+                }
             }
+        }
+
+        private void Write(string output, Color? foreground, Color? background)
+        {
+            var texts = AnsiEscapeCodeUtils.ParseAnsiEscapeColor(output, CurrentFont);
+            CurrentFont = texts.Last().Font;
+            Invoke((Action)delegate
+            {
+                foreach (var text in texts)
+                {
+                    if (string.IsNullOrEmpty(text.Text)) continue;
+
+                    Output.SelectionStart = Output.Text.Length;
+                    Output.SelectionLength = 0;
+                    Output.SelectionColor = foreground ?? text.Font.Foreground;
+                    Output.SelectionBackColor = background ?? text.Font.Background;
+                    Output.AppendText(text.Text);
+                }
+
+                if (Output.Text.Length > 1.05 * MaxOutputLength)
+                {
+                    var size = Output.Text.Length - MaxOutputLength;
+                    for (; size < Output.Text.Length; size++)
+                    {
+                        if (Output.Text[size - 1] == '\n') break;
+                    }
+                    Output.ReadOnly = false;
+                    Output.Select(0, size);
+                    Output.SelectedText = "";
+                    Output.ReadOnly = true;
+                }
+            });
         }
 
         public void ClearOutput()
